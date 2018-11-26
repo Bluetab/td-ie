@@ -17,3 +17,5 @@ config :td_ie, TdIe.Repo,
   database: "td_ie_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+config :td_perms, redis_host: "localhost"

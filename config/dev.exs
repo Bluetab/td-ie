@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :td_ie, TdIeWeb.Endpoint,
-  http: [port: 4000],
+  http: [port: 4014],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
@@ -44,3 +44,11 @@ config :td_ie, TdIe.Repo,
   database: "td_ie_dev",
   hostname: "localhost",
   pool_size: 10
+
+
+config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.HttpTdAuditService,
+  audit_host: "localhost",
+  audit_port: "4007",
+  audit_domain: ""
+
+config :td_perms, redis_host: "localhost"

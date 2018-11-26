@@ -17,4 +17,11 @@ config :td_ie, TdIe.Repo,
   username: "postgres",
   password: "postgres",
   database: "td_ie_prod",
-  pool_size: 15
+  pool_size: 10
+
+config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.HttpTdAuditService,
+  audit_host: "${API_AUDIT_HOST}",
+  audit_port: "${API_AUDIT_PORT}",
+  audit_domain: ""
+
+config :td_perms, redis_host: "${REDIS_HOST}"
