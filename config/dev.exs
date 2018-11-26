@@ -51,4 +51,10 @@ config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.HttpTdAuditServi
   audit_port: "4007",
   audit_domain: ""
 
+config :td_ie, :elasticsearch,
+  search_service: TdIe.Search,
+  es_host: "localhost",
+  es_port: 9200,
+  type_name: "doc"
+
 config :td_perms, redis_host: "localhost"

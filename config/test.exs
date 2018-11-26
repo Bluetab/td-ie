@@ -18,4 +18,12 @@ config :td_ie, TdIe.Repo,
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :td_ie, df_cache: TdPerms.MockDynamicFormCache
+
+config :td_ie, :elasticsearch,
+  search_service: TdIe.Search.MockSearch,
+  es_host: "localhost",
+  es_port: 9200,
+  type_name: "doc"
+
 config :td_perms, redis_host: "localhost"
