@@ -2,9 +2,9 @@ defmodule TdIe.Ingests.IngestVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdIe.Ingest.RichText
+  alias TdIe.Ingests.RichText
   alias TdIe.Ingests
-  alias TdIe.Ingest.Ingest
+  alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
@@ -145,9 +145,6 @@ defmodule TdIe.Ingests.IngestVersion do
       template -> template
     end
 
-    aliases = Ingests.list_ingest_aliases(ingest_version.id)
-    aliases = Enum.map(aliases, &%{name: &1.name})
-
     domain = retrieve_domain(ingest_version.ingest.domain_id)
     domain_ids = retrieve_domain_ids(Map.get(domain, :id))
     domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
@@ -159,8 +156,6 @@ defmodule TdIe.Ingests.IngestVersion do
       end
 
     content = Enum.reduce(Map.get(template, :content), ingest_version.content, &fill_content(&2, &1))
-
-    content = update_in(content["_confidential"], &(if &1 == "Si", do: &1, else: "No"))
 
     %{
       id: ingest_version.id,
@@ -178,7 +173,6 @@ defmodule TdIe.Ingests.IngestVersion do
       },
       content: content,
       last_change_at: ingest_version.last_change_at,
-      bc_aliases: aliases,
       domain_ids: domain_ids,
       current: ingest_version.current,
       in_progress: ingest_version.in_progress,

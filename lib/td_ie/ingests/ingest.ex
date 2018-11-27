@@ -3,7 +3,6 @@ defmodule TdIe.Ingests.Ingest do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdIe.Ingests.Ingest
-  alias TdIe.Ingests.IngestAlias
   alias TdIe.Ingests.IngestVersion
 
   @status %{draft: "draft",
@@ -22,7 +21,6 @@ defmodule TdIe.Ingests.Ingest do
     field :last_change_at, :utc_datetime
 
     has_many :versions, IngestVersion
-    has_many :aliases, IngestAlias
 
     timestamps(type: :utc_datetime)
   end

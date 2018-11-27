@@ -6,7 +6,7 @@ defmodule TdIe.Ingests do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Ecto.Multi
-  alias TdIe.IngestLoader #TODO
+  alias TdIe.IngestLoader
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
@@ -20,77 +20,75 @@ defmodule TdIe.Ingests do
   @content_schema :content_schema
 
   @doc """
-    check business concept name availability
+    check ingest name availability
   """
-  def check_business_concept_name_availability(type, name, exclude_concept_id \\ nil)
+  def check_ingest_name_availability(type, name, exclude_ingest_id \\ nil)
 
-  def check_business_concept_name_availability(type, name, _exclude_concept_id)
+  def check_ingest_name_availability(type, name, _exclude_ingest_id)
       when is_nil(name) or is_nil(type),
       do: {:name_available}
 
-  def check_business_concept_name_availability(type, name, exclude_concept_id) do
-    status = [BusinessConcept.status().versioned, BusinessConcept.status().deprecated]
+  def check_ingest_name_availability(type, name, exclude_ingest_id) do
+    status = [Ingest.status().versioned, Ingest.status().deprecated]
 
     count =
-      BusinessConcept
-      |> join(:left, [c], _ in assoc(c, :aliases))
-      |> join(:left, [c, a], _ in assoc(c, :versions))
-      |> where([c, a, v], c.type == ^type and v.status not in ^status)
-      |> include_name_where(name,  exclude_concept_id)
-      |> select([c, a, v], count(c.id))
+      Ingest
+      |> join(:left, [i], _ in assoc(i, :versions))
+      |> where([i, v], i.type == ^type and v.status not in ^status)
+      |> include_name_where(name,  exclude_ingest_id)
+      |> select([i, v], count(i.id))
       |> Repo.one!()
 
     if count == 0, do: {:name_available}, else: {:name_not_available}
   end
 
   defp include_name_where(query, name, nil) do
-    query |> where([_, a, v], v.name == ^name or a.name == ^name)
+    query |> where([_, v], v.name == ^name)
   end
 
-  defp include_name_where(query, name, exclude_concept_id) do
+  defp include_name_where(query, name, exclude_ingest_id) do
     query
     |> where(
-      [c, a, v],
-      (c.id != ^exclude_concept_id and (v.name == ^name or a.name == ^name)) or
-        (c.id == ^exclude_concept_id and a.name == ^name)
+      [i, v],
+      i.id != ^exclude_ingest_id and v.name == ^name
     )
   end
 
   @doc """
-    list all business concepts
+    list all ingests
     """
-  def list_all_business_concepts do
-    BusinessConcept
+  def list_all_ingests do
+    Ingest
       |> Repo.all()
   end
 
-  def list_current_business_concept_versions do
-    BusinessConceptVersion
+  def list_current_ingest_versions do
+    IngestVersion
     |> where([v], v.current == true)
-    |> preload(:business_concept)
+    |> preload(:ingest)
     |> Repo.all()
   end
 
   @doc """
-    Fetch an exsisting business_concept by its id
+    Fetch an exsisting ingest by its id
   """
-  def get_business_concept!(business_concept_id) do
-     Repo.one!(from(c in BusinessConcept,
-        where: c.id == ^business_concept_id))
+  def get_ingest!(ingest_id) do
+     Repo.one!(from(i in Ingest,
+        where: i.id == ^ingest_id))
   end
 
   @doc """
-    count published business concepts
-    business concept must be of indicated type
-    business concept are resticted to indicated id list
+    count published business ingests
+    ingest must be of indicated type
+    ingest are resticted to indicated id list
   """
-  def count_published_business_concepts(type, ids) do
-    published = BusinessConcept.status().published
+  def count_published_ingests(type, ids) do
+    published = Ingest.status().published
 
-    BusinessConcept
-    |> join(:left, [c], _ in assoc(c, :versions))
-    |> where([c, v], c.type == ^type and c.id in ^ids and v.status == ^published)
-    |> select([c, _v], count(c.id))
+    Ingest
+    |> join(:left, [i], _ in assoc(i, :versions))
+    |> where([i, v], i.type == ^type and i.id in ^ids and v.status == ^published)
+    |> select([i, _v], count(i.id))
     |> Repo.one!()
   end
 
@@ -98,105 +96,105 @@ defmodule TdIe.Ingests do
   Returns children of domain id passed as argument
   """
   def get_domain_children_versions!(domain_id) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> preload([_, c], business_concept: c)
-    |> where([_, c], c.domain_id == ^domain_id)
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
+    |> preload([_, i], ingest: i)
+    |> where([_, i], i.domain_id == ^domain_id)
     |> Repo.all()
   end
 
   @doc """
-  Gets a single business_concept.
+  Gets a single ingest.
 
-  Raises `Ecto.NoResultsError` if the Business concept does not exist.
+  Raises `Ecto.NoResultsError` if the ingest does not exist.
 
   ## Examples
 
-      iex> get_current_version_by_business_concept_id!(123)
-      %BusinessConcept{}
+      iex> get_current_version_by_ingest_id!(123)
+      %Ingest{}
 
-      iex> get_current_version_by_business_concept_id!(456)
+      iex> get_current_version_by_ingest_id!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_current_version_by_business_concept_id!(business_concept_id) do
-    BusinessConceptVersion
-    |> where([v], v.business_concept_id == ^business_concept_id)
+  def get_current_version_by_ingest_id!(ingest_id) do
+    IngestVersion
+    |> where([v], v.ingest_id == ^ingest_id)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(:ingest)
     |> Repo.one!()
   end
 
-  def get_current_version_by_business_concept_id!(business_concept_id, %{current: current}) do
-    BusinessConceptVersion
-    |> where([v], v.business_concept_id == ^business_concept_id)
+  def get_current_version_by_ingest_id!(ingest_id, %{current: current}) do
+    IngestVersion
+    |> where([v], v.ingest_id == ^ingest_id)
     |> where([v], v.current == ^current)
     |> order_by(desc: :version)
     |> limit(1)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(:ingest)
     |> Repo.one!()
   end
 
   @doc """
-  Gets a single business_concept searching for the published version instead of the latest.
+  Gets a single ingest searching for the published version instead of the latest.
 
-  Raises `Ecto.NoResultsError` if the Business concept does not exist.
+  Raises `Ecto.NoResultsError` if the Ingest does not exist.
 
   ## Examples
 
       iex> get_currently_published_version!(123)
-      %BusinessConcept{}
+      %IngestVersion{}
 
       iex> get_currently_published_version!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_currently_published_version!(business_concept_id) do
-    published = BusinessConcept.status().published
+  def get_currently_published_version!(ingest_id) do
+    published = Ingest.status().published
 
-    version = BusinessConceptVersion
-    |> where([v], v.business_concept_id == ^business_concept_id)
+    version =
+    IngestVersion
+    |> where([v], v.ingest_id == ^ingest_id)
     |> where([v], v.status == ^published)
-    |> preload(business_concept: [:aliases, :domain])
+    |> preload(:ingest)
     |> Repo.one()
 
     case version do
-      nil -> get_current_version_by_business_concept_id!(business_concept_id)
+      nil -> get_current_version_by_ingest_id!(ingest_id)
       _ -> version
     end
   end
 
   @doc """
-  Creates a business_concept.
+  Creates a ingest.
 
   ## Examples
 
-      iex> create_business_concept(%{field: value})
-      {:ok, %BusinessConceptVersion{}}
+      iex> create_ingest(%{field: value})
+      {:ok, %IngestVersion{}}
 
-      iex> create_business_concept(%{field: bad_value})
+      iex> create_ingest(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_business_concept(attrs \\ %{}) do
+  def create_ingest(attrs \\ %{}) do
     result =
       attrs
       |> attrs_keys_to_atoms
       |> raise_error_if_no_content_schema
       |> set_content_defaults
-      |> validate_new_concept
+      |> validate_new_ingest
       |> validate_description
-      |> validate_concept_content
-      |> insert_concept
+      |> validate_ingest_content
+      |> insert_ingest
 
     case result do
-      {:ok, business_concept_version} ->
-        new_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+      {:ok, ingest_version} ->
+        new_version = get_ingest_version!(ingest_version.id)
+        ingest_id = new_version.ingest_id
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         {:ok, new_version}
 
       _ ->
@@ -205,38 +203,38 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Creates a new business_concept version.
+  Creates a new ingest version.
 
   """
-  def version_business_concept(user, %BusinessConceptVersion{} = business_concept_version) do
-    business_concept = business_concept_version.business_concept
-    business_concept =
-      business_concept
+  def new_ingest_version(user, %IngestVersion{} = ingest_version) do
+    ingest = ingest_version.ingest
+
+    ingest =
+      ingest
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
-    draft_attrs = Map.from_struct(business_concept_version)
+    draft_attrs = Map.from_struct(ingest_version)
 
     draft_attrs =
       draft_attrs
-      |> Map.put("business_concept", business_concept)
+      |> Map.put("ingest", ingest)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now())
-      |> Map.put("status", BusinessConcept.status().draft)
-      |> Map.put("version", business_concept_version.version + 1)
+      |> Map.put("status", Ingest.status().draft)
+      |> Map.put("version", ingest_version.version + 1)
 
     result =
       draft_attrs
       |> attrs_keys_to_atoms
-      |> validate_new_concept
-      |> version_concept(business_concept_version)
+      |> validate_new_ingest
+      |> version_ingest(ingest_version)
 
     case result do
       {:ok, %{current: new_version}} ->
-        business_concept_id = new_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ingest_id = new_version.ingest_id
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -245,37 +243,36 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Updates a business_concept.
+  Updates a ingest.
 
   ## Examples
 
-      iex> update_business_concept_version(business_concept_version, %{field: new_value})
-      {:ok, %BusinessConceptVersion{}}
+      iex> update_ingest_version(ingest_version, %{field: new_value})
+      {:ok, %IngestVersion{}}
 
-      iex> update_business_concept_version(business_concept_version, %{field: bad_value})
+      iex> update_ingest_version(ingest_version, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def update_ingest_version(%IngestVersion{} = ingest_version, attrs) do
     result =
       attrs
       |> attrs_keys_to_atoms
       |> raise_error_if_no_content_schema
       |> add_content_if_not_exist
-      |> merge_content_with_concept(business_concept_version)
+      |> merge_content_with_ingest(ingest_version)
       |> set_content_defaults
-      |> validate_concept(business_concept_version)
-      |> validate_concept_content
+      |> validate_ingest(ingest_version)
+      |> validate_ingest_content
       |> validate_description
-      |> update_concept
+      |> update_ingest
 
     case result do
       {:ok, _} ->
-        updated_version = get_business_concept_version!(business_concept_version.id)
-        business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        updated_version = get_ingest_version!(ingest_version.id)
+        ingest_id = updated_version.ingest_id
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         {:ok, updated_version}
 
       _ ->
@@ -283,21 +280,20 @@ defmodule TdIe.Ingests do
     end
   end
 
-  def update_business_concept_version_status(
-        %BusinessConceptVersion{} = business_concept_version,
+  def update_ingest_version_status(
+        %IngestVersion{} = ingest_version,
         attrs
       ) do
     result =
-      business_concept_version
-      |> BusinessConceptVersion.update_status_changeset(attrs)
+      ingest_version
+      |> IngestVersion.update_status_changeset(attrs)
       |> Repo.update()
 
     case result do
       {:ok, updated_version} ->
-        business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ingest_id = updated_version.ingest_id
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -305,32 +301,31 @@ defmodule TdIe.Ingests do
     end
   end
 
-  def publish_business_concept_version(business_concept_version) do
-    status_published = BusinessConcept.status().published
+  def publish_ingest_version(ingest_version) do
+    status_published = Ingest.status().published
     attrs = %{status: status_published}
 
-    business_concept_id = business_concept_version.business_concept.id
+    ingest_id = ingest_version.ingest.id
 
     query =
       from(
-        c in BusinessConceptVersion,
-        where: c.business_concept_id == ^business_concept_id and c.status == ^status_published
+        c in IngestVersion,
+        where: c.ingest_id == ^ingest_id and c.status == ^status_published
       )
 
     result =
       Multi.new()
-      |> Multi.update_all(:versioned, query, set: [status: BusinessConcept.status().versioned])
+      |> Multi.update_all(:versioned, query, set: [status: Ingest.status().versioned])
       |> Multi.update(
         :published,
-        BusinessConceptVersion.update_status_changeset(business_concept_version, attrs)
+        IngestVersion.update_status_changeset(ingest_version, attrs)
       )
       |> Repo.transaction()
 
     case result do
-      {:ok, %{published: %BusinessConceptVersion{business_concept_id: business_concept_id}}} ->
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+      {:ok, %{published: %IngestVersion{ingest_id: ingest_id}}} ->
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -338,35 +333,23 @@ defmodule TdIe.Ingests do
     end
   end
 
-  def index_business_concept_versions(business_concept_id, params) do
-    business_concept_id
-    |> list_business_concept_versions(nil)
-    |> Enum.map(fn(bv) ->
-        case params do
-          params when params == %{} -> bv
-          params -> Map.merge(bv, params)
-        end
-      end
-    )
+  def index_ingest_versions(ingest_id) do
+    ingest_id
+    |> list_ingest_versions(nil)
     |> Enum.each(&@search_service.put_search/1)
   end
 
-  def retrieve_last_bc_version_params(business_concept_id) do
-    get_concept_counts(business_concept_id)
-  end
-
-  def reject_business_concept_version(%BusinessConceptVersion{} = business_concept_version, attrs) do
+  def reject_ingest_version(%IngestVersion{} = ingest_version, attrs) do
     result =
-      business_concept_version
-      |> BusinessConceptVersion.reject_changeset(attrs)
+      ingest_version
+      |> IngestVersion.reject_changeset(attrs)
       |> Repo.update()
 
     case result do
       {:ok, updated_version} ->
-        business_concept_id = updated_version.business_concept_id
-        params = retrieve_last_bc_version_params(business_concept_id)
-        BusinessConceptLoader.refresh(business_concept_id)
-        index_business_concept_versions(business_concept_id, params)
+        ingest_id = updated_version.ingest_id
+        IngestLoader.refresh(ingest_id)
+        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -375,59 +358,58 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept changes.
+  Returns an `%Ecto.Changeset{}` for tracking ingest changes.
 
   ## Examples
 
-      iex> change_business_concept(business_concept)
-      %Ecto.Changeset{source: %BusinessConcept{}}
+      iex> change_ingest(ingest)
+      %Ecto.Changeset{source: %Ingest{}}
 
   """
-  def change_business_concept(%BusinessConcept{} = business_concept) do
-    BusinessConcept.changeset(business_concept, %{})
+  def change_ingest(%Ingest{} = ingest) do
+    Ingest.changeset(ingest, %{})
   end
 
-  alias TdBg.BusinessConcepts.BusinessConceptVersion
+  alias TdIe.Ingests.IngestVersion
 
   @doc """
-  Returns the list of business_concept_versions.
+  Returns the list of ingest_versions.
 
   ## Examples
 
-      iex> list_all_business_concept_versions(filter)
-      [%BusinessConceptVersion{}, ...]
+      iex> list_all_ingest_versions(filter)
+      [%IngestVersion{}, ...]
 
   """
-  def list_all_business_concept_versions do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+  def list_all_ingest_versions do
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
+    |> preload([_, i], ingest: i)
     |> order_by(asc: :version)
     |> Repo.all()
   end
 
   @doc """
-  Returns the list of business_concept_versions.
+  Returns the list of ingest_versions.
 
   ## Examples
 
-      iex> list_all_business_concept_versions()
-      [%BusinessConceptVersion{}, ...]
+      iex> list_all_ingest_versions()
+      [%IngestVersion{}, ...]
 
   """
-  def find_business_concept_versions(filter) do
+  def find_ingest_versions(filter) do
     query =
-      BusinessConceptVersion
-      |> join(:left, [v], _ in assoc(v, :business_concept))
-      |> preload([_, c], business_concept: c)
+      IngestVersion
+      |> join(:left, [v], _ in assoc(v, :ingest))
+      |> preload([_, i], ingest: i)
       |> order_by(asc: :version)
 
     query =
       case Map.has_key?(filter, :id) && length(filter.id) > 0 do
         true ->
           id = Map.get(filter, :id)
-          query |> where([_v, c], c.id in ^id)
+          query |> where([_v, i], i.id in ^id)
 
         _ ->
           query
@@ -437,7 +419,7 @@ defmodule TdIe.Ingests do
       case Map.has_key?(filter, :status) && length(filter.status) > 0 do
         true ->
           status = Map.get(filter, :status)
-          query |> where([v, _c], v.status in ^status)
+          query |> where([v, _i], v.status in ^status)
 
         _ ->
           query
@@ -447,31 +429,29 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Returns the list of business_concept_versions of a
-  business_concept
+  Returns the list of ingest_versions of a
+  ingest
 
   ## Examples
 
-      iex> list_business_concept_versions(business_concept_id)
-      [%BusinessConceptVersion{}, ...]
+      iex> list_ingest_versions(ingest_id)
+      [%IngestVersion{}, ...]
 
   """
-  def list_business_concept_versions(business_concept_id, status) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
-    |> where([_, c], c.id == ^business_concept_id)
+  def list_ingest_versions(ingest_id, status) do
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
+    |> preload([_, i], ingest: i)
+    |> where([_, i], i.id == ^ingest_id)
     |> include_status_in_where(status)
     |> order_by(desc: :version)
     |> Repo.all()
   end
 
-  def list_all_business_concept_with_status(status) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+  def list_all_ingest_with_status(status) do
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
+    |> preload([_, i], ingest: i)
     |> include_status_in_where(status)
     |> order_by(asc: :version)
     |> Repo.all()
@@ -484,75 +464,74 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Gets a single business_concept_version.
+  Gets a single ingest_version.
 
-  Raises `Ecto.NoResultsError` if the Business concept version does not exist.
+  Raises `Ecto.NoResultsError` if the ingest version does not exist.
 
   ## Examples
 
-      iex> get_business_concept_version!(123)
-      %BusinessConceptVersion{}
+      iex> get_ingest_version!(123)
+      %IngestVersion{}
 
-      iex> get_business_concept_version!(456)
+      iex> get_ingest_version!(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_business_concept_version!(id) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [_, c], _ in assoc(c, :domain))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+  def get_ingest_version!(id) do
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
+    |> preload([_, i], ingest: i)
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
   end
 
   @doc """
-  Deletes a BusinessCocneptVersion.
+  Deletes a IngestVersion.
 
   ## Examples
 
-      iex> delete_business_concept_version(data_structure)
-      {:ok, %BusinessCocneptVersion{}}
+      iex> delete_ingest_version(ingest_version)
+      {:ok, %IngestVersion{}}
 
-      iex> delete_business_concept_version(data_structure)
+      iex> delete_ingest_version(ingest_version)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
-    if business_concept_version.version == 1 do
-      business_concept = business_concept_version.business_concept
-      business_concept_id = business_concept.id
+  def delete_ingest_version(%IngestVersion{} = ingest_version) do
+    if ingest_version.version == 1 do
+      ingest = ingest_version.ingest
+      ingest_id = ingest.id
       Multi.new()
       |> Multi.update_all(:detatch_children,
-        (from child in BusinessConcept, where: child.parent_id == ^business_concept_id),
+        (from child in Ingest, where: child.parent_id == ^ingest_id),
         set: [parent_id: nil])
-      |> Multi.delete(:business_concept_version, business_concept_version)
-      |> Multi.delete(:business_concept, business_concept)
+      |> Multi.delete(:ingest_version, ingest_version)
+      |> Multi.delete(:ingest, ingest)
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
            detatch_children: {_, nil},
-           business_concept: %BusinessConcept{},
-           business_concept_version: %BusinessConceptVersion{} = version
+           ingest: %Ingest{},
+           ingest_version: %IngestVersion{} = version
          }} ->
-          BusinessConceptLoader.delete(business_concept_id)
-          @search_service.delete_search(business_concept_version)
+          IngestLoader.delete(ingest_id)
+          @search_service.delete_search(ingest_version)
           {:ok, version}
       end
     else
       Multi.new()
-      |> Multi.delete(:business_concept_version, business_concept_version)
+      |> Multi.delete(:ingest_version, ingest_version)
       |> Multi.update(
         :current,
-        BusinessConceptVersion.current_changeset(business_concept_version)
+        IngestVersion.current_changeset(ingest_version)
       )
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
-           business_concept_version: %BusinessConceptVersion{} = deleted_version,
-           current: %BusinessConceptVersion{} = current_version
+           ingest_version: %IngestVersion{} = deleted_version,
+           current: %IngestVersion{} = current_version
          }} ->
           @search_service.delete_search(deleted_version)
           {:ok, current_version}
@@ -561,16 +540,16 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept_version changes.
+  Returns an `%Ecto.Changeset{}` for tracking ingest_version changes.
 
   ## Examples
 
-      iex> change_business_concept_version(business_concept_version)
-      %Ecto.Changeset{source: %BusinessConceptVersion{}}
+      iex> change_ingest_version(ingest_version)
+      %Ecto.Changeset{source: %IngestVersion{}}
 
   """
-  def change_business_concept_version(%BusinessConceptVersion{} = business_concept_version) do
-    BusinessConceptVersion.changeset(business_concept_version, %{})
+  def change_ingest_version(%IngestVersion{} = ingest_version) do
+    IngestVersion.changeset(ingest_version, %{})
   end
 
   defp map_keys_to_atoms(key_values) do
@@ -584,16 +563,16 @@ defmodule TdIe.Ingests do
 
   defp attrs_keys_to_atoms(key_values) do
     map = map_keys_to_atoms(key_values)
-    case map.business_concept do
-      %BusinessConcept{} -> map
-      %{} = concept -> Map.put(map, :business_concept, map_keys_to_atoms(concept))
+    case map.ingest do
+      %Ingest{} -> map
+      %{} = ingest -> Map.put(map, :ingest, map_keys_to_atoms(ingest))
       _ -> map
     end
   end
 
   defp raise_error_if_no_content_schema(attrs) do
     if not Map.has_key?(attrs, @content_schema) do
-      raise "Content Schema is not defined for Business Concept"
+      raise "Content Schema is not defined for Ingest"
     end
 
     attrs
@@ -607,20 +586,20 @@ defmodule TdIe.Ingests do
     end
   end
 
-  defp validate_new_concept(attrs) do
-    changeset = BusinessConceptVersion.create_changeset(%BusinessConceptVersion{}, attrs)
+  defp validate_new_ingest(attrs) do
+    changeset = IngestVersion.create_changeset(%IngestVersion{}, attrs)
     Map.put(attrs, @changeset, changeset)
   end
 
-  defp validate_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
-    changeset = BusinessConceptVersion.update_changeset(business_concept_version, attrs)
+  defp validate_ingest(attrs, %IngestVersion{} = ingest_version) do
+    changeset = IngestVersion.update_changeset(ingest_version, attrs)
     Map.put(attrs, @changeset, changeset)
   end
 
-  defp merge_content_with_concept(attrs, %BusinessConceptVersion{} = business_concept_version) do
+  defp merge_content_with_ingest(attrs, %IngestVersion{} = ingest_version) do
     content = Map.get(attrs, @content)
-    concept_content = Map.get(business_concept_version, :content, %{})
-    new_content = Map.merge(concept_content, content)
+    ingest_content = Map.get(ingest_version, :content, %{})
+    new_content = Map.merge(ingest_content, content)
     Map.put(attrs, @content, new_content)
   end
 
@@ -651,17 +630,17 @@ defmodule TdIe.Ingests do
 
   defp set_default_value(content, %{}), do: content
 
-  defp validate_concept_content(attrs) do
+  defp validate_ingest_content(attrs) do
     changeset = Map.get(attrs, @changeset)
 
     if changeset.valid? do
-      do_validate_concept_content(attrs)
+      do_validate_ingest_content(attrs)
     else
       attrs
     end
   end
 
-  defp do_validate_concept_content(attrs) do
+  defp do_validate_ingest_content(attrs) do
     content = Map.get(attrs, @content)
     content_schema = Map.get(attrs, @content_schema)
     changeset = Validation.build_changeset(content, content_schema)
@@ -696,7 +675,7 @@ defmodule TdIe.Ingests do
     end
   end
 
-  defp update_concept(attrs) do
+  defp update_ingest(attrs) do
     changeset = Map.get(attrs, @changeset)
 
     if changeset.valid? do
@@ -706,7 +685,7 @@ defmodule TdIe.Ingests do
     end
   end
 
-  defp insert_concept(attrs) do
+  defp insert_ingest(attrs) do
     changeset = Map.get(attrs, @changeset)
 
     if changeset.valid? do
@@ -716,14 +695,14 @@ defmodule TdIe.Ingests do
     end
   end
 
-  defp version_concept(attrs, business_concept_version) do
+  defp version_ingest(attrs, ingest_version) do
     changeset = Map.get(attrs, @changeset)
 
     if changeset.valid? do
       Multi.new()
       |> Multi.update(
         :not_current,
-        BusinessConceptVersion.not_anymore_current_changeset(business_concept_version)
+        IngestVersion.not_anymore_current_changeset(ingest_version)
       )
       |> Multi.insert(:current, changeset)
       |> Repo.transaction()
@@ -732,105 +711,21 @@ defmodule TdIe.Ingests do
     end
   end
 
-  alias TdBg.BusinessConcepts.BusinessConceptAlias
-
-  @doc """
-  Returns the list of business_concept_aliases
-  of a business_concept
-
-  ## Examples
-
-      iex> list_business_concept_aliases(123)
-      [%BusinessConceptAlias{}, ...]
-
-  """
-  def list_business_concept_aliases(business_concept_id) do
-    BusinessConceptAlias
-    |> where([v], v.business_concept_id == ^business_concept_id)
-    |> order_by(desc: :business_concept_id)
-    |> Repo.all()
-  end
-
-  @doc """
-  Gets a single business_concept_alias.
-
-  Raises `Ecto.NoResultsError` if the Business concept alias does not exist.
-
-  ## Examples
-
-      iex> get_business_concept_alias!(123)
-      %BusinessConceptAlias{}
-
-      iex> get_business_concept_alias!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_business_concept_alias!(id), do: Repo.get!(BusinessConceptAlias, id)
-
-  @doc """
-  Creates a business_concept_alias.
-
-  ## Examples
-
-      iex> create_business_concept_alias(%{field: value})
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> create_business_concept_alias(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_business_concept_alias(attrs \\ %{}) do
-    %BusinessConceptAlias{}
-    |> BusinessConceptAlias.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Deletes a BusinessConceptAlias.
-
-  ## Examples
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:ok, %BusinessConceptAlias{}}
-
-      iex> delete_business_concept_alias(business_concept_alias)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    Repo.delete(business_concept_alias)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking business_concept_alias changes.
-
-  ## Examples
-
-      iex> change_business_concept_alias(business_concept_alias)
-      %Ecto.Changeset{source: %BusinessConceptAlias{}}
-
-  """
-  def change_business_concept_alias(%BusinessConceptAlias{} = business_concept_alias) do
-    BusinessConceptAlias.changeset(business_concept_alias, %{})
-  end
-
-  def get_business_concept_by_name(name) do
-    # Repo.all from r in BusinessConceptVersion, where:
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
+  def get_ingest_by_name(name) do
+    # Repo.all from r in IngestVersion, where:
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
     |> where([v], ilike(v.name, ^"%#{name}%"))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> preload([_, i], ingest: i)
     |> order_by(asc: :version)
     |> Repo.all()
   end
 
-  def get_business_concept_by_term(term) do
-    BusinessConceptVersion
-    |> join(:left, [v], _ in assoc(v, :business_concept))
-    |> join(:left, [v, c], _ in assoc(c, :domain))
+  def get_ingest_by_term(term) do
+    IngestVersion
+    |> join(:left, [v], _ in assoc(v, :ingest))
     |> where([v], ilike(v.name, ^"%#{term}%") or ilike(v.description, ^"%#{term}%"))
-    |> preload([_, c, d], business_concept: {c, domain: d})
+    |> preload([_, i], ingest: i)
     |> order_by(asc: :version)
     |> Repo.all()
   end
@@ -839,7 +734,7 @@ defmodule TdIe.Ingests do
 
   def check_valid_related_to(type, ids) do
     input_count = length(ids)
-    actual_count = count_published_business_concepts(type, ids)
+    actual_count = count_published_ingests(type, ids)
     if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 end
