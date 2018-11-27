@@ -16,6 +16,7 @@ defmodule TdIe.Application do
       supervisor(TdIeWeb.Endpoint, []),
       # Start your own worker by calling: TdIe.Worker.start_link(arg1, arg2, arg3)
       # worker(TdIe.Worker, [arg1, arg2, arg3]),
+      worker(TdIe.IngestLoader, [TdIe.IngestLoader]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
