@@ -9,7 +9,10 @@ defmodule TdIe.IngestsTests do
   alias TdIe.Repo
   alias TdIeWeb.ApiServices.MockTdAuthService
 
+  @df_cache Application.get_env(:td_ie, :df_cache)
+
   setup_all do
+    start_supervised(@df_cache)
     start_supervised(MockTdAuthService)
     :ok
   end
@@ -18,9 +21,33 @@ defmodule TdIe.IngestsTests do
     %{"document" => plain}
   end
 
+  def create_template(template) do
+    @df_cache.put_template(template)
+    template
+  end
+
   describe "ingests" do
     alias TdIe.Ingests.Ingest
     alias TdIe.Ingests.IngestVersion
+
+    defp fixture do
+      template_content = [%{name: "fieldname", type: "string", required: false}]
+      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+      parent_domain_id = 1
+      child_domain_id = 2
+      insert(:ingest, type: template.name, domain_id: child_domain_id)
+      insert(:ingest, type: template.name, domain_id: parent_domain_id)
+    end
+
+    test "list_all_ingests/0 return all ingests" do
+      fixture()
+      assert length(Ingests.list_all_ingests()) == 2
+    end
+
+    test "load_ingest/1 return the expected ingest" do
+      ingest = fixture()
+      assert ingest.id == Ingests.get_ingest!(ingest.id).id
+    end
 
     test "get_current_version_by_ingest_id!/1 returns the ingest with given id" do
       user = build(:user)
@@ -649,6 +676,62 @@ defmodule TdIe.IngestsTests do
       user = build(:user)
       ingest = insert(:ingest, last_change_by: user.id)
       assert %Ecto.Changeset{} = Ingests.change_ingest(ingest)
+    end
+  end
+
+  describe "ingest hierarchy" do
+
+    defp create_hierarchy do
+      domain_id = 1
+      parent = build(:ingest, domain_id: domain_id)
+      parent_version = insert(:ingest_version, ingest: parent)
+      child  =  build(:ingest, domain_id: domain_id, parent_id: parent_version.ingest.id)
+      child_version = insert(:ingest_version, ingest: child)
+
+      {
+        parent_version.ingest.id,
+        child_version.ingest.id
+      }
+    end
+
+    test "check parents" do
+      {parent_id, child_id}  = create_hierarchy()
+
+      parent = parent_id
+      |> Ingests.get_current_version_by_ingest_id!
+      |> Map.get(:ingest)
+
+      child = child_id
+      |> Ingests.get_current_version_by_ingest_id!
+      |> Map.get(:ingest)
+      |> Repo.preload(:parent)
+
+      assert child.parent.id == parent.id
+    end
+
+    test "check children" do
+      {parent_id, child_id}  = create_hierarchy()
+
+      parent = parent_id
+      |> Ingests.get_current_version_by_ingest_id!
+      |> Map.get(:ingest)
+      |> Repo.preload(:children)
+
+      child = child_id
+      |> Ingests.get_current_version_by_ingest_id!
+      |> Map.get(:ingest)
+
+      assert Enum.map(parent.children, &(&1.id)) == [child.id]
+    end
+
+    test "delete_ingest_version/1 delete parent ingest with children" do
+      {parent_id, child_id}  = create_hierarchy()
+      parent = Ingests.get_current_version_by_ingest_id!(parent_id)
+      Ingests.delete_ingest_version(parent)
+      assert_raise Ecto.NoResultsError, fn ->
+        Ingests.get_current_version_by_ingest_id!(parent_id)
+      end
+      assert Ingests.get_current_version_by_ingest_id!(child_id)
     end
   end
 
