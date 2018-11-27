@@ -4,35 +4,35 @@ defmodule TdIe.Ingest.Download do
   """
   @df_cache Application.get_env(:td_ie, :df_cache)
 
-  def to_csv(concepts) do
-    concepts_by_type = Enum.group_by(concepts, &(&1 |> Map.get("template") |> Map.get("name")))
-    types = Map.keys(concepts_by_type)
+  def to_csv(ingests) do
+    ingests_by_type = Enum.group_by(ingests, &(&1 |> Map.get("template") |> Map.get("name")))
+    types = Map.keys(ingests_by_type)
     templates_by_type = Enum.reduce(types, %{},  &Map.put(&2, &1, @df_cache.get_template_by_name(&1)))
 
     list = Enum.reduce(types, [], fn(type, acc) ->
-      concepts = Map.get(concepts_by_type, type)
+      ingests = Map.get(ingests_by_type, type)
       template = Map.get(templates_by_type, type)
 
-      csv_list = template_concepts_to_csv(template, concepts, !Enum.empty?(acc))
+      csv_list = template_ingests_to_csv(template, ingests, !Enum.empty?(acc))
       acc ++ csv_list
     end)
 
     to_string(list)
   end
 
-  defp template_concepts_to_csv(template, concepts, add_separation) do
+  defp template_ingests_to_csv(template, ingests, add_separation) do
     content = template.content
     content_names  = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "name")]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
     content_names_to_types  = Enum.reduce(content, %{}, &Map.put(&2, Map.get(&1, "name"), Map.get(&1, "type")))
 
     headers = ["template", "name", "domain", "status", "description", "inserted_at"] ++ content_labels
-    concepts_list = concepts_to_list(content_names, content_names_to_types, concepts)
+    ingests_list = ingests_to_list(content_names, content_names_to_types, ingests)
     list_to_encode = case add_separation do
       true ->
         empty = build_empty_list([], length(headers))
-        [empty, empty, headers] ++ concepts_list
-      false -> [headers|concepts_list]
+        [empty, empty, headers] ++ ingests_list
+      false -> [headers|ingests_list]
     end
 
     list_to_encode
@@ -40,15 +40,15 @@ defmodule TdIe.Ingest.Download do
     |> Enum.to_list
   end
 
-  defp concepts_to_list(content_fields, _content_fields_to_types, concepts) do
-    Enum.reduce(concepts, [], fn(concept, acc) ->
-      content = concept["content"]
-      values = [concept["template"]["name"],
-                concept["name"],
-                concept["domain"]["name"],
-                concept["status"],
-                concept["description"],
-                concept["inserted_at"]]
+  defp ingests_to_list(content_fields, _content_fields_to_types, ingests) do
+    Enum.reduce(ingests, [], fn(ingest, acc) ->
+      content = ingest["content"]
+      values = [ingest["template"]["name"],
+                ingest["name"],
+                ingest["domain"]["name"],
+                ingest["status"],
+                ingest["description"],
+                ingest["inserted_at"]]
 
       acc ++ [Enum.reduce(content_fields, values,
               &(&2 ++ [Map.get(content, &1, "")]))]
