@@ -22,6 +22,7 @@ defmodule TdIe.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import TdIe.DataCase
+      import TdIe.Factory
     end
   end
 
