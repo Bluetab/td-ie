@@ -49,6 +49,7 @@ config :td_perms, permissions: [
   :manage_confidential_business_concepts
 ]
 
+config :td_ie, permission_resolver: TdPerms.Permissions
 config :td_ie, df_cache: TdPerms.DynamicFormCache
 
 config :td_ie, :audit_service,
