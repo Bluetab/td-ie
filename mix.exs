@@ -54,8 +54,8 @@ defmodule TdIe.Mixfile do
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.8.1"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "2.8.0"}
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.8.2"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "2.8.1"}
     ]
   end
 
