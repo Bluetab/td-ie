@@ -17,6 +17,11 @@ config :td_ie, TdIeWeb.Endpoint,
   pubsub: [name: TdIe.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :td_ie, :phoenix_swagger,
+  swagger_files: %{
+    "priv/static/swagger.json" => [router: TdIeWeb.Router]
+  }
+
 config :td_perms, permissions: [
   :is_admin,
   :create_acl_entry,
