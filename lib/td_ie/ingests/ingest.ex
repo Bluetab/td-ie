@@ -44,6 +44,10 @@ defmodule TdIe.Ingests.Ingest do
     }
   end
 
+  def status_to_permissions do
+    Enum.reduce(Ingest.permissions_to_status(), %{}, fn ({k, v}, acc) -> Map.put(acc, v, k) end)
+  end
+
   @doc false
   def changeset(%Ingest{} = business_concept, attrs) do
     business_concept

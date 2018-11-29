@@ -145,7 +145,7 @@ defmodule TdIe.Ingests.IngestVersion do
       template -> template
     end
 
-    domain = retrieve_domain(ingest_version.ingest.domain_id)
+    domain = Ingests.retrieve_domain(ingest_version.ingest.domain_id)
     domain_ids = retrieve_domain_ids(Map.get(domain, :id))
     domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
 
@@ -178,19 +178,6 @@ defmodule TdIe.Ingests.IngestVersion do
       in_progress: ingest_version.in_progress,
       inserted_at: ingest_version.inserted_at
     }
-  end
-
-  defp retrieve_domain(domain_id) do
-    domain_name = TaxonomyCache.get_name(domain_id)
-    return_domain_value(domain_id, domain_name)
-  end
-
-  defp return_domain_value(_domain_id, nil), do: %{}
-
-  defp return_domain_value(domain_id, domain_name) do
-    Map.new()
-    |> Map.put(:id, domain_id)
-    |> Map.put(:name, domain_name)
   end
 
   defp retrieve_domain_ids(nil), do: []

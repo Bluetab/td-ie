@@ -11,6 +11,7 @@ defmodule TdIe.Ingests do
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
   alias TdDfLib.Validation
+  alias TdPerms.TaxonomyCache
   alias ValidationError
 
   @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
@@ -483,6 +484,39 @@ defmodule TdIe.Ingests do
     |> preload([_, i], ingest: i)
     |> where([v, _], v.id == ^id)
     |> Repo.one!()
+  end
+
+  def retrieve_parent(%IngestVersion{ingest: ingest} = ingest_version, target_key) do
+    parent_domain =
+      ingest
+        |> Map.get(:domain_id)
+        |> retrieve_domain()
+
+    ingest_version |> Map.put(target_key, parent_domain)
+  end
+
+  def retrieve_parent(%Ingest{domain_id: domain_id} = ingest, target_key) do
+    parent_domain =
+      domain_id
+        |> retrieve_domain()
+
+    ingest |> Map.put(target_key, parent_domain)
+  end
+
+
+  def retrieve_domain(nil), do: %{}
+
+  def retrieve_domain(domain_id) do
+    domain_name = TaxonomyCache.get_name(domain_id)
+    return_domain_value(domain_id, domain_name)
+  end
+
+  def return_domain_value(_domain_id, nil), do: %{}
+
+  def return_domain_value(domain_id, domain_name) do
+    Map.new()
+    |> Map.put(:id, domain_id)
+    |> Map.put(:name, domain_name)
   end
 
   @doc """
