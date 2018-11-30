@@ -97,7 +97,6 @@ defmodule TdIe.Canada.IngestAbilities do
       )
   end
 
-  # TODO: Check status is versioned??
   def can?(%User{is_admin: true}, :view_versions, %IngestVersion{}), do: true
 
   def can?(%User{} = user, :view_versions, %IngestVersion{} = ingest_version) do
@@ -110,7 +109,6 @@ defmodule TdIe.Canada.IngestAbilities do
       Ingest.status().deprecated
     ]
 
-    # TODO: Should be only Ingest.status().versioned??
     IngestVersion.has_any_status?(ingest_version, valid_statuses) &&
       authorized?(
         user,
