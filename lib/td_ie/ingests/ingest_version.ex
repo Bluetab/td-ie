@@ -3,9 +3,9 @@ defmodule TdIe.Ingests.IngestVersion do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdIe.Ingests
-  alias TdIe.Ingests.RichText
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
+  alias TdIe.Ingests.RichText
   alias TdPerms.TaxonomyCache
   alias TdPerms.UserCache
 

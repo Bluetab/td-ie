@@ -1,6 +1,6 @@
 defmodule TdIe.Search do
   require Logger
-  alias TdIe.ESClientApis
+  alias TdIe.ESClientApi
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
 
