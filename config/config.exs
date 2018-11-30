@@ -22,6 +22,12 @@ config :td_ie, :phoenix_swagger,
     "priv/static/swagger.json" => [router: TdIeWeb.Router]
   }
 
+config :td_ie, TdIe.Auth.Guardian,
+  allowed_algos: ["HS512"], # optional
+  issuer: "tdauth",
+  ttl: { 1, :hours },
+  secret_key: "SuperSecretTruedat"
+
 config :td_perms, permissions: [
   :is_admin,
   :create_acl_entry,
