@@ -15,6 +15,8 @@ defmodule TdIeWeb.ChannelCase do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+
   using do
     quote do
       # Import conveniences for testing with channels
@@ -25,11 +27,10 @@ defmodule TdIeWeb.ChannelCase do
     end
   end
 
-
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TdIe.Repo)
+    :ok = Sandbox.checkout(TdIe.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TdIe.Repo, {:shared, self()})
+     Sandbox.mode(TdIe.Repo, {:shared, self()})
     end
     :ok
   end

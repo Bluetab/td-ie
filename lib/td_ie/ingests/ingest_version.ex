@@ -2,8 +2,8 @@ defmodule TdIe.Ingests.IngestVersion do
   @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
-  alias TdIe.Ingests.RichText
   alias TdIe.Ingests
+  alias TdIe.Ingests.RichText
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdPerms.TaxonomyCache

@@ -2,7 +2,7 @@ defmodule TdIe.Application do
   @moduledoc false
 
   use Application
-
+  alias TdIeWeb.Endpoint
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
@@ -28,7 +28,7 @@ defmodule TdIe.Application do
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    TdIeWeb.Endpoint.config_change(changed, removed)
+    Endpoint.config_change(changed, removed)
     :ok
   end
 end

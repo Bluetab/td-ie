@@ -1,8 +1,8 @@
 defmodule TdIe.Canada.Abilities do
   @moduledoc false
   alias TdIe.Accounts.User
-  alias TdIe.Ingests.IngestVersion
   alias TdIe.Canada.IngestAbilities
+  alias TdIe.Ingests.IngestVersion
 
   defimpl Canada.Can, for: User do
     # administrator is superpowerful

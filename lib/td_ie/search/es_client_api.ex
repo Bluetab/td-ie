@@ -54,7 +54,8 @@ defmodule TdIe.ESClientApi do
   end
 
   defp get_type_name do
-    Application.get_env(:td_ie, :elasticsearch)[:type_name] # doc
+    # doc
+    Application.get_env(:td_ie, :elasticsearch)[:type_name]
   end
 
   defp get_search_path(index_name, id) do

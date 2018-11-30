@@ -6,11 +6,11 @@ defmodule TdIe.Ingests do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Ecto.Multi
+  alias TdDfLib.Validation
   alias TdIe.IngestLoader
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
-  alias TdDfLib.Validation
   alias TdPerms.TaxonomyCache
   alias ValidationError
 
@@ -502,7 +502,6 @@ defmodule TdIe.Ingests do
 
     ingest |> Map.put(target_key, parent_domain)
   end
-
 
   def retrieve_domain(nil), do: %{}
 

@@ -30,6 +30,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
          %{conn: conn} do
       create_template()
       domain_attrs = domain_fixture()
+
       ingest_version =
         insert(
           :ingest_version,
@@ -84,6 +85,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
       domain_attrs = domain_fixture()
       create_template()
+
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -114,15 +116,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000),
         version: 1
       }
-      |> Enum.each(
-        &assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      |> Enum.each(&assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
 
       creation_attrs
       |> Map.drop([:domain_id])
-      |> Enum.each(
-        &assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      |> Enum.each(&assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
 
       assert ingest["domain"]["id"] == Map.get(domain_attrs, :id)
       assert ingest["domain"]["name"] == Map.get(domain_attrs, :name)
@@ -133,6 +131,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       domain_attrs = domain_fixture()
 
       create_template(%{id: 0, name: "some_type", content: [], label: "label"})
+
       creation_attrs = %{
         content: %{},
         type: "some_type",
@@ -192,32 +191,38 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   describe "create new versions" do
-
     @tag :admin_authenticated
     test "create new version with modified template", %{
       conn: conn
     } do
+      template_content = [%{"name" => "fieldname", "type" => "string", "required" => false}]
 
-      template_content = [%{"name" => "fieldname", "type" => "string", "required" =>  false}]
-      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+      template =
+        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+
       user = build(:user)
+
       ingest =
-        insert(:ingest,
-                type: template.name,
-                last_change_by: user.id)
+        insert(
+          :ingest,
+          type: template.name,
+          last_change_by: user.id
+        )
+
       ingest_version =
         insert(
           :ingest_version,
           ingest: ingest,
           last_change_by: user.id,
-          status: Ingest.status.published
+          status: Ingest.status().published
         )
 
-      updated_content = template
-      |> Map.get(:content)
-      |> Enum.reduce([], fn(field, acc) ->
-            [Map.put(field, "required", true)|acc]
-         end)
+      updated_content =
+        template
+        |> Map.get(:content)
+        |> Enum.reduce([], fn field, acc ->
+          [Map.put(field, "required", true) | acc]
+        end)
 
       update_attrs = Map.put(template, :content, updated_content)
       @df_cache.put_template(update_attrs)
@@ -232,12 +237,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           )
         )
 
-        assert json_response(conn, 201)["data"]
+      assert json_response(conn, 201)["data"]
     end
   end
 
   describe "update ingest_version" do
-
     @tag :admin_authenticated
     test "renders ingest_version when data is valid", %{
       conn: conn,
@@ -273,8 +277,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       update_attrs
       |> Enum.each(
-        &assert updated_ingest_version |> Map.get(Atom.to_string(elem(&1, 0))) ==
-                  elem(&1, 1)
+        &assert updated_ingest_version |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
       )
     end
   end
@@ -305,6 +308,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     @df_cache.put_template(attrs)
     :ok
   end
+
   def create_template(template) do
     @df_cache.put_template(template)
     template

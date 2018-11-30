@@ -17,8 +17,8 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
-  alias TdIeWeb.IngestSupport
   alias TdIeWeb.ErrorView
+  alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
 
   @df_cache Application.get_env(:td_ie, :df_cache)
@@ -109,8 +109,7 @@ defmodule TdIeWeb.IngestVersionController do
   def csv(conn, params) do
     user = conn.assigns[:current_user]
 
-    %{results: ingest_versions} =
-      Search.search_ingest_versions(params, user, 0, 10_000)
+    %{results: ingest_versions} = Search.search_ingest_versions(params, user, 0, 10_000)
 
     conn
     |> put_resp_content_type("text/csv", "utf-8")
@@ -146,8 +145,9 @@ defmodule TdIeWeb.IngestVersionController do
     ingest_name = Map.get(ingest_params, "name")
 
     domain_id = Map.get(ingest_params, "domain_id")
+
     resource_domain =
-      Map.new
+      Map.new()
       |> Map.put(:resource_id, domain_id)
       |> Map.put(:resource_type, "domain")
 
@@ -175,11 +175,9 @@ defmodule TdIeWeb.IngestVersionController do
     related_to = Map.get(creation_attrs, "related_to")
 
     with true <- can?(user, create_ingest(resource_domain)),
-         {:name_available} <-
-           Ingests.check_ingest_name_availability(ingest_type, ingest_name),
+         {:name_available} <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
          {:valid_related_to} <- check_valid_related_to(ingest_type, related_to),
-         {:ok, %IngestVersion{} = version} <-
-           Ingests.create_ingest(creation_attrs) do
+         {:ok, %IngestVersion{} = version} <- Ingests.create_ingest(creation_attrs) do
       ingest_id = version.ingest.id
 
       audit = %{
@@ -248,8 +246,7 @@ defmodule TdIeWeb.IngestVersionController do
   def versions(conn, %{"ingest_version_id" => ingest_version_id}) do
     user = conn.assigns[:current_user]
 
-    ingest_version =
-      Ingests.get_ingest_version!(ingest_version_id)
+    ingest_version = Ingests.get_ingest_version!(ingest_version_id)
 
     case Search.list_ingest_versions(ingest_version.ingest_id, user) do
       %{results: ingest_versions} ->
@@ -288,7 +285,7 @@ defmodule TdIeWeb.IngestVersionController do
 
       ingest_version =
         ingest_version
-        |> Repo.preload([ingest: [:children, :parent]])
+        |> Repo.preload(ingest: [:children, :parent])
         |> Ingests.retrieve_parent(:domain)
 
       render(
@@ -329,8 +326,7 @@ defmodule TdIeWeb.IngestVersionController do
     ingest_id = ingest_version.ingest.id
 
     with true <- can?(user, delete(ingest_version)),
-         {:ok, %IngestVersion{}} <-
-           Ingests.delete_ingest_version(ingest_version) do
+         {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version) do
       audit_payload =
         ingest_version
         |> Map.take([:version])
@@ -594,8 +590,7 @@ defmodule TdIeWeb.IngestVersionController do
     attrs = %{reject_reason: reason}
 
     with true <- can?(user, reject(ingest_version)),
-         {:ok, %IngestVersion{} = version} <-
-           Ingests.reject_ingest_version(ingest_version, attrs) do
+         {:ok, %IngestVersion{} = version} <- Ingests.reject_ingest_version(ingest_version, attrs) do
       ingest_id = version.ingest.id
 
       audit = %{
@@ -648,7 +643,6 @@ defmodule TdIeWeb.IngestVersionController do
              ingest_version,
              attrs
            ) do
-
       audit = %{
         "audit" => %{
           "resource_id" => ingest_id,
@@ -685,7 +679,6 @@ defmodule TdIeWeb.IngestVersionController do
     with true <- can?(user, version(ingest_version)),
          {:ok, %{current: %IngestVersion{} = new_version}} <-
            Ingests.new_ingest_version(user, ingest_version) do
-
       audit_payload =
         new_version
         |> Map.take([:version])
@@ -774,14 +767,12 @@ defmodule TdIeWeb.IngestVersionController do
              ingest_name,
              ingest_version.ingest.id
            ),
-         {:valid_related_to} <-
-           Ingests.check_valid_related_to(template.name, related_to),
+         {:valid_related_to} <- Ingests.check_valid_related_to(template.name, related_to),
          {:ok, %IngestVersion{} = ingest_version} <-
            Ingests.update_ingest_version(
              ingest_version,
              update_params
            ) do
-
       audit_payload = get_changed_params(ingest_version, ingest_version)
 
       audit = %{
@@ -833,7 +824,6 @@ defmodule TdIeWeb.IngestVersionController do
          %IngestVersion{} = old,
          %IngestVersion{} = new
        ) do
-
     fields_to_compare = [:name, :description]
 
     diffs =

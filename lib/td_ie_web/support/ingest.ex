@@ -18,7 +18,6 @@ defmodule TdIeWeb.IngestSupport do
         |> put_status(:unprocessable_entity)
         |> json(%{errors: [@errors.existing_ingest]})
       {:not_valid_related_to} ->
-        # TODO: change this error to standard format
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: %{related_to: ["invalid"]}})

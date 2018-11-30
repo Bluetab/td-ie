@@ -66,7 +66,7 @@ defmodule TdIe.Permissions.MockPermissionResolver do
 
   def has_permission?(session_id, permission, "domain", domain_id) do
     domain_id
-    |> TaxonomyCache.get_parent_ids
+    |> TaxonomyCache.get_parent_ids()
     |> Enum.any?(&has_resource_permission?(session_id, permission, "domain", &1))
   end
 

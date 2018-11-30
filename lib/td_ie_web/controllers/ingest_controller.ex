@@ -242,8 +242,7 @@ defmodule TdIeWeb.IngestController do
     attrs = %{reject_reason: Map.get(ingest_params, "reject_reason")}
 
     with true <- can?(user, reject(ingest_version)),
-         {:ok, %IngestVersion{} = ingest} <-
-           Ingests.reject_ingest_version(ingest_version, attrs) do
+         {:ok, %IngestVersion{} = ingest} <- Ingests.reject_ingest_version(ingest_version, attrs) do
       @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
