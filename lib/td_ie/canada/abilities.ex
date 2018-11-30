@@ -1,22 +1,18 @@
 defmodule TdIe.Canada.Abilities do
   @moduledoc false
   alias TdIe.Accounts.User
-  alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Canada.IngestAbilities
 
   defimpl Canada.Can, for: User do
-    # administrator is superpowerful for Domain
-    def can?(%User{is_admin: true}, _action, Ingest) do
-      true
-    end
-
-    def can?(%User{is_admin: true}, _action, %Ingest{}) do
+    # administrator is superpowerful
+    def can?(%User{is_admin: true}, _action, _entity) do
       true
     end
 
     def can?(%User{} = user, :create_ingest,
       %{resource_type: "domain"} = domain) do
+        IO.puts "Pasa"
       IngestAbilities.can?(user, :create_ingest, domain)
     end
 
@@ -74,10 +70,6 @@ defmodule TdIe.Canada.Abilities do
           %IngestVersion{} = ingest_version
         ) do
       IngestAbilities.can?(user, :view_ingest, ingest_version)
-    end
-
-    def can?(%User{is_admin: true}, _action, %{}) do
-      true
     end
 
     def can?(%User{}, _action, _domain), do: false
