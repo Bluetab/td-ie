@@ -6,7 +6,7 @@ defmodule TdIe.Mixfile do
   def project do
     [
       app: :td_ie,
-      version: "0.0.1",
+      version: case System.get_env("APP_VERSION") do nil -> "2.8.5-local"; v -> v end,
       elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
