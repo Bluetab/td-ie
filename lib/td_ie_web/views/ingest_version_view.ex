@@ -102,7 +102,6 @@ defmodule TdIeWeb.IngestVersionView do
     |> Map.put("type", type)
   end
 
-  # TODO: update swagger with embedded
   def render(
         "ingest_version.json",
         %{
@@ -138,6 +137,35 @@ defmodule TdIeWeb.IngestVersionView do
     |> add_template(assigns)
     |> add_parent(ingest_version.ingest)
     |> add_children(ingest_version.ingest)
+  end
+
+  def render("versions.json", %{
+    ingest_versions: ingest_versions,
+    hypermedia: hypermedia
+  }) do
+    render_many_hypermedia(
+      ingest_versions,
+      hypermedia,
+      IngestVersionView,
+      "version.json"
+    )
+  end
+
+  def render("version.json", %{ingest_version: ingest_version}) do
+  %{
+    id: ingest_version["id"],
+    ingest_id: ingest_version["ingest_id"],
+    type: ingest_version["template"]["name"],
+    content: ingest_version["content"],
+    name: ingest_version["name"],
+    description: ingest_version["description"],
+    last_change_by: Map.get(ingest_version["last_change_by"], "full_name", ""),
+    last_change_at: ingest_version["last_change_at"],
+    domain: ingest_version["domain"],
+    status: ingest_version["status"],
+    current: ingest_version["current"],
+    version: ingest_version["version"]
+  }
   end
 
   defp add_reject_reason(ingest, reject_reason, :rejected) do
