@@ -14,25 +14,40 @@ defmodule TdIeWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+  alias Ecto.Adapters.SQL.Sandbox
+  alias Phoenix.ConnTest
+  import TdIeWeb.Authentication, only: :functions
 
   using do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
       import TdIeWeb.Router.Helpers
+      import TdIe.Factory
 
       # The default endpoint for testing
       @endpoint TdIeWeb.Endpoint
     end
   end
 
+  @admin_user_name "app-admin"
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(TdIe.Repo)
+    :ok = Sandbox.checkout(TdIe.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(TdIe.Repo, {:shared, self()})
+      Sandbox.mode(TdIe.Repo, {:shared, self()})
     end
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+
+    cond do
+      tags[:admin_authenticated] ->
+        user = create_user(@admin_user_name, is_admin: true)
+        create_user_auth_conn(user)
+      tags[:authenticated_user] ->
+        user = create_user(tags[:authenticated_user])
+        create_user_auth_conn(user)
+       true ->
+         {:ok, conn: ConnTest.build_conn()}
+    end
   end
 
 end
