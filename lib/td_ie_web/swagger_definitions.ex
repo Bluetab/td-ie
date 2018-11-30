@@ -108,6 +108,7 @@ defmodule TdIeWeb.SwaggerDefinitions do
         swagger_schema do
           title("Domain Reference")
           description("A Domain's id and name")
+          nullable(true)
 
           properties do
             id(:integer, "Domain Identifier", required: true)
@@ -217,7 +218,7 @@ defmodule TdIeWeb.SwaggerDefinitions do
                   content(:object, "Ingest content", required: true)
                   name(:string, "Ingest name", required: true)
                   description(:object, "Ingest description", required: true)
-                  domain_id(:integer, "Ingest Domain ID", required: true)
+                  domain_id(:integer, "Ingest Domain ID", required: false)
                   parent_id(:integer, "Parent Ingest ID", required: false)
                 end
               end
@@ -262,67 +263,6 @@ defmodule TdIeWeb.SwaggerDefinitions do
         swagger_schema do
           properties do
             data(Schema.ref(:IngestFields))
-          end
-        end,
-      DataStructure:
-        swagger_schema do
-          title("Data Structure")
-          description("A Data Structure")
-
-          properties do
-            id(:integer, "Data Structure id", required: true)
-            ou(:string, "Data Structure orgainzation", required: true)
-            system(:string, "Data Structure system", required: true)
-            group(:string, "Data Structure group", required: true)
-            name(:string, "Data Structure name", required: true)
-          end
-        end,
-      DataStructures:
-        swagger_schema do
-          title("Data Structures")
-          description("A collection of data structures")
-          type(:array)
-          items(Schema.ref(:DataStructure))
-        end,
-      DataStructureResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:DataStructure))
-          end
-        end,
-      DataStructuresResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:DataStructures))
-          end
-        end,
-      DataField:
-        swagger_schema do
-          title("Data Field")
-          description("A Data Field")
-
-          properties do
-            id(:integer, "Data Field id", required: true)
-            name(:string, "Data Field name", required: true)
-          end
-        end,
-      DataFields:
-        swagger_schema do
-          title("Data Fields")
-          description("A collection of data fields")
-          type(:array)
-          items(Schema.ref(:DataField))
-        end,
-      DataFieldResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:DataField))
-          end
-        end,
-      DataFieldsResponse:
-        swagger_schema do
-          properties do
-            data(Schema.ref(:DataFields))
           end
         end
     }
