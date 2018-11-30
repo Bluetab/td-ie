@@ -62,6 +62,7 @@ config :td_perms, permissions: [
 
 config :td_ie, permission_resolver: TdPerms.Permissions
 config :td_ie, df_cache: TdPerms.DynamicFormCache
+config :td_ie, ingests_on_startup: true
 
 config :td_ie, :audit_service,
   protocol: "http",

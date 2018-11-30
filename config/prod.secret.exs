@@ -14,9 +14,10 @@ config :td_ie, TdIeWeb.Endpoint,
 # Configure your database
 config :td_ie, TdIe.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "td_ie_prod",
+  username: "${DB_USER}",
+  password: "${DB_PASSWORD}",
+  database: "${DB_NAME}",
+  hostname: "${DB_HOST}"
   pool_size: 10
 
 config :td_ie, TdIe.Auth.Guardian,
