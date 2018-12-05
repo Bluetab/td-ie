@@ -35,12 +35,12 @@ defmodule TdIe.Ingests.Ingest do
 
   def permissions_to_status do
     status = Ingest.status
-    %{view_approval_pending_business_concepts: status.pending_approval,
-      view_deprecated_business_concepts: status.deprecated,
-      view_draft_business_concepts: status.draft,
-      view_published_business_concepts: status.published,
-      view_rejected_business_concepts: status.rejected,
-      view_versioned_business_concepts: status.versioned
+    %{view_approval_pending_ingests: status.pending_approval,
+      view_deprecated_ingests: status.deprecated,
+      view_draft_ingests: status.draft,
+      view_published_ingests: status.published,
+      view_rejected_ingests: status.rejected,
+      view_versioned_ingests: status.versioned
     }
   end
 
@@ -49,8 +49,8 @@ defmodule TdIe.Ingests.Ingest do
   end
 
   @doc false
-  def changeset(%Ingest{} = business_concept, attrs) do
-    business_concept
+  def changeset(%Ingest{} = ingest, attrs) do
+    ingest
     |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at, :parent_id])
     |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
