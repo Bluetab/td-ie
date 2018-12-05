@@ -17,7 +17,7 @@ config :td_ie, TdIe.Repo,
   username: "${DB_USER}",
   password: "${DB_PASSWORD}",
   database: "${DB_NAME}",
-  hostname: "${DB_HOST}"
+  hostname: "${DB_HOST}",
   pool_size: 10
 
 config :td_ie, TdIe.Auth.Guardian,
