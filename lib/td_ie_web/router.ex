@@ -65,7 +65,6 @@ defmodule TdIeWeb.Router do
         title: "TdIe"
       },
       host: @endpoint_url,
-      basePath: "/api",
       securityDefinitions:
         %{
           bearer:
