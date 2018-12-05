@@ -65,17 +65,17 @@ config :td_perms, permissions: [
   :publish_ingest,
   :reject_ingest,
   :deprecate_ingest,
-  :view_draft_ingest,
-  :view_approval_pending_ingest,
-  :view_published_ingest,
-  :view_versioned_ingest,
-  :view_rejected_ingest,
+  :view_draft_ingests,
+  :view_approval_pending_ingests,
+  :view_published_ingests,
+  :view_versioned_ingests,
+  :view_rejected_ingests,
   :view_deprecated_ingests
 ]
 
 config :td_ie, permission_resolver: TdPerms.Permissions
 config :td_ie, df_cache: TdPerms.DynamicFormCache
-config :td_ie, ingests_on_startup: true
+config :td_ie, cache_ingests_on_startup: true
 
 config :td_ie, :audit_service,
   protocol: "http",

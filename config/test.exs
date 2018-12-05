@@ -33,3 +33,4 @@ config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.MockTdAuditServi
   audit_domain: ""
 
 config :td_perms, redis_host: "localhost"
+config :td_ie, cache_ingests_on_startup: false
