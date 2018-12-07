@@ -10,21 +10,23 @@ defmodule TdIe.Ingest.Search do
 
   @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
 
-  def get_filter_values(%User{is_admin: true}) do
-    query = %{} |> create_query
+  def get_filter_values(%User{is_admin: true}, params) do
+    filter_clause = params |> create_filters()
+    query = %{} |> create_query(filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     @search_service.get_filters(search)
   end
 
-  def get_filter_values(%User{} = user) do
+  def get_filter_values(%User{} = user, params) do
     permissions = user |> Permissions.get_domain_permissions()
-    get_filter_values(permissions)
+    get_filter_values(permissions, params)
   end
 
-  def get_filter_values([]), do: %{}
+  def get_filter_values([], _), do: %{}
 
-  def get_filter_values(permissions) do
-    filter = permissions |> create_filter_clause
+  def get_filter_values(permissions, params) do
+    filter_clause = create_filters(params)
+    filter = permissions |> create_filter_clause(filter_clause)
     query = %{} |> create_query(filter)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     @search_service.get_filters(search)
@@ -145,7 +147,7 @@ defmodule TdIe.Ingest.Search do
     %{bool: %{must: query}}
   end
 
-  defp create_filter_clause(permissions, user_defined_filters \\ []) do
+  defp create_filter_clause(permissions, user_defined_filters) do
     should_clause =
       permissions
       |> Enum.map(&entry_to_filter_clause(&1, user_defined_filters))

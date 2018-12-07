@@ -45,6 +45,7 @@ defmodule TdIeWeb.Router do
     post "/ingest_versions/search", IngestVersionController, :search
 
     get "/ingest_filters", IngestFilterController, :index
+    post "/ingest_filters/search", IngestFilterController, :search
 
     resources "/ingests/comments", CommentController, except: [:new, :edit]
     get "/ingests/index/:status", IngestController, :index_status
