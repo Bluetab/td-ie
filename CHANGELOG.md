@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.11.0] 2019-01-15
+
+### Added
+
+- Added support for Ingest Executions   
+
 ## [0.0.3] 2018-12-07
 
 ### Added

@@ -770,4 +770,102 @@ defmodule TdIe.Ingests do
     actual_count = count_published_ingests(type, ids)
     if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
+
+  alias TdIe.Ingests.IngestExecution
+
+  @doc """
+  Returns the list of ingest_executions.
+
+  ## Examples
+
+      iex> list_ingest_executions()
+      [%IngestExecution{}, ...]
+
+  """
+  def list_ingest_executions(ingest_id) do
+    IngestExecution
+    |> where([v], v.ingest_id == ^ingest_id)
+    |> Repo.all
+  end
+
+  @doc """
+  Gets a single ingest_execution.
+
+  Raises `Ecto.NoResultsError` if the Ingest execution does not exist.
+
+  ## Examples
+
+      iex> get_ingest_execution!(123)
+      %IngestExecution{}
+
+      iex> get_ingest_execution!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_ingest_execution!(id), do: Repo.get!(IngestExecution, id)
+
+  @doc """
+  Creates a ingest_execution.
+
+  ## Examples
+
+      iex> create_ingest_execution(%{field: value})
+      {:ok, %IngestExecution{}}
+
+      iex> create_ingest_execution(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_ingest_execution(attrs \\ %{}) do
+    %IngestExecution{}
+    |> IngestExecution.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a ingest_execution.
+
+  ## Examples
+
+      iex> update_ingest_execution(ingest_execution, %{field: new_value})
+      {:ok, %IngestExecution{}}
+
+      iex> update_ingest_execution(ingest_execution, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_ingest_execution(%IngestExecution{} = ingest_execution, attrs) do
+    ingest_execution
+    |> IngestExecution.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a IngestExecution.
+
+  ## Examples
+
+      iex> delete_ingest_execution(ingest_execution)
+      {:ok, %IngestExecution{}}
+
+      iex> delete_ingest_execution(ingest_execution)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_ingest_execution(%IngestExecution{} = ingest_execution) do
+    Repo.delete(ingest_execution)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking ingest_execution changes.
+
+  ## Examples
+
+      iex> change_ingest_execution(ingest_execution)
+      %Ecto.Changeset{source: %IngestExecution{}}
+
+  """
+  def change_ingest_execution(%IngestExecution{} = ingest_execution) do
+    IngestExecution.changeset(ingest_execution, %{})
+  end
 end

@@ -857,4 +857,70 @@ defmodule TdIe.IngestsTests do
     changeset
   end
 
+  describe "ingest_executions" do
+    alias TdIe.Ingests.IngestExecution
+
+    @valid_attrs %{end_timestamp: ~N[2010-04-17 14:00:00.000000],
+      start_timestamp: ~N[2010-04-17 14:00:00.000000], status: "some status"}
+    @update_attrs %{end_timestamp: ~N[2011-05-18 15:01:01.000000],
+      start_timestamp: ~N[2011-05-18 15:01:01.000000], status: "some updated status"}
+    @invalid_attrs %{end_timestamp: nil, start_timestamp: nil, status: nil}
+
+    def ingest_execution_fixture(attrs \\ %{}) do
+      {:ok, ingest_execution} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Ingests.create_ingest_execution()
+
+      ingest_execution
+    end
+
+    test "list_ingest_executions/0 returns all ingest_executions" do
+      %{id: ingest_id} = insert(:ingest)
+      ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
+      assert Ingests.list_ingest_executions(ingest_id) == [ingest_execution]
+    end
+
+    test "get_ingest_execution!/1 returns the ingest_execution with given id" do
+      ingest_execution = ingest_execution_fixture()
+      assert Ingests.get_ingest_execution!(ingest_execution.id) == ingest_execution
+    end
+
+    test "create_ingest_execution/1 with valid data creates a ingest_execution" do
+      assert {:ok, %IngestExecution{} = ingest_execution} = Ingests.create_ingest_execution(@valid_attrs)
+      assert ingest_execution.end_timestamp == ~N[2010-04-17 14:00:00.000000]
+      assert ingest_execution.start_timestamp == ~N[2010-04-17 14:00:00.000000]
+      assert ingest_execution.status == "some status"
+    end
+
+    test "create_ingest_execution/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Ingests.create_ingest_execution(@invalid_attrs)
+    end
+
+    test "update_ingest_execution/2 with valid data updates the ingest_execution" do
+      ingest_execution = ingest_execution_fixture()
+      assert {:ok, ingest_execution} = Ingests.update_ingest_execution(ingest_execution, @update_attrs)
+      assert %IngestExecution{} = ingest_execution
+      assert ingest_execution.end_timestamp == ~N[2011-05-18 15:01:01.000000]
+      assert ingest_execution.start_timestamp == ~N[2011-05-18 15:01:01.000000]
+      assert ingest_execution.status == "some updated status"
+    end
+
+    test "update_ingest_execution/2 with invalid data returns error changeset" do
+      ingest_execution = ingest_execution_fixture()
+      assert {:error, %Ecto.Changeset{}} = Ingests.update_ingest_execution(ingest_execution, @invalid_attrs)
+      assert ingest_execution == Ingests.get_ingest_execution!(ingest_execution.id)
+    end
+
+    test "delete_ingest_execution/1 deletes the ingest_execution" do
+      ingest_execution = ingest_execution_fixture()
+      assert {:ok, %IngestExecution{}} = Ingests.delete_ingest_execution(ingest_execution)
+      assert_raise Ecto.NoResultsError, fn -> Ingests.get_ingest_execution!(ingest_execution.id) end
+    end
+
+    test "change_ingest_execution/1 returns a ingest_execution changeset" do
+      ingest_execution = ingest_execution_fixture()
+      assert %Ecto.Changeset{} = Ingests.change_ingest_execution(ingest_execution)
+    end
+  end
 end

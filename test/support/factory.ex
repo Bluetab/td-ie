@@ -2,6 +2,7 @@ defmodule TdIe.Factory do
   @moduledoc false
   use ExMachina.Ecto, repo: TdIe.Repo
   alias TdIe.Ingests.Ingest
+  alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
 
   def user_factory do
@@ -35,6 +36,15 @@ defmodule TdIe.Factory do
       status: Ingest.status.draft,
       version: 1,
       in_progress: false
+    }
+  end
+
+  def ingest_execution_factory do
+    %IngestExecution {
+      ingest_id: insert(:ingest).id,
+      start_timestamp: ~N[2010-04-17 14:00:00.000000],
+      end_timestamp: ~N[2010-04-17 14:00:00.000000],
+      status: "status",
     }
   end
 end

@@ -53,6 +53,7 @@ defmodule TdIeWeb.Router do
     get "/ingests/domains/:domain_id", IngestController, :index_children_ingest
     resources "/ingests", IngestController, except: [:index, :new, :edit, :delete] do
       patch "/status", IngestController, :update_status
+      resources "/ingest_executions", IngestExecutionController, except: [:new, :edit]
     end
 
     get "/ingests/search/reindex_all", SearchController, :reindex_all

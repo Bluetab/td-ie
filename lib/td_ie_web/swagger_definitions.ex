@@ -123,6 +123,64 @@ defmodule TdIeWeb.SwaggerDefinitions do
     }
   end
 
+   def ingest_execution_definitions do
+    %{
+      IngestExecution:
+        swagger_schema do
+          title("IngestExecution")
+          description("IngestExecution")
+
+          properties do
+            id(:integer, "unique identifier", required: true)
+
+            ingest_id(
+              :integer,
+              "Associated ingest id",
+              required: true
+            )
+
+            status(:string, "Ingest execution status", required: true)
+            start_timestamp(:string, "Ingest execution start timestamp", required: true)
+            end_timestamp(:string, "Ingest execution end timestamp", required: true)
+
+          end
+        end,
+      IngestExecutionUpdate:
+        swagger_schema do
+          properties do
+            ingest_execution(
+              Schema.new do
+                properties do
+                  status(:string, "Ingest execution status", required: true)
+                  start_timestamp(:string, "Ingest execution start timestamp", required: true)
+                  end_timestamp(:string, "Ingest execution end timestamp", required: true)
+                end
+              end
+            )
+          end
+        end,
+      IngestExecutions:
+        swagger_schema do
+          title("Ingest executions")
+          description("A collection of Ingest executions")
+          type(:array)
+          items(Schema.ref(:IngestExecution))
+        end,
+      IngestExecutionResponse:
+        swagger_schema do
+          properties do
+            data(Schema.ref(:IngestExecution))
+          end
+        end,
+      IngestExecutionsResponse:
+        swagger_schema do
+          properties do
+            data(Schema.ref(:IngestExecutions))
+          end
+        end
+    }
+  end
+
   def ingest_version_definitions do
     %{
       IngestVersion:
