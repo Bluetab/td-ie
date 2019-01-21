@@ -177,7 +177,20 @@ defmodule TdIeWeb.SwaggerDefinitions do
           properties do
             data(Schema.ref(:IngestExecutions))
           end
-        end
+        end,
+      IngestExecutionByName:
+        swagger_schema do
+          properties do
+            ingest_name(:string, "Ingest name")
+            ingest_execution(Schema.ref(:IngestExecutionUpdate), "Ingest Execution")
+          end
+        end,
+      IngestExecutionByNameResponse:
+        swagger_schema do
+          properties do
+            data(Schema.ref(:IngestExecutionByName))
+          end
+        end,
     }
   end
 

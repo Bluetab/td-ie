@@ -13,6 +13,10 @@ defmodule TdIeWeb.IngestSupport do
         conn
         |> put_status(:forbidden)
         |> render(ErrorView, "403.json")
+      {:ingest_not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Ingest name not found"})
       {:name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)

@@ -63,6 +63,45 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
     end
   end
 
+  describe "create ingest_execution_by_name" do
+    @tag :admin_authenticated
+    test "renders ingest_execution_by_name when data is valid", %{conn: conn, swagger_schema: schema} do
+      insert(:ingest)
+      insert(:ingest_version, name: "nombre sobrescrito")
+      conn = post conn, ingest_execution_path(conn, :add_execution_by_name),
+        ingest_name: "nombre sobrescrito", ingest_execution: @create_attrs
+      validate_resp_schema(conn, schema, "IngestExecutionByNameResponse")
+      assert json_response(conn, 201)["data"]
+    end
+
+    @tag :admin_authenticated
+    test "renders errors when data is invalid", %{conn: conn} do
+      insert(:ingest)
+      insert(:ingest_version, name: "nombre sobrescrito")
+      conn = post conn, ingest_execution_path(conn, :add_execution_by_name),
+        ingest_name: "nombre sobrescrito", ingest_execution: @invalid_attrs
+      assert json_response(conn, 422)["errors"] != %{}
+    end
+
+    @tag :admin_authenticated
+    test "renders errors when data is valid, but name invalid", %{conn: conn} do
+      insert(:ingest)
+      insert(:ingest_version, name: "nombre sobrescrito")
+      conn = post conn, ingest_execution_path(conn, :add_execution_by_name),
+        ingest_name: "name", ingest_execution: @create_attrs
+      assert json_response(conn, 404)["errors"] != %{}
+    end
+
+    @tag :admin_authenticated
+    test "renders errors when everything is invalid", %{conn: conn} do
+      insert(:ingest)
+      insert(:ingest_version, name: "nombre sobrescrito")
+      conn = post conn, ingest_execution_path(conn, :add_execution_by_name),
+        ingest_name: "name", ingest_execution: @invalid_attrs
+      assert json_response(conn, 404)["errors"] != %{}
+    end
+  end
+
   describe "update ingest_execution" do
 
     @tag :admin_authenticated

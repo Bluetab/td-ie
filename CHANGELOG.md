@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.0] 2019-01-15
+
+### Added
+
+- [TD-1371] Added end-point to add executions by name
+
 ## [2.11.0] 2019-01-15
 
 ### Added

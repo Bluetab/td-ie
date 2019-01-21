@@ -122,4 +122,47 @@ defmodule TdIeWeb.IngestExecutionController do
       send_resp(conn, :no_content, "")
     end
   end
+
+  swagger_path :add_execution_by_name do
+    description("Creates a Ingest Execution By Name")
+    produces("application/json")
+
+    parameters do
+      ingest_by_name(:body, Schema.ref(:IngestExecutionByName), "Ingest Execution By Name", required: true)
+    end
+
+    response(201, "Created", Schema.ref(:IngestExecutionResponse))
+    response(401, "User is not authorized to perform this action")
+    response(400, "Client Error")
+  end
+
+  def add_execution_by_name(conn, %{"ingest_name" => ingest_name, "ingest_execution" => ingest_execution_params} = params) do
+    user = conn.assigns[:current_user]
+
+    with [%{ingest_id: ingest_id}] <- Ingests.get_ingest_by_name(ingest_name) do
+
+      ingest = Ingests.get_ingest!(ingest_id)
+      params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
+
+      with %Ingest{domain_id: domain_id} <- ingest,
+        true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
+        {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
+        |> render("show.json", ingest_execution: ingest_execution)
+
+      else
+        error ->
+          IngestSupport.handle_ingest_errors(conn, error)
+      end
+    else
+      [] ->
+        IngestSupport.handle_ingest_errors(conn, {:ingest_not_found})
+      error ->
+        IngestSupport.handle_ingest_errors(conn, error)
+    end
+
+  end
+
 end
