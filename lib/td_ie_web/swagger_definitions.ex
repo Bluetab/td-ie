@@ -182,7 +182,15 @@ defmodule TdIeWeb.SwaggerDefinitions do
         swagger_schema do
           properties do
             ingest_name(:string, "Ingest name")
-            ingest_execution(Schema.ref(:IngestExecutionUpdate), "Ingest Execution")
+            ingest_execution(
+              Schema.new do
+                properties do
+                  status(:string, "Ingest execution status", required: true)
+                  start_timestamp(:string, "Ingest execution start timestamp", required: true)
+                  end_timestamp(:string, "Ingest execution end timestamp", required: true)
+                end
+              end
+            )
           end
         end,
       IngestExecutionByNameResponse:
