@@ -139,7 +139,7 @@ defmodule TdIeWeb.IngestExecutionController do
   def add_execution_by_name(conn, %{"ingest_name" => ingest_name, "ingest_execution" => ingest_execution_params} = params) do
     user = conn.assigns[:current_user]
 
-    with [%{ingest_id: ingest_id}] <- Ingests.get_ingest_by_name(ingest_name) do
+    with [%{id: ingest_id}] <- Ingests.get_ingest_by_name(ingest_name) do
 
       ingest = Ingests.get_ingest!(ingest_id)
       params = Map.put(ingest_execution_params, "ingest_id", ingest_id)

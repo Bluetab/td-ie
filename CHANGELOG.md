@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.2] 2019-01-29
+
+### Fix
+
+- [TD-1371] Fix end-point to add executions by name when there are many versions
+
 ## [2.12.1] 2019-01-28
 
 ### Fix

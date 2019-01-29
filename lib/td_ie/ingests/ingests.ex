@@ -746,11 +746,11 @@ defmodule TdIe.Ingests do
 
   def get_ingest_by_name(name) do
     # Repo.all from r in IngestVersion, where:
-    IngestVersion
-    |> join(:left, [v], _ in assoc(v, :ingest))
-    |> where([v], ilike(v.name, ^"%#{name}%"))
-    |> preload([_, i], ingest: i)
-    |> order_by(asc: :version)
+
+    Ingest
+    |> join(:left, [v], _ in assoc(v, :versions))
+    |> where([i, v], i.id == v.ingest_id and ilike(v.name, ^"%#{name}%"))
+    |> limit(1)
     |> Repo.all()
   end
 
