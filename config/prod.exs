@@ -19,7 +19,9 @@ config :td_ie, TdIeWeb.Endpoint,
   server: true
 
 # Do not print debug messages in production
-config :logger, level: :info
+config :logger, :console,
+  format: (System.get_env("EX_LOGGER_FORMAT") || "[$level] $message") || "\n",
+  level: :info
 
 # ## SSL Support
 #
