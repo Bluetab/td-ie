@@ -136,7 +136,10 @@ defmodule TdIeWeb.IngestExecutionController do
     response(400, "Client Error")
   end
 
-  def add_execution_by_name(conn, %{"ingest_name" => ingest_name, "ingest_execution" => ingest_execution_params} = params) do
+  def add_execution_by_name(conn, %{
+    "ingest_name" => ingest_name,
+    "ingest_execution" => ingest_execution_params
+  }) do
     user = conn.assigns[:current_user]
 
     with [%{id: ingest_id}] <- Ingests.get_ingest_by_name(ingest_name) do

@@ -10,10 +10,20 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuthService
 
-  @create_attrs %{end_timestamp: ~N[2010-04-17 14:00:00.000000], start_timestamp: ~N[2010-04-17 14:00:00.000000],
-    status: "some status"}
-  @update_attrs %{end_timestamp: ~N[2011-05-18 15:01:01.000000], start_timestamp: ~N[2011-05-18 15:01:01.000000],
-    status: "some updated status"}
+  @create_attrs %{
+    end_timestamp: ~N[2010-04-17 14:00:00.000000],
+    start_timestamp: ~N[2010-04-17 14:00:00.000000],
+    status: "some status",
+    file_name: "some file_name",
+    file_size: 42
+  }
+  @update_attrs %{
+    end_timestamp: ~N[2011-05-18 15:01:01.000000],
+    start_timestamp: ~N[2011-05-18 15:01:01.000000],
+    status: "some updated status",
+    file_name: "some updated file_name",
+    file_size: 53
+  }
   @invalid_attrs %{end_timestamp: nil, start_timestamp: nil, status: nil, ingest_id: nil}
 
   setup_all do
@@ -52,7 +62,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
         "end_timestamp" => "2010-04-17T14:00:00.000000",
         "start_timestamp" => "2010-04-17T14:00:00.000000",
         "status" => "some status",
-        "ingest_id" => ingest_id}
+        "ingest_id" => ingest_id,
+        "file_name" => "some file_name",
+        "file_size" => 42
+      }
     end
 
     @tag :admin_authenticated
@@ -122,7 +135,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
         "end_timestamp" => "2011-05-18T15:01:01.000000",
         "start_timestamp" => "2011-05-18T15:01:01.000000",
         "status" => "some updated status",
-        "ingest_id" => ingest_id}
+        "ingest_id" => ingest_id,
+        "file_name" => "some updated file_name",
+        "file_size" => 53
+      }
     end
 
     @tag :admin_authenticated
