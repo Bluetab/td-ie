@@ -82,9 +82,12 @@ config :td_ie, :audit_service,
   audits_path: "/api/audits/"
 
 # Configures Elixir's Logger
+# set EX_LOGGER_FORMAT environment variable to override Elixir's Logger format
+# (without the 'end of line' character)
+# EX_LOGGER_FORMAT='$date $time [$level] $message'
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:user_id]
+  format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
+  metadata: [:request_id]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
