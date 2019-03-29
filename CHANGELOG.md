@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-1571] Elixir's Logger config will check for EX_LOGGER_FORMAT variable to override format
+- [TD-1573] On IngestExecutions adds file_name and file_size and makes end_timestamp not required
 
 ## [2.12.2] 2019-01-29
 

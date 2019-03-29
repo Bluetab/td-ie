@@ -7,6 +7,8 @@ defmodule TdIe.Ingests.IngestExecution do
     field :end_timestamp, :naive_datetime
     field :start_timestamp, :naive_datetime
     field :status, :string
+    field :file_name, :string
+    field :file_size, :integer
     field :ingest_id, :id
 
     timestamps()
@@ -15,7 +17,14 @@ defmodule TdIe.Ingests.IngestExecution do
   @doc false
   def changeset(ingest_execution, attrs) do
     ingest_execution
-    |> cast(attrs, [:start_timestamp, :end_timestamp, :status, :ingest_id])
-    |> validate_required([:start_timestamp, :end_timestamp, :status])
+    |> cast(attrs, [
+      :start_timestamp,
+      :end_timestamp,
+      :status,
+      :file_name,
+      :file_size,
+      :ingest_id
+    ])
+    |> validate_required([:start_timestamp, :status])
   end
 end
