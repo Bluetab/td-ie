@@ -21,12 +21,14 @@ config :td_ie, TdIe.Repo,
   pool_size: 10
 
 config :td_ie, TdIe.Auth.Guardian,
-  allowed_algos: ["HS512"], # optional
+  # optional
+  allowed_algos: ["HS512"],
   issuer: "tdauth",
-  ttl: { 1, :hours },
+  ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
-config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.HttpTdAuditService,
+config :td_ie, :audit_service,
+  api_service: TdIeWeb.ApiServices.HttpTdAuditService,
   audit_host: "${API_AUDIT_HOST}",
   audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""

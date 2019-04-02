@@ -47,8 +47,8 @@ config :td_ie, TdIe.Repo,
   hostname: "localhost",
   pool_size: 10
 
-
-config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.HttpTdAuditService,
+config :td_ie, :audit_service,
+  api_service: TdIeWeb.ApiServices.HttpTdAuditService,
   audit_host: "localhost",
   audit_port: "4007",
   audit_domain: ""

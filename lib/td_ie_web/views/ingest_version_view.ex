@@ -124,7 +124,7 @@ defmodule TdIeWeb.IngestVersionView do
       current: ingest_version.current,
       version: ingest_version.version,
       in_progress: ingest_version.in_progress,
-      last_change_user:  UserCache.get_user(ingest_version.last_change_by),
+      last_change_user: UserCache.get_user(ingest_version.last_change_by)
     }
     |> add_reject_reason(
       ingest_version.reject_reason,
@@ -140,9 +140,9 @@ defmodule TdIeWeb.IngestVersionView do
   end
 
   def render("versions.json", %{
-    ingest_versions: ingest_versions,
-    hypermedia: hypermedia
-  }) do
+        ingest_versions: ingest_versions,
+        hypermedia: hypermedia
+      }) do
     render_many_hypermedia(
       ingest_versions,
       hypermedia,
@@ -152,20 +152,20 @@ defmodule TdIeWeb.IngestVersionView do
   end
 
   def render("version.json", %{ingest_version: ingest_version}) do
-  %{
-    id: ingest_version["id"],
-    ingest_id: ingest_version["ingest_id"],
-    type: ingest_version["template"]["name"],
-    content: ingest_version["content"],
-    name: ingest_version["name"],
-    description: ingest_version["description"],
-    last_change_by: Map.get(ingest_version["last_change_by"], "full_name", ""),
-    last_change_at: ingest_version["last_change_at"],
-    domain: ingest_version["domain"],
-    status: ingest_version["status"],
-    current: ingest_version["current"],
-    version: ingest_version["version"]
-  }
+    %{
+      id: ingest_version["id"],
+      ingest_id: ingest_version["ingest_id"],
+      type: ingest_version["template"]["name"],
+      content: ingest_version["content"],
+      name: ingest_version["name"],
+      description: ingest_version["description"],
+      last_change_by: Map.get(ingest_version["last_change_by"], "full_name", ""),
+      last_change_at: ingest_version["last_change_at"],
+      domain: ingest_version["domain"],
+      status: ingest_version["status"],
+      current: ingest_version["current"],
+      version: ingest_version["version"]
+    }
   end
 
   defp add_reject_reason(ingest, reject_reason, :rejected) do
@@ -191,39 +191,46 @@ defmodule TdIeWeb.IngestVersionView do
     end
   end
 
-  def add_parent(ingest_version_map,  ingest) do
+  def add_parent(ingest_version_map, ingest) do
     case Ecto.assoc_loaded?(ingest.parent) do
       true ->
-        parent_map = case ingest.parent do
-          nil -> %{}
-          parent ->
-            %{
-              id: IngestCache.get_ingest_version_id(parent.id),
-              name: IngestCache.get_name(parent.id)
-            }
-        end
+        parent_map =
+          case ingest.parent do
+            nil ->
+              %{}
+
+            parent ->
+              %{
+                id: IngestCache.get_ingest_version_id(parent.id),
+                name: IngestCache.get_name(parent.id)
+              }
+          end
+
         Map.put(ingest_version_map, :parent, parent_map)
+
       false ->
         ingest_version_map
     end
   end
 
-  def add_children(ingest_version_map,  ingest) do
+  def add_children(ingest_version_map, ingest) do
     case Ecto.assoc_loaded?(ingest.children) do
       true ->
-        children_map = ingest.children
-        |> Enum.reduce([], fn(child, acc) ->
-            child_map =
-            %{
+        children_map =
+          ingest.children
+          |> Enum.reduce([], fn child, acc ->
+            child_map = %{
               id: IngestCache.get_ingest_version_id(child.id),
               name: IngestCache.get_name(child.id)
             }
-            [child_map|acc]
-           end)
+
+            [child_map | acc]
+          end)
+
         Map.put(ingest_version_map, :children, children_map)
+
       false ->
         ingest_version_map
     end
   end
-
 end

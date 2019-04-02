@@ -6,11 +6,11 @@ defmodule TdIe.Repo.Migrations.CreateComments do
 
   def change do
     create table(:comments) do
-      add :content, :text
-      add :resource_id, :integer
-      add :resource_type, :string
-      add :user, :map
-      add :created_at, :utc_datetime
+      add(:content, :text)
+      add(:resource_id, :integer)
+      add(:resource_type, :string)
+      add(:user, :map)
+      add(:created_at, :utc_datetime)
 
       timestamps(type: :utc_datetime)
     end

@@ -3,14 +3,14 @@ defmodule TdIe.Repo.Migrations.CreateIngestExecutions do
 
   def change do
     create table(:ingest_executions) do
-      add :start_timestamp, :naive_datetime
-      add :end_timestamp, :naive_datetime
-      add :status, :string
-      add :ingest_id, references(:ingests, on_delete: :nothing)
+      add(:start_timestamp, :naive_datetime)
+      add(:end_timestamp, :naive_datetime)
+      add(:status, :string)
+      add(:ingest_id, references(:ingests, on_delete: :nothing))
 
       timestamps()
     end
 
-    create index(:ingest_executions, [:ingest_id])
+    create(index(:ingest_executions, [:ingest_id]))
   end
 end

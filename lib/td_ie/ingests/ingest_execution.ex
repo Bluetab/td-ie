@@ -4,12 +4,12 @@ defmodule TdIe.Ingests.IngestExecution do
   import Ecto.Changeset
 
   schema "ingest_executions" do
-    field :end_timestamp, :naive_datetime
-    field :start_timestamp, :naive_datetime
-    field :status, :string
-    field :file_name, :string
-    field :file_size, :integer
-    field :ingest_id, :id
+    field(:end_timestamp, :naive_datetime)
+    field(:start_timestamp, :naive_datetime)
+    field(:status, :string)
+    field(:file_name, :string)
+    field(:file_size, :integer)
+    field(:ingest_id, :id)
 
     timestamps()
   end

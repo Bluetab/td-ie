@@ -6,7 +6,6 @@ defmodule TdIe.IngestRichTextTest do
   alias TdIe.Ingests.RichText
 
   describe "ingests_rich_text" do
-
     test "to_rich_text/1 nil input" do
       assert RichText.to_rich_text(nil) == %{}
     end
@@ -17,22 +16,23 @@ defmodule TdIe.IngestRichTextTest do
 
     test "to_rich_text/1 not empty input" do
       input = "Hola\nMundo"
+
       assert RichText.to_rich_text(input) == %{
-        "document" => %{
-          "nodes" => [
-            %{
-              "nodes" => [%{"leaves" => [%{"text" => "Hola"}], "object" => "text"}],
-              "object" => "block",
-              "type" => "paragraph"
-            },
-            %{
-              "nodes" => [%{"leaves" => [%{"text" => "Mundo"}], "object" => "text"}],
-              "object" => "block",
-              "type" => "paragraph"
-            }
-          ]
-        }
-      }
+               "document" => %{
+                 "nodes" => [
+                   %{
+                     "nodes" => [%{"leaves" => [%{"text" => "Hola"}], "object" => "text"}],
+                     "object" => "block",
+                     "type" => "paragraph"
+                   },
+                   %{
+                     "nodes" => [%{"leaves" => [%{"text" => "Mundo"}], "object" => "text"}],
+                     "object" => "block",
+                     "type" => "paragraph"
+                   }
+                 ]
+               }
+             }
     end
 
     test "to_plain_text/1 nil input" do
@@ -63,6 +63,5 @@ defmodule TdIe.IngestRichTextTest do
 
       assert RichText.to_plain_text(input) == "Hola Mundo"
     end
-
   end
 end

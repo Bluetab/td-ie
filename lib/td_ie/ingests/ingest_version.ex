@@ -73,7 +73,14 @@ defmodule TdIe.Ingests.IngestVersion do
     ])
     |> cast_assoc(:ingest)
     |> put_change(:status, Ingest.status().draft)
-    |> validate_required([:content, :related_to, :name, :last_change_by, :last_change_at, :in_progress])
+    |> validate_required([
+      :content,
+      :related_to,
+      :name,
+      :last_change_by,
+      :last_change_at,
+      :in_progress
+    ])
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -140,10 +147,11 @@ defmodule TdIe.Ingests.IngestVersion do
   end
 
   def search_fields(%IngestVersion{last_change_by: last_change_by_id} = ingest_version) do
-    template = case @df_cache.get_template_by_name(ingest_version.ingest.type) do
-      nil -> %{content: []}
-      template -> template
-    end
+    template =
+      case @df_cache.get_template_by_name(ingest_version.ingest.type) do
+        nil -> %{content: []}
+        template -> template
+      end
 
     domain = Ingests.retrieve_domain(ingest_version.ingest.domain_id)
     domain_ids = retrieve_domain_ids(Map.get(domain, :id))
@@ -155,7 +163,8 @@ defmodule TdIe.Ingests.IngestVersion do
         user -> user
       end
 
-    content = Enum.reduce(Map.get(template, :content), ingest_version.content, &fill_content(&2, &1))
+    content =
+      Enum.reduce(Map.get(template, :content), ingest_version.content, &fill_content(&2, &1))
 
     %{
       id: ingest_version.id,
@@ -190,6 +199,7 @@ defmodule TdIe.Ingests.IngestVersion do
       false -> Map.put(content, name, "")
     end
   end
+
   defp fill_content(content, _field), do: content
 
   def index_name do

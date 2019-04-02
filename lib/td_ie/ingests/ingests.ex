@@ -36,7 +36,7 @@ defmodule TdIe.Ingests do
       Ingest
       |> join(:left, [i], _ in assoc(i, :versions))
       |> where([i, v], i.type == ^type and v.status not in ^status)
-      |> include_name_where(name,  exclude_ingest_id)
+      |> include_name_where(name, exclude_ingest_id)
       |> select([i, v], count(i.id))
       |> Repo.one!()
 
@@ -56,11 +56,11 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-    list all ingests
-    """
+  list all ingests
+  """
   def list_all_ingests do
     Ingest
-      |> Repo.all()
+    |> Repo.all()
   end
 
   def list_current_ingest_versions do
@@ -74,8 +74,11 @@ defmodule TdIe.Ingests do
     Fetch an exsisting ingest by its id
   """
   def get_ingest!(ingest_id) do
-     Repo.one!(from(i in Ingest,
-        where: i.id == ^ingest_id))
+    Repo.one!(
+      from(i in Ingest,
+        where: i.id == ^ingest_id
+      )
+    )
   end
 
   @doc """
@@ -155,11 +158,11 @@ defmodule TdIe.Ingests do
     published = Ingest.status().published
 
     version =
-    IngestVersion
-    |> where([v], v.ingest_id == ^ingest_id)
-    |> where([v], v.status == ^published)
-    |> preload(:ingest)
-    |> Repo.one()
+      IngestVersion
+      |> where([v], v.ingest_id == ^ingest_id)
+      |> where([v], v.status == ^published)
+      |> preload(:ingest)
+      |> Repo.one()
 
     case version do
       nil -> get_current_version_by_ingest_id!(ingest_id)
@@ -489,8 +492,8 @@ defmodule TdIe.Ingests do
   def retrieve_parent(%IngestVersion{ingest: ingest} = ingest_version, target_key) do
     parent_domain =
       ingest
-        |> Map.get(:domain_id)
-        |> retrieve_domain()
+      |> Map.get(:domain_id)
+      |> retrieve_domain()
 
     ingest_version |> Map.put(target_key, parent_domain)
   end
@@ -498,7 +501,7 @@ defmodule TdIe.Ingests do
   def retrieve_parent(%Ingest{domain_id: domain_id} = ingest, target_key) do
     parent_domain =
       domain_id
-        |> retrieve_domain()
+      |> retrieve_domain()
 
     ingest |> Map.put(target_key, parent_domain)
   end
@@ -534,10 +537,13 @@ defmodule TdIe.Ingests do
     if ingest_version.version == 1 do
       ingest = ingest_version.ingest
       ingest_id = ingest.id
+
       Multi.new()
-      |> Multi.update_all(:detatch_children,
-        (from child in Ingest, where: child.parent_id == ^ingest_id),
-        set: [parent_id: nil])
+      |> Multi.update_all(
+        :detatch_children,
+        from(child in Ingest, where: child.parent_id == ^ingest_id),
+        set: [parent_id: nil]
+      )
       |> Multi.delete(:ingest_version, ingest_version)
       |> Multi.delete(:ingest, ingest)
       |> Repo.transaction()
@@ -596,6 +602,7 @@ defmodule TdIe.Ingests do
 
   defp attrs_keys_to_atoms(key_values) do
     map = map_keys_to_atoms(key_values)
+
     case map.ingest do
       %Ingest{} -> map
       %{} = ingest -> Map.put(map, :ingest, map_keys_to_atoms(ingest))
@@ -677,6 +684,7 @@ defmodule TdIe.Ingests do
     content = Map.get(attrs, @content)
     content_schema = Map.get(attrs, @content_schema)
     changeset = Validation.build_changeset(content, content_schema)
+
     if not changeset.valid? do
       attrs
       |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
@@ -785,7 +793,7 @@ defmodule TdIe.Ingests do
   def list_ingest_executions(ingest_id) do
     IngestExecution
     |> where([v], v.ingest_id == ^ingest_id)
-    |> Repo.all
+    |> Repo.all()
   end
 
   @doc """

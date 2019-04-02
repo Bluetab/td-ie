@@ -15,12 +15,11 @@ defmodule TdIe.Canada.Abilities do
       true
     end
 
-    def can?(%User{is_admin: true}, _action,  %{resource_type: "domain"}) do
+    def can?(%User{is_admin: true}, _action, %{resource_type: "domain"}) do
       true
     end
 
-    def can?(%User{} = user, :create_ingest,
-      %{resource_type: "domain"} = domain) do
+    def can?(%User{} = user, :create_ingest, %{resource_type: "domain"} = domain) do
       IngestAbilities.can?(user, :create_ingest, domain)
     end
 

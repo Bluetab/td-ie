@@ -12,5 +12,4 @@ defmodule TdIe.Ingest.Query do
       _ -> "#{query}*"
     end
   end
-
 end

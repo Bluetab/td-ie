@@ -11,9 +11,9 @@ defmodule TdIe.IngestLoader do
   require Logger
 
   @cache_ingests_on_startup Application.get_env(
-                                       :td_ie,
-                                       :cache_ingests_on_startup
-                                     )
+                              :td_ie,
+                              :cache_ingests_on_startup
+                            )
 
   def start_link(name \\ nil) do
     GenServer.start_link(__MODULE__, nil, name: name)
@@ -68,7 +68,7 @@ defmodule TdIe.IngestLoader do
 
   defp load_all_ingests do
     Ingests.list_all_ingests()
-    |> Enum.map(& load_ingest(&1.id))
+    |> Enum.map(&load_ingest(&1.id))
   end
 
   defp load_ingest_version_data(ingest_version) do

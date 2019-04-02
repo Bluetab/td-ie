@@ -10,7 +10,7 @@ defmodule TdIeWeb.IngestExecutionController do
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
 
-  action_fallback TdIeWeb.FallbackController
+  action_fallback(TdIeWeb.FallbackController)
 
   def swagger_definitions do
     SwaggerDefinitions.ingest_execution_definitions()
@@ -22,6 +22,7 @@ defmodule TdIeWeb.IngestExecutionController do
     parameters do
       ingest_id(:path, :integer, "ingest ID", required: true)
     end
+
     response(200, "OK", Schema.ref(:IngestExecutionsResponse))
   end
 
@@ -36,6 +37,7 @@ defmodule TdIeWeb.IngestExecutionController do
 
     parameters do
       ingest_id(:path, :integer, "ingest ID", required: true)
+
       ingest_execution(
         :body,
         Schema.ref(:IngestExecutionUpdate),
@@ -50,12 +52,16 @@ defmodule TdIeWeb.IngestExecutionController do
   def create(conn, %{"ingest_id" => ingest_id, "ingest_execution" => ingest_execution_params}) do
     user = conn.assigns[:current_user]
     params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
+
     with %Ingest{domain_id: domain_id} <- Ingests.get_ingest!(ingest_id),
-      true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
-      {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
+         true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
+         {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
+      |> put_resp_header(
+        "location",
+        ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
+      )
       |> render("show.json", ingest_execution: ingest_execution)
     else
       error ->
@@ -88,18 +94,28 @@ defmodule TdIeWeb.IngestExecutionController do
     parameters do
       ingest_id(:path, :integer, "ingest ID", required: true)
       id(:path, :integer, "ingest executions ID", required: true)
-      ingest_execution(:body, Schema.ref(:IngestExecutionUpdate), "ingest executions update attrs")
+
+      ingest_execution(
+        :body,
+        Schema.ref(:IngestExecutionUpdate),
+        "ingest executions update attrs"
+      )
     end
 
     response(200, "OK", Schema.ref(:IngestExecutionResponse))
     response(400, "Client Error")
   end
 
-  def update(conn, %{"ingest_id" => ingest_id, "id" => id, "ingest_execution" => ingest_execution_params}) do
+  def update(conn, %{
+        "ingest_id" => ingest_id,
+        "id" => id,
+        "ingest_execution" => ingest_execution_params
+      }) do
     params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
     ingest_execution = Ingests.get_ingest_execution!(id)
 
-    with {:ok, %IngestExecution{} = ingest_execution} <- Ingests.update_ingest_execution(ingest_execution, params) do
+    with {:ok, %IngestExecution{} = ingest_execution} <-
+           Ingests.update_ingest_execution(ingest_execution, params) do
       render(conn, "show.json", ingest_execution: ingest_execution)
     end
   end
@@ -118,6 +134,7 @@ defmodule TdIeWeb.IngestExecutionController do
 
   def delete(conn, %{"id" => id}) do
     ingest_execution = Ingests.get_ingest_execution!(id)
+
     with {:ok, %IngestExecution{}} <- Ingests.delete_ingest_execution(ingest_execution) do
       send_resp(conn, :no_content, "")
     end
@@ -128,7 +145,9 @@ defmodule TdIeWeb.IngestExecutionController do
     produces("application/json")
 
     parameters do
-      ingest_by_name(:body, Schema.ref(:IngestExecutionByName), "Ingest Execution By Name", required: true)
+      ingest_by_name(:body, Schema.ref(:IngestExecutionByName), "Ingest Execution By Name",
+        required: true
+      )
     end
 
     response(201, "Created", Schema.ref(:IngestExecutionResponse))
@@ -137,24 +156,25 @@ defmodule TdIeWeb.IngestExecutionController do
   end
 
   def add_execution_by_name(conn, %{
-    "ingest_name" => ingest_name,
-    "ingest_execution" => ingest_execution_params
-  }) do
+        "ingest_name" => ingest_name,
+        "ingest_execution" => ingest_execution_params
+      }) do
     user = conn.assigns[:current_user]
 
     with [%{id: ingest_id}] <- Ingests.get_ingest_by_name(ingest_name) do
-
       ingest = Ingests.get_ingest!(ingest_id)
       params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
 
       with %Ingest{domain_id: domain_id} <- ingest,
-        true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
-        {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
+           true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
+           {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
         conn
         |> put_status(:created)
-        |> put_resp_header("location", ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
+        |> put_resp_header(
+          "location",
+          ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
+        )
         |> render("show.json", ingest_execution: ingest_execution)
-
       else
         error ->
           IngestSupport.handle_ingest_errors(conn, error)
@@ -162,10 +182,9 @@ defmodule TdIeWeb.IngestExecutionController do
     else
       [] ->
         IngestSupport.handle_ingest_errors(conn, {:ingest_not_found})
+
       error ->
         IngestSupport.handle_ingest_errors(conn, error)
     end
-
   end
-
 end

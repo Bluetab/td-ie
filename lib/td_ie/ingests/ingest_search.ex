@@ -44,7 +44,7 @@ defmodule TdIe.Ingest.Search do
         _ -> create_query(params, filter_clause)
       end
 
-     search = %{
+    search = %{
       from: page * size,
       size: size,
       query: query,
@@ -62,6 +62,7 @@ defmodule TdIe.Ingest.Search do
 
   def list_ingest_versions(ingest_id, %User{is_admin: true}) do
     query = %{ingest_id: ingest_id} |> create_query
+
     %{query: query}
     |> do_search
   end
@@ -71,6 +72,7 @@ defmodule TdIe.Ingest.Search do
     predefined_query = %{ingest_id: ingest_id} |> create_query
     filter = permissions |> create_filter_clause([predefined_query])
     query = create_query(nil, filter)
+
     %{query: query}
     |> do_search
   end
@@ -85,8 +87,8 @@ defmodule TdIe.Ingest.Search do
 
   defp to_terms_query({filter, values}) do
     Aggregations.aggregation_terms()
-      |> Map.get(filter)
-      |> get_filter(values)
+    |> Map.get(filter)
+    |> get_filter(values)
   end
 
   defp get_filter(%{terms: %{field: field}}, values) do
@@ -117,8 +119,10 @@ defmodule TdIe.Ingest.Search do
   defp create_query(%{ingest_id: id}) do
     %{term: %{ingest_id: id}}
   end
+
   defp create_query(%{"query" => query}) do
     equery = Query.add_query_wildcard(query)
+
     %{simple_query_string: %{query: equery}}
     |> bool_query
   end
@@ -130,6 +134,7 @@ defmodule TdIe.Ingest.Search do
 
   defp create_query(%{"query" => query}, filter) do
     equery = Query.add_query_wildcard(query)
+
     %{simple_query_string: %{query: equery}}
     |> bool_query(filter)
   end
@@ -159,7 +164,6 @@ defmodule TdIe.Ingest.Search do
          %{resource_id: resource_id, permissions: permissions},
          user_defined_filters
        ) do
-
     domain_clause = %{term: %{domain_ids: resource_id}}
 
     status =
@@ -167,11 +171,10 @@ defmodule TdIe.Ingest.Search do
       |> Enum.map(&Map.get(Ingest.permissions_to_status(), &1))
       |> Enum.filter(&(!is_nil(&1)))
 
-    status_clause =  %{terms: %{status: status}}
+    status_clause = %{terms: %{status: status}}
 
     %{
-      bool: %{filter: user_defined_filters ++ [domain_clause,
-                                               status_clause]}
+      bool: %{filter: user_defined_filters ++ [domain_clause, status_clause]}
     }
   end
 
