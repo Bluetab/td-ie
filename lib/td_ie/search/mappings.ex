@@ -15,7 +15,7 @@ defmodule TdIe.Search.Mappings do
       version: %{type: "short"},
       template: %{
         properties: %{
-          name:  %{type: "text"},
+          name: %{type: "text"},
           label: %{type: "text", fields: %{raw: %{type: "keyword"}}}
         }
       },

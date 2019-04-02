@@ -10,11 +10,11 @@ defmodule TdIeWeb.SearchController do
   alias TdIeWeb.ErrorView
 
   swagger_path :reindex_all do
-    description "Reindex all ES indexes with DB content"
-    produces "application/json"
-    response 200, "OK"
-    response 403, "Unauthorized"
-    response 500, "Client Error"
+    description("Reindex all ES indexes with DB content")
+    produces("application/json")
+    response(200, "OK")
+    response(403, "Unauthorized")
+    response(500, "Client Error")
   end
 
   def reindex_all(conn, _params) do
@@ -26,12 +26,13 @@ defmodule TdIeWeb.SearchController do
     else
       false ->
         conn
-          |> put_status(:forbidden)
-          |> render(ErrorView, "403.json")
+        |> put_status(:forbidden)
+        |> render(ErrorView, "403.json")
+
       _error ->
         conn
-          |> put_status(:internal_server_error)
-          |> render(ErrorView, "500.json")
+        |> put_status(:internal_server_error)
+        |> render(ErrorView, "500.json")
     end
   end
 end

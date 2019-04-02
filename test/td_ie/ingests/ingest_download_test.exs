@@ -23,16 +23,19 @@ defmodule TdIe.IngestDownloadTests do
       template_name = "template_name"
       field_name = "field_name"
       field_label = "field_label"
+
       create_template(%{
-          id: 0,
-          name: template_name,
-          label: "label",
-          content: [%{
+        id: 0,
+        name: template_name,
+        label: "label",
+        content: [
+          %{
             "name" => field_name,
             "type" => "list",
             "label" => field_label
           }
-      ]})
+        ]
+      })
 
       ingest_name = "ingest_name"
       ingest_description = "ingest_description"
@@ -40,22 +43,31 @@ defmodule TdIe.IngestDownloadTests do
       field_value = "field_value"
       ingest_status = "draft"
       inserted_at = "2018-05-05"
-      ingests =  [%{
-        "name" => ingest_name,
-        "description" => ingest_description,
-        "template" => %{"name" => template_name},
-        "domain" => %{
-          "name" => domain_name
-        },
-        "content" => %{
-          field_name => field_value
-        },
-        "status" => ingest_status,
-        "inserted_at"=> inserted_at
-      }]
+
+      ingests = [
+        %{
+          "name" => ingest_name,
+          "description" => ingest_description,
+          "template" => %{"name" => template_name},
+          "domain" => %{
+            "name" => domain_name
+          },
+          "content" => %{
+            field_name => field_value
+          },
+          "status" => ingest_status,
+          "inserted_at" => inserted_at
+        }
+      ]
 
       csv = Download.to_csv(ingests)
-      assert csv == "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{template_name};#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{inserted_at};#{field_value}\r\n"
+
+      assert csv ==
+               "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{
+                 template_name
+               };#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{
+                 inserted_at
+               };#{field_value}\r\n"
     end
   end
 end

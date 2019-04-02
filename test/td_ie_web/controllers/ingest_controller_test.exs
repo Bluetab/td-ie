@@ -67,9 +67,7 @@ defmodule TdIeWeb.IngestControllerTest do
       assert Map.get(domain, :name) == updated_ingest |> Map.get("domain") |> Map.get("name")
 
       update_attrs
-      |> Enum.each(
-        &assert updated_ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      |> Enum.each(&assert updated_ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
     end
 
     @tag :admin_authenticated
@@ -122,8 +120,7 @@ defmodule TdIeWeb.IngestControllerTest do
       } do
         user = build(:user)
 
-        ingest_version =
-          insert(:ingest_version, status: status_from, last_change_by: user.id)
+        ingest_version = insert(:ingest_version, status: status_from, last_change_by: user.id)
 
         ingest = ingest_version.ingest
         ingest_id = ingest.id

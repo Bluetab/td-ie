@@ -14,5 +14,4 @@ defmodule TdIe.Accounts.User do
   def gen_id_from_user_name(user_name) do
     Integer.mod(:binary.decode_unsigned(user_name), 100_000)
   end
-
 end

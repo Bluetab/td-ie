@@ -11,11 +11,13 @@ defmodule TdIeWeb.CommentView do
   end
 
   def render("comment.json", %{comment: comment}) do
-    %{id: comment.id,
+    %{
+      id: comment.id,
       resource_id: comment.resource_id,
       resource_type: comment.resource_type,
       created_at: comment.created_at,
       user: comment.user,
-      content: comment.content}
+      content: comment.content
+    }
   end
 end

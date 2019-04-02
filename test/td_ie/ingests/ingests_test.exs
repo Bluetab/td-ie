@@ -32,7 +32,10 @@ defmodule TdIe.IngestsTests do
 
     defp fixture do
       template_content = [%{name: "fieldname", type: "string", required: false}]
-      template = create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+
+      template =
+        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+
       parent_domain_id = 1
       child_domain_id = 2
       insert(:ingest, type: template.name, domain_id: child_domain_id)
@@ -53,16 +56,14 @@ defmodule TdIe.IngestsTests do
       user = build(:user)
       ingest_version = insert(:ingest_version, last_change_by: user.id)
 
-      object =
-        Ingests.get_current_version_by_ingest_id!(
-          ingest_version.ingest.id
-        )
+      object = Ingests.get_current_version_by_ingest_id!(ingest_version.ingest.id)
 
       assert object |> ingest_version_preload() == ingest_version
     end
 
     test "get_currently_published_version!/1 returns the published ingest with given id" do
       user = build(:user)
+
       in_published =
         insert(
           :ingest_version,
@@ -78,12 +79,14 @@ defmodule TdIe.IngestsTests do
 
     test "get_currently_published_version!/1 returns the last when there are no published" do
       user = build(:user)
+
       inv_draft =
         insert(
           :ingest_version,
           last_change_by: user.id,
           status: Ingest.status().draft
         )
+
       inv_current = Ingests.get_currently_published_version!(inv_draft.ingest.id)
 
       assert inv_current.id == inv_draft.id
@@ -93,8 +96,7 @@ defmodule TdIe.IngestsTests do
       ingest_version = insert(:ingest_version)
       ingest_id = ingest_version.ingest.id
 
-      ingest_version =
-        Ingests.get_current_version_by_ingest_id!(ingest_id)
+      ingest_version = Ingests.get_current_version_by_ingest_id!(ingest_id)
 
       assert !is_nil(ingest_version)
       assert !is_nil(ingest_version.ingest)
@@ -124,8 +126,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:ok, %IngestVersion{} = object} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -153,8 +154,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:error, %Ecto.Changeset{}} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:error, %Ecto.Changeset{}} = Ingests.create_ingest(creation_attrs)
     end
 
     test "create_ingest/1 with content" do
@@ -189,8 +189,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
 
       assert object.content == content
     end
@@ -226,8 +225,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} =
-      Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -272,8 +270,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = ingest_version} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = ingest_version} = Ingests.create_ingest(creation_attrs)
 
       assert ingest_version.content["Field1"] == "Hello"
       assert ingest_version.content["Field2"] == "World"
@@ -308,8 +305,7 @@ defmodule TdIe.IngestsTests do
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:ok, %IngestVersion{} = object} =
-      Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -353,8 +349,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} =
-      Ingests.create_ingest(creation_attrs)
+      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
 
       assert object.content == version_attrs.content
       assert object.name == version_attrs.name
@@ -394,8 +389,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = Ingests.create_ingest(creation_attrs)
 
       assert_expected_validation(changeset, "content", :required)
     end
@@ -428,8 +422,7 @@ defmodule TdIe.IngestsTests do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:error, %Ecto.Changeset{} = changeset} =
-               Ingests.create_ingest(creation_attrs)
+      assert {:error, %Ecto.Changeset{} = changeset} = Ingests.create_ingest(creation_attrs)
 
       assert_expected_validation(changeset, "content", :required)
     end
@@ -467,8 +460,7 @@ defmodule TdIe.IngestsTests do
       type = ingest_version.ingest.type
       name = ingest_version.name
 
-      assert {:name_not_available} ==
-               Ingests.check_ingest_name_availability(type, name)
+      assert {:name_not_available} == Ingests.check_ingest_name_availability(type, name)
     end
 
     test "check_ingest_name_availability/2 check available" do
@@ -584,8 +576,7 @@ defmodule TdIe.IngestsTests do
         "Field2" => "Second field"
       }
 
-      ingest_version =
-        insert(:ingest_version, last_change_by: user.id, content: content)
+      ingest_version = insert(:ingest_version, last_change_by: user.id, content: content)
 
       update_content = %{
         "Field1" => "New first field"
@@ -643,10 +634,7 @@ defmodule TdIe.IngestsTests do
                  update_attrs
                )
 
-      object =
-        Ingests.get_current_version_by_ingest_id!(
-          ingest_version.ingest.id
-        )
+      object = Ingests.get_current_version_by_ingest_id!(ingest_version.ingest.id)
 
       assert object |> ingest_version_preload() == ingest_version
     end
@@ -666,8 +654,7 @@ defmodule TdIe.IngestsTests do
 
       assert %IngestVersion{} = new_version
 
-      assert Ingests.get_ingest_version!(ingest_version.id).current ==
-               false
+      assert Ingests.get_ingest_version!(ingest_version.id).current == false
 
       assert Ingests.get_ingest_version!(new_version.id).current == true
     end
@@ -680,12 +667,11 @@ defmodule TdIe.IngestsTests do
   end
 
   describe "ingest hierarchy" do
-
     defp create_hierarchy do
       domain_id = 1
       parent = build(:ingest, domain_id: domain_id)
       parent_version = insert(:ingest_version, ingest: parent)
-      child  =  build(:ingest, domain_id: domain_id, parent_id: parent_version.ingest.id)
+      child = build(:ingest, domain_id: domain_id, parent_id: parent_version.ingest.id)
       child_version = insert(:ingest_version, ingest: child)
 
       {
@@ -695,42 +681,48 @@ defmodule TdIe.IngestsTests do
     end
 
     test "check parents" do
-      {parent_id, child_id}  = create_hierarchy()
+      {parent_id, child_id} = create_hierarchy()
 
-      parent = parent_id
-      |> Ingests.get_current_version_by_ingest_id!
-      |> Map.get(:ingest)
+      parent =
+        parent_id
+        |> Ingests.get_current_version_by_ingest_id!()
+        |> Map.get(:ingest)
 
-      child = child_id
-      |> Ingests.get_current_version_by_ingest_id!
-      |> Map.get(:ingest)
-      |> Repo.preload(:parent)
+      child =
+        child_id
+        |> Ingests.get_current_version_by_ingest_id!()
+        |> Map.get(:ingest)
+        |> Repo.preload(:parent)
 
       assert child.parent.id == parent.id
     end
 
     test "check children" do
-      {parent_id, child_id}  = create_hierarchy()
+      {parent_id, child_id} = create_hierarchy()
 
-      parent = parent_id
-      |> Ingests.get_current_version_by_ingest_id!
-      |> Map.get(:ingest)
-      |> Repo.preload(:children)
+      parent =
+        parent_id
+        |> Ingests.get_current_version_by_ingest_id!()
+        |> Map.get(:ingest)
+        |> Repo.preload(:children)
 
-      child = child_id
-      |> Ingests.get_current_version_by_ingest_id!
-      |> Map.get(:ingest)
+      child =
+        child_id
+        |> Ingests.get_current_version_by_ingest_id!()
+        |> Map.get(:ingest)
 
-      assert Enum.map(parent.children, &(&1.id)) == [child.id]
+      assert Enum.map(parent.children, & &1.id) == [child.id]
     end
 
     test "delete_ingest_version/1 delete parent ingest with children" do
-      {parent_id, child_id}  = create_hierarchy()
+      {parent_id, child_id} = create_hierarchy()
       parent = Ingests.get_current_version_by_ingest_id!(parent_id)
       Ingests.delete_ingest_version(parent)
+
       assert_raise Ecto.NoResultsError, fn ->
         Ingests.get_current_version_by_ingest_id!(parent_id)
       end
+
       assert Ingests.get_current_version_by_ingest_id!(child_id)
     end
   end
@@ -744,8 +736,7 @@ defmodule TdIe.IngestsTests do
       ingest_versions = Ingests.list_all_ingest_versions()
 
       assert ingest_versions
-             |> Enum.map(fn iv -> ingest_version_preload(iv) end) ==
-               [ingest_version]
+             |> Enum.map(fn iv -> ingest_version_preload(iv) end) == [ingest_version]
     end
 
     test "find_ingest_versions/1 returns filtered ingest_versions" do
@@ -757,8 +748,7 @@ defmodule TdIe.IngestsTests do
       id = [create_version(domain_id, "two", published).ingest.id | id]
       id = [create_version(domain_id, "three", published).ingest.id | id]
 
-      ingest_versions =
-        Ingests.find_ingest_versions(%{id: id, status: [published]})
+      ingest_versions = Ingests.find_ingest_versions(%{id: id, status: [published]})
 
       assert 2 == length(ingest_versions)
     end
@@ -784,8 +774,7 @@ defmodule TdIe.IngestsTests do
         ])
 
       assert ingest_versions
-             |> Enum.map(fn i -> ingest_version_preload(i) end) ==
-               [ingest_version]
+             |> Enum.map(fn i -> ingest_version_preload(i) end) == [ingest_version]
     end
 
     test "get_ingest_version!/1 returns the ingest_version with given id" do
@@ -820,8 +809,7 @@ defmodule TdIe.IngestsTests do
 
       attrs = %{reject_reason: "Because I want to"}
 
-      assert {:ok, ingest_version} =
-               Ingests.reject_ingest_version(ingest_version, attrs)
+      assert {:ok, ingest_version} = Ingests.reject_ingest_version(ingest_version, attrs)
 
       assert ingest_version.status == Ingest.status().rejected
       assert ingest_version.reject_reason == attrs.reject_reason
@@ -831,8 +819,7 @@ defmodule TdIe.IngestsTests do
       user = build(:user)
       ingest_version = insert(:ingest_version, last_change_by: user.id)
 
-      assert %Ecto.Changeset{} =
-               Ingests.change_ingest_version(ingest_version)
+      assert %Ecto.Changeset{} = Ingests.change_ingest_version(ingest_version)
     end
   end
 
@@ -860,10 +847,16 @@ defmodule TdIe.IngestsTests do
   describe "ingest_executions" do
     alias TdIe.Ingests.IngestExecution
 
-    @valid_attrs %{end_timestamp: ~N[2010-04-17 14:00:00.000000],
-      start_timestamp: ~N[2010-04-17 14:00:00.000000], status: "some status"}
-    @update_attrs %{end_timestamp: ~N[2011-05-18 15:01:01.000000],
-      start_timestamp: ~N[2011-05-18 15:01:01.000000], status: "some updated status"}
+    @valid_attrs %{
+      end_timestamp: ~N[2010-04-17 14:00:00.000000],
+      start_timestamp: ~N[2010-04-17 14:00:00.000000],
+      status: "some status"
+    }
+    @update_attrs %{
+      end_timestamp: ~N[2011-05-18 15:01:01.000000],
+      start_timestamp: ~N[2011-05-18 15:01:01.000000],
+      status: "some updated status"
+    }
     @invalid_attrs %{end_timestamp: nil, start_timestamp: nil, status: nil}
 
     def ingest_execution_fixture(attrs \\ %{}) do
@@ -887,7 +880,9 @@ defmodule TdIe.IngestsTests do
     end
 
     test "create_ingest_execution/1 with valid data creates a ingest_execution" do
-      assert {:ok, %IngestExecution{} = ingest_execution} = Ingests.create_ingest_execution(@valid_attrs)
+      assert {:ok, %IngestExecution{} = ingest_execution} =
+               Ingests.create_ingest_execution(@valid_attrs)
+
       assert ingest_execution.end_timestamp == ~N[2010-04-17 14:00:00.000000]
       assert ingest_execution.start_timestamp == ~N[2010-04-17 14:00:00.000000]
       assert ingest_execution.status == "some status"
@@ -899,7 +894,10 @@ defmodule TdIe.IngestsTests do
 
     test "update_ingest_execution/2 with valid data updates the ingest_execution" do
       ingest_execution = ingest_execution_fixture()
-      assert {:ok, ingest_execution} = Ingests.update_ingest_execution(ingest_execution, @update_attrs)
+
+      assert {:ok, ingest_execution} =
+               Ingests.update_ingest_execution(ingest_execution, @update_attrs)
+
       assert %IngestExecution{} = ingest_execution
       assert ingest_execution.end_timestamp == ~N[2011-05-18 15:01:01.000000]
       assert ingest_execution.start_timestamp == ~N[2011-05-18 15:01:01.000000]
@@ -908,14 +906,20 @@ defmodule TdIe.IngestsTests do
 
     test "update_ingest_execution/2 with invalid data returns error changeset" do
       ingest_execution = ingest_execution_fixture()
-      assert {:error, %Ecto.Changeset{}} = Ingests.update_ingest_execution(ingest_execution, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Ingests.update_ingest_execution(ingest_execution, @invalid_attrs)
+
       assert ingest_execution == Ingests.get_ingest_execution!(ingest_execution.id)
     end
 
     test "delete_ingest_execution/1 deletes the ingest_execution" do
       ingest_execution = ingest_execution_fixture()
       assert {:ok, %IngestExecution{}} = Ingests.delete_ingest_execution(ingest_execution)
-      assert_raise Ecto.NoResultsError, fn -> Ingests.get_ingest_execution!(ingest_execution.id) end
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Ingests.get_ingest_execution!(ingest_execution.id)
+      end
     end
 
     test "change_ingest_execution/1 returns a ingest_execution changeset" do

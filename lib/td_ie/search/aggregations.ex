@@ -10,7 +10,11 @@ defmodule TdIe.Search.Aggregations do
       {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
       {"domain_id", %{terms: %{field: "domain.id"}}},
       {"ingest_id", %{terms: %{field: "ingest_id"}}},
-      {"domain_parents", %{nested: %{path: "domain_parents"}, aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}}},
+      {"domain_parents",
+       %{
+         nested: %{path: "domain_parents"},
+         aggs: %{distinct_search: %{terms: %{field: "domain_parents.name.raw", size: 50}}}
+       }},
       {"status", %{terms: %{field: "status"}}},
       {"current", %{terms: %{field: "current"}}},
       {"in_progress", %{terms: %{field: "in_progress"}}},
