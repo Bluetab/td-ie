@@ -46,7 +46,7 @@ defmodule TdIe.Mixfile do
       {:jason, "~> 1.0"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
-      {:cabbage, git: "https://github.com/eriosv/cabbage.git"},
+      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.7-alpha"},
       {:httpoison, "~> 1.0"},
       {:distillery, "~> 2.0", runtime: false},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
