@@ -10,11 +10,7 @@ defmodule TdIeWeb.Hypermedia.HypermediaControllerHelper do
   def collection_hypermedia(helper, conn, resource, resource_type) do
     %HypermediaCollection{
       collection_hypermedia: hypermedia(helper, conn, %{}, resource_type),
-      collection:
-        Enum.into(
-          Enum.map(resource, &{&1, []}),
-          %{}
-        )
+      collection: Enum.into(resource, %{}, &{&1, []})
     }
   end
 
@@ -23,11 +19,7 @@ defmodule TdIeWeb.Hypermedia.HypermediaControllerHelper do
   def hypermedia(helper, conn, resource, nested) when is_list(resource) do
     %HypermediaCollection{
       collection_hypermedia: hypermedia(helper, conn, %{}),
-      collection:
-        Enum.into(
-          Enum.map(resource, &{&1, hypermedia(helper, conn, &1, nested)}),
-          %{}
-        )
+      collection: Enum.into(resource, %{}, &{&1, hypermedia(helper, conn, &1, nested)})
     }
   end
 

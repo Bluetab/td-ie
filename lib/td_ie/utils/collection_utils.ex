@@ -14,8 +14,7 @@ defmodule TdIe.Utils.CollectionUtils do
 
   def stringify_keys(%{} = map) do
     map
-    |> Enum.map(fn {k, v} -> {stringify_key(k), v} end)
-    |> Enum.into(%{})
+    |> Enum.into(%{}, fn {k, v} -> {stringify_key(k), v} end)
   end
 
   defp stringify_key(key) when is_atom(key), do: Atom.to_string(key)
@@ -23,8 +22,7 @@ defmodule TdIe.Utils.CollectionUtils do
 
   def atomize_keys(%{} = map) do
     map
-    |> Enum.map(fn {k, v} -> {atomize_key(k), v} end)
-    |> Enum.into(%{})
+    |> Enum.into(%{}, fn {k, v} -> {atomize_key(k), v} end)
   end
 
   defp atomize_key(key) when is_binary(key), do: String.to_atom(key)

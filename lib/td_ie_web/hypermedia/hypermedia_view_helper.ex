@@ -34,7 +34,7 @@ defmodule TdIeWeb.Hypermedia.HypermediaViewHelper do
   end
 
   defp render_hypermedia(hypermedia) do
-    %{"_actions" => Enum.into(Enum.map(hypermedia, &render_link/1), %{})}
+    %{"_actions" => Enum.into(hypermedia, %{}, &render_link/1)}
   end
 
   defp render_link(%Link{} = link) do
@@ -48,7 +48,7 @@ defmodule TdIeWeb.Hypermedia.HypermediaViewHelper do
 
   defp render_link(map) do
     [{nested, hypermedia}] = Map.to_list(map)
-    {String.to_atom(nested), Enum.into(Enum.map(hypermedia, &render_link/1), %{})}
+    {String.to_atom(nested), Enum.into(hypermedia, %{}, &render_link/1)}
   end
 
   defp map_action("show"), do: "ref"
