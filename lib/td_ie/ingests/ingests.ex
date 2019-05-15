@@ -216,7 +216,7 @@ defmodule TdIe.Ingests do
     ingest =
       ingest
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
     draft_attrs = Map.from_struct(ingest_version)
 
@@ -224,7 +224,7 @@ defmodule TdIe.Ingests do
       draft_attrs
       |> Map.put("ingest", ingest)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
       |> Map.put("status", Ingest.status().draft)
       |> Map.put("version", ingest_version.version + 1)
 

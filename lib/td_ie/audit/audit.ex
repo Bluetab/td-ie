@@ -10,7 +10,7 @@ defmodule TdIe.Audit do
     event_params =
       event_params
       |> Map.put("event", event)
-      |> Map.put("ts", DateTime.to_string(DateTime.utc_now()))
+      |> Map.put("ts", DateTime.to_string(DateTime.utc_now() |> DateTime.truncate(:second)))
       |> Map.put("service", @service)
 
     create_event(conn, %{"audit" => event_params})

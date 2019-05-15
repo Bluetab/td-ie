@@ -6,7 +6,7 @@ defmodule TdIe.Factory do
   alias TdIe.Ingests.IngestVersion
 
   def user_factory do
-    %TdIe.Accounts.User {
+    %TdIe.Accounts.User{
       id: 0,
       user_name: "bufoncillo",
       is_admin: false,
@@ -15,36 +15,36 @@ defmodule TdIe.Factory do
   end
 
   def ingest_factory do
-    %Ingest {
+    %Ingest{
       domain_id: 1,
       parent_id: nil,
       type: "some_type",
       last_change_by: 1,
-      last_change_at: DateTime.utc_now()
+      last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
     }
   end
 
   def ingest_version_factory do
-    %IngestVersion {
+    %IngestVersion{
       ingest: build(:ingest),
       content: %{},
       related_to: [],
       name: "My ingest",
       description: %{"document" => "My ingest description"},
       last_change_by: 1,
-      last_change_at: DateTime.utc_now(),
-      status: Ingest.status.draft,
+      last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
+      status: Ingest.status().draft,
       version: 1,
       in_progress: false
     }
   end
 
   def ingest_execution_factory do
-    %IngestExecution {
+    %IngestExecution{
       ingest_id: insert(:ingest).id,
       start_timestamp: ~N[2010-04-17 14:00:00.000000],
       end_timestamp: ~N[2010-04-17 14:00:00.000000],
-      status: "status",
+      status: "status"
     }
   end
 end

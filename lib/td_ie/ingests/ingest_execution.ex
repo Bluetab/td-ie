@@ -11,7 +11,7 @@ defmodule TdIe.Ingests.IngestExecution do
     field(:file_size, :integer)
     field(:ingest_id, :id)
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false

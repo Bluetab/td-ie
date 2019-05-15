@@ -39,7 +39,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           description: to_rich_text("The awesome ingest")
         )
 
-      conn = get(conn, ingest_version_path(conn, :show, ingest_version.id))
+      conn = get(conn, Routes.ingest_version_path(conn, :show, ingest_version.id))
       data = json_response(conn, 200)["data"]
       assert data["name"] == ingest_version.name
       assert data["description"] == ingest_version.description
@@ -54,7 +54,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all ingest_versions", %{conn: conn} do
-      conn = get(conn, ingest_version_path(conn, :index))
+      conn = get(conn, Routes.ingest_version_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -71,7 +71,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       id = [create_version(domain_attrs, "three", published).ingest_id | id]
 
       conn =
-        get(conn, ingest_path(conn, :search), %{
+        get(conn, Routes.ingest_path(conn, :search), %{
           id: Enum.join(id, ","),
           status: published
         })
@@ -98,7 +98,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn =
         post(
           conn,
-          ingest_version_path(conn, :create),
+          Routes.ingest_version_path(conn, :create),
           ingest_version: creation_attrs
         )
 
@@ -107,7 +107,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       conn = recycle_and_put_headers(conn)
 
-      conn = get(conn, ingest_path(conn, :show, id))
+      conn = get(conn, Routes.ingest_path(conn, :show, id))
       validate_resp_schema(conn, schema, "IngestResponse")
       ingest = json_response(conn, 200)["data"]
 
@@ -130,7 +130,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain_attrs = domain_fixture()
 
-      create_template(%{id: 0, name: "some_type", content: [], label: "label"})
+      create_template(%{id: 0, name: "some_type", content: [], label: "label", scope: "ie"})
 
       creation_attrs = %{
         content: %{},
@@ -144,7 +144,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn =
         post(
           conn,
-          ingest_version_path(conn, :create),
+          Routes.ingest_version_path(conn, :create),
           ingest_version: creation_attrs
         )
 
@@ -164,11 +164,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       id = [create_version(domain_attrs, "two", published).ingest.id | id]
       [create_version(domain_attrs, "two", published).ingest.id | id]
 
-      conn = get(conn, ingest_version_path(conn, :index), %{query: "two"})
+      conn = get(conn, Routes.ingest_version_path(conn, :index), %{query: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, ingest_version_path(conn, :index), %{query: "one"})
+      conn = get(conn, Routes.ingest_version_path(conn, :index), %{query: "one"})
       assert 1 == length(json_response(conn, 200)["data"])
     end
   end
@@ -182,7 +182,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn =
         get(
           conn,
-          ingest_version_ingest_version_path(conn, :versions, ingest_version.id)
+          Routes.ingest_version_ingest_version_path(conn, :versions, ingest_version.id)
         )
 
       [data | _] = json_response(conn, 200)["data"]
@@ -198,7 +198,13 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       template_content = [%{"name" => "fieldname", "type" => "string", "required" => false}]
 
       template =
-        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+        create_template(%{
+          id: 0,
+          name: "onefield",
+          content: template_content,
+          label: "label",
+          scope: "ie"
+        })
 
       user = build(:user)
 
@@ -230,7 +236,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn =
         post(
           conn,
-          ingest_version_ingest_version_path(
+          Routes.ingest_version_ingest_version_path(
             conn,
             :version,
             ingest_version.id
@@ -262,7 +268,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn =
         put(
           conn,
-          ingest_version_path(conn, :update, ingest_version),
+          Routes.ingest_version_path(conn, :update, ingest_version),
           ingest_version: update_attrs
         )
 
@@ -270,7 +276,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert %{"id" => ^ingest_version_id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, ingest_version_path(conn, :show, ingest_version_id))
+      conn = get(conn, Routes.ingest_version_path(conn, :show, ingest_version_id))
       validate_resp_schema(conn, schema, "IngestVersionResponse")
 
       updated_ingest_version = json_response(conn, 200)["data"]
@@ -298,12 +304,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   def create_template do
-    attrs =
-      %{}
-      |> Map.put(:id, 0)
-      |> Map.put(:label, "some type")
-      |> Map.put(:name, "some_type")
-      |> Map.put(:content, [])
+    attrs = %{id: 0, label: "some type", name: "some_type", content: [], scope: "ie"}
 
     @df_cache.put_template(attrs)
     :ok

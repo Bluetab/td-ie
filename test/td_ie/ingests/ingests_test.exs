@@ -34,7 +34,13 @@ defmodule TdIe.IngestsTests do
       template_content = [%{name: "fieldname", type: "string", required: false}]
 
       template =
-        create_template(%{id: 0, name: "onefield", content: template_content, label: "label"})
+        create_template(%{
+          id: 0,
+          name: "onefield",
+          content: template_content,
+          label: "label",
+          scope: "ie"
+        })
 
       parent_domain_id = 1
       child_domain_id = 2
@@ -110,7 +116,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -120,7 +126,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -173,7 +179,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -183,7 +189,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -199,8 +205,8 @@ defmodule TdIe.IngestsTests do
       domain_id = 1
 
       content_schema = [
-        %{"name" => "Field1", "type" => "string", "required" => true},
-        %{"name" => "Field2", "type" => "string", "required" => true}
+        %{"name" => "Field1", "type" => "string", "cardinality" => "1"},
+        %{"name" => "Field2", "type" => "string", "cardinality" => "1"}
       ]
 
       content = %{}
@@ -209,7 +215,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -219,7 +225,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -254,7 +260,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -264,7 +270,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -276,55 +282,12 @@ defmodule TdIe.IngestsTests do
       assert ingest_version.content["Field2"] == "World"
     end
 
-    test "create_ingest/1 with invalid content: not in list" do
-      user = build(:user)
-      domain_id = 1
-
-      content_schema = [
-        %{"name" => "Field1", "type" => "list", "values" => ["Hello"]}
-      ]
-
-      content = %{"Field1" => "World"}
-
-      ingest_attrs = %{
-        type: "some_type",
-        domain_id: domain_id,
-        last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
-      }
-
-      version_attrs = %{
-        ingest: ingest_attrs,
-        content: content,
-        related_to: [],
-        name: "some name",
-        description: to_rich_text("some description"),
-        last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
-        version: 1
-      }
-
-      creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
-      assert {:ok, %IngestVersion{} = object} = Ingests.create_ingest(creation_attrs)
-
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.in_progress == true
-      assert object.version == version_attrs.version
-      assert object.ingest.type == ingest_attrs.type
-      assert object.ingest.domain_id == ingest_attrs.domain_id
-      assert object.ingest.last_change_by == ingest_attrs.last_change_by
-    end
-
     test "create_ingest/1 with invalid content: invalid variable list" do
       user = build(:user)
       domain_id = 1
 
       content_schema = [
-        %{"name" => "Field1", "type" => "variable_list"}
+        %{"name" => "Field1", "type" => "string", "cardinality" => "*"}
       ]
 
       content = %{"Field1" => "World"}
@@ -333,7 +296,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -343,7 +306,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -375,7 +338,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -383,7 +346,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -406,7 +369,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -416,7 +379,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -435,7 +398,7 @@ defmodule TdIe.IngestsTests do
         type: "some_type",
         domain_id: domain_id,
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       creation_attrs = %{
@@ -445,7 +408,7 @@ defmodule TdIe.IngestsTests do
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -529,7 +492,7 @@ defmodule TdIe.IngestsTests do
 
       ingest_attrs = %{
         last_change_by: 1000,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -540,7 +503,7 @@ defmodule TdIe.IngestsTests do
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -584,7 +547,7 @@ defmodule TdIe.IngestsTests do
 
       ingest_attrs = %{
         last_change_by: 1000,
-        last_change_at: DateTime.utc_now()
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
       }
 
       version_attrs = %{
@@ -595,7 +558,7 @@ defmodule TdIe.IngestsTests do
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
-        last_change_at: DateTime.utc_now(),
+        last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
         version: 1
       }
 
@@ -883,8 +846,8 @@ defmodule TdIe.IngestsTests do
       assert {:ok, %IngestExecution{} = ingest_execution} =
                Ingests.create_ingest_execution(@valid_attrs)
 
-      assert ingest_execution.end_timestamp == ~N[2010-04-17 14:00:00.000000]
-      assert ingest_execution.start_timestamp == ~N[2010-04-17 14:00:00.000000]
+      assert ingest_execution.end_timestamp == ~N[2010-04-17 14:00:00]
+      assert ingest_execution.start_timestamp == ~N[2010-04-17 14:00:00]
       assert ingest_execution.status == "some status"
     end
 
@@ -899,8 +862,8 @@ defmodule TdIe.IngestsTests do
                Ingests.update_ingest_execution(ingest_execution, @update_attrs)
 
       assert %IngestExecution{} = ingest_execution
-      assert ingest_execution.end_timestamp == ~N[2011-05-18 15:01:01.000000]
-      assert ingest_execution.start_timestamp == ~N[2011-05-18 15:01:01.000000]
+      assert ingest_execution.end_timestamp == ~N[2011-05-18 15:01:01]
+      assert ingest_execution.start_timestamp == ~N[2011-05-18 15:01:01]
       assert ingest_execution.status == "some updated status"
     end
 

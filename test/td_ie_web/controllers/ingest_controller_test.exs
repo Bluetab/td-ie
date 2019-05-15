@@ -50,7 +50,7 @@ defmodule TdIeWeb.IngestControllerTest do
       conn =
         put(
           conn,
-          ingest_path(conn, :update, ingest),
+          Routes.ingest_path(conn, :update, ingest),
           ingest: update_attrs
         )
 
@@ -58,7 +58,7 @@ defmodule TdIeWeb.IngestControllerTest do
       assert %{"id" => ^ingest_id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, ingest_path(conn, :show, ingest_id))
+      conn = get(conn, Routes.ingest_path(conn, :show, ingest_id))
       validate_resp_schema(conn, schema, "IngestResponse")
 
       updated_ingest = json_response(conn, 200)["data"]
@@ -86,7 +86,7 @@ defmodule TdIeWeb.IngestControllerTest do
       conn =
         put(
           conn,
-          ingest_path(conn, :update, ingest_id),
+          Routes.ingest_path(conn, :update, ingest_id),
           ingest: update_attrs
         )
 
@@ -132,7 +132,7 @@ defmodule TdIeWeb.IngestControllerTest do
         conn =
           patch(
             conn,
-            ingest_ingest_path(conn, :update_status, ingest),
+            Routes.ingest_ingest_path(conn, :update_status, ingest),
             ingest: update_attrs
           )
 
@@ -140,7 +140,7 @@ defmodule TdIeWeb.IngestControllerTest do
         assert %{"id" => ^ingest_id} = json_response(conn, 200)["data"]
 
         conn = recycle_and_put_headers(conn)
-        conn = get(conn, ingest_path(conn, :show, ingest_id))
+        conn = get(conn, Routes.ingest_path(conn, :show, ingest_id))
         validate_resp_schema(conn, schema, "IngestResponse")
 
         assert json_response(conn, 200)["data"]["status"] == status_to
@@ -149,12 +149,7 @@ defmodule TdIeWeb.IngestControllerTest do
   end
 
   defp create_template(_) do
-    attrs =
-      %{}
-      |> Map.put(:id, 0)
-      |> Map.put(:label, "some type")
-      |> Map.put(:name, "some_type")
-      |> Map.put(:content, [])
+    attrs = %{id: 0, label: "some type", name: "some_type", content: [], scope: "ie"}
 
     @df_cache.put_template(attrs)
     :ok

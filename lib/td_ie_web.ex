@@ -21,8 +21,8 @@ defmodule TdIeWeb do
     quote do
       use Phoenix.Controller, namespace: TdIeWeb
       import Plug.Conn
-      import TdIeWeb.Router.Helpers
       import TdIeWeb.Gettext
+      alias TdIeWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -34,10 +34,9 @@ defmodule TdIeWeb do
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
-
-      import TdIeWeb.Router.Helpers
       import TdIeWeb.ErrorHelpers
       import TdIeWeb.Gettext
+      alias TdIeWeb.Router.Helpers, as: Routes
     end
   end
 

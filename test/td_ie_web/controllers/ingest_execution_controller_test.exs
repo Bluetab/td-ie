@@ -40,7 +40,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
     @tag :admin_authenticated
     test "lists all ingest_executions", %{conn: conn, swagger_schema: schema} do
       %{id: ingest_id} = insert(:ingest)
-      conn = get(conn, ingest_ingest_execution_path(conn, :index, ingest_id))
+      conn = get(conn, Routes.ingest_ingest_execution_path(conn, :index, ingest_id))
       validate_resp_schema(conn, schema, "IngestExecutionsResponse")
       assert json_response(conn, 200)["data"] == []
     end
@@ -52,7 +52,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       %{id: ingest_id} = insert(:ingest)
 
       conn =
-        post(conn, ingest_ingest_execution_path(conn, :create, ingest_id),
+        post(conn, Routes.ingest_ingest_execution_path(conn, :create, ingest_id),
           ingest_execution: @create_attrs
         )
 
@@ -60,13 +60,13 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, ingest_ingest_execution_path(conn, :show, ingest_id, id))
+      conn = get(conn, Routes.ingest_ingest_execution_path(conn, :show, ingest_id, id))
       validate_resp_schema(conn, schema, "IngestExecutionResponse")
 
       assert json_response(conn, 200)["data"] == %{
                "id" => id,
-               "end_timestamp" => "2010-04-17T14:00:00.000000",
-               "start_timestamp" => "2010-04-17T14:00:00.000000",
+               "end_timestamp" => "2010-04-17T14:00:00",
+               "start_timestamp" => "2010-04-17T14:00:00",
                "status" => "some status",
                "ingest_id" => ingest_id,
                "file_name" => "some file_name",
@@ -79,7 +79,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       %{id: ingest_id} = insert(:ingest)
 
       conn =
-        post(conn, ingest_ingest_execution_path(conn, :create, ingest_id),
+        post(conn, Routes.ingest_ingest_execution_path(conn, :create, ingest_id),
           ingest_execution: @invalid_attrs
         )
 
@@ -97,7 +97,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       insert(:ingest_version, name: "nombre sobrescrito")
 
       conn =
-        post(conn, ingest_execution_path(conn, :add_execution_by_name),
+        post(conn, Routes.ingest_execution_path(conn, :add_execution_by_name),
           ingest_name: "nombre sobrescrito",
           ingest_execution: @create_attrs
         )
@@ -112,7 +112,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       insert(:ingest_version, name: "nombre sobrescrito")
 
       conn =
-        post(conn, ingest_execution_path(conn, :add_execution_by_name),
+        post(conn, Routes.ingest_execution_path(conn, :add_execution_by_name),
           ingest_name: "nombre sobrescrito",
           ingest_execution: @invalid_attrs
         )
@@ -126,7 +126,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       insert(:ingest_version, name: "nombre sobrescrito")
 
       conn =
-        post(conn, ingest_execution_path(conn, :add_execution_by_name),
+        post(conn, Routes.ingest_execution_path(conn, :add_execution_by_name),
           ingest_name: "name",
           ingest_execution: @create_attrs
         )
@@ -140,7 +140,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       insert(:ingest_version, name: "nombre sobrescrito")
 
       conn =
-        post(conn, ingest_execution_path(conn, :add_execution_by_name),
+        post(conn, Routes.ingest_execution_path(conn, :add_execution_by_name),
           ingest_name: "name",
           ingest_execution: @invalid_attrs
         )
@@ -157,7 +157,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       %{id: id} = ingest_execution
 
       conn =
-        put(conn, ingest_ingest_execution_path(conn, :update, ingest_id, ingest_execution),
+        put(conn, Routes.ingest_ingest_execution_path(conn, :update, ingest_id, ingest_execution),
           ingest_execution: @update_attrs
         )
 
@@ -165,13 +165,13 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = recycle_and_put_headers(conn)
-      conn = get(conn, ingest_ingest_execution_path(conn, :show, ingest_id, id))
+      conn = get(conn, Routes.ingest_ingest_execution_path(conn, :show, ingest_id, id))
       validate_resp_schema(conn, schema, "IngestExecutionResponse")
 
       assert json_response(conn, 200)["data"] == %{
                "id" => id,
-               "end_timestamp" => "2011-05-18T15:01:01.000000",
-               "start_timestamp" => "2011-05-18T15:01:01.000000",
+               "end_timestamp" => "2011-05-18T15:01:01",
+               "start_timestamp" => "2011-05-18T15:01:01",
                "status" => "some updated status",
                "ingest_id" => ingest_id,
                "file_name" => "some updated file_name",
@@ -185,7 +185,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
       conn =
-        put(conn, ingest_ingest_execution_path(conn, :update, ingest_id, ingest_execution),
+        put(conn, Routes.ingest_ingest_execution_path(conn, :update, ingest_id, ingest_execution),
           ingest_execution: @invalid_attrs
         )
 
@@ -200,13 +200,16 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
       conn =
-        delete(conn, ingest_ingest_execution_path(conn, :delete, ingest_id, ingest_execution))
+        delete(
+          conn,
+          Routes.ingest_ingest_execution_path(conn, :delete, ingest_id, ingest_execution)
+        )
 
       assert response(conn, 204)
 
       assert_error_sent(404, fn ->
         conn = recycle_and_put_headers(conn)
-        get(conn, ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
+        get(conn, Routes.ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
       end)
     end
   end
