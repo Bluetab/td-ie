@@ -1,3 +1,3 @@
 #!/bin/sh
 
-bin/td_ie command Elixir.TdIe.ReleaseTasks seed
+$RELEASE_ROOT_DIR/bin/td_ie eval 'Elixir.TdIe.ReleaseTasks.seed()'

@@ -48,7 +48,7 @@ defmodule TdIe.Mixfile do
       {:gettext, "~> 0.11"},
       {:cabbage, git: "https://github.com/eriosv/cabbage.git"},
       {:httpoison, "~> 1.0"},
-      {:distillery, "~> 1.5", runtime: false},
+      {:distillery, "~> 2.0", runtime: false},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:guardian, "~> 1.0"},
       {:canada, "~> 1.0.1"},
