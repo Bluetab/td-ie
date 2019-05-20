@@ -40,7 +40,6 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :td_ie, TdIe.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "td_ie_dev",

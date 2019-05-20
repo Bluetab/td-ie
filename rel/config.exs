@@ -36,7 +36,7 @@ environment :prod do
   set(include_erts: true)
   set(include_src: false)
   set(cookie: :"uV5.x{.Y8($Qp8!c**|2UJfPeBxh]NPz]r2qC~x_yEZr~Ub&7(?b<%2j(i&Zo!2{")
-  set(pre_start_hook: "rel/hooks/pre-start")
+  set(pre_start_hooks: "rel/hooks/pre_start")
 end
 
 # You may define one or more releases in this file.
@@ -46,16 +46,6 @@ end
 
 release :td_ie do
   set(version: current_version(:td_ie))
-
-  set(
-    applications: [
-      :runtime_tools
-    ]
-  )
-
-  set(
-    commands: [
-      migrate: "rel/commands/migrate.sh"
-    ]
-  )
+  set(applications: [:runtime_tools])
+  set(commands: [migrate: "rel/commands/migrate.sh"])
 end

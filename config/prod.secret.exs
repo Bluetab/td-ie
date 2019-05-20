@@ -13,7 +13,6 @@ config :td_ie, TdIeWeb.Endpoint,
 
 # Configure your database
 config :td_ie, TdIe.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "${DB_USER}",
   password: "${DB_PASSWORD}",
   database: "${DB_NAME}",

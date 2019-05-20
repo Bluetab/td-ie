@@ -60,7 +60,7 @@ defmodule TdIeWeb.IngestExecutionController do
       |> put_status(:created)
       |> put_resp_header(
         "location",
-        ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
+        Routes.ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
       )
       |> render("show.json", ingest_execution: ingest_execution)
     else
@@ -172,7 +172,7 @@ defmodule TdIeWeb.IngestExecutionController do
         |> put_status(:created)
         |> put_resp_header(
           "location",
-          ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
+          Routes.ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution)
         )
         |> render("show.json", ingest_execution: ingest_execution)
       else

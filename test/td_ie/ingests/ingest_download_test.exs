@@ -28,6 +28,7 @@ defmodule TdIe.IngestDownloadTests do
         id: 0,
         name: template_name,
         label: "label",
+        scope: "ie",
         content: [
           %{
             "name" => field_name,

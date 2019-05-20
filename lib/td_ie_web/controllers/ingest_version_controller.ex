@@ -159,7 +159,7 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("parent_id", parent_id)
       |> Map.put("type", ingest_type)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
     creation_attrs =
       ingest_params
@@ -168,7 +168,7 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.update("content", %{}, & &1)
       |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", conn.assigns.current_user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
       |> Map.put("status", Ingest.status().draft)
       |> Map.put("version", 1)
 
@@ -195,7 +195,7 @@ defmodule TdIeWeb.IngestVersionController do
         |> put_status(:created)
         |> put_resp_header(
           "location",
-          ingest_path(conn, :show, version.ingest)
+          Routes.ingest_path(conn, :show, version.ingest)
         )
         |> render(
           "show.json",
@@ -258,9 +258,7 @@ defmodule TdIeWeb.IngestVersionController do
         )
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -297,14 +295,10 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -344,14 +338,10 @@ defmodule TdIeWeb.IngestVersionController do
       send_resp(conn, :no_content, "")
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -378,9 +368,7 @@ defmodule TdIeWeb.IngestVersionController do
         send_for_approval(conn, user, ingest_version)
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -407,9 +395,7 @@ defmodule TdIeWeb.IngestVersionController do
         publish(conn, user, ingest_version)
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -437,9 +423,7 @@ defmodule TdIeWeb.IngestVersionController do
         reject(conn, user, ingest_version, Map.get(params, "reject_reason"))
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -466,9 +450,7 @@ defmodule TdIeWeb.IngestVersionController do
         undo_rejection(conn, user, ingest_version)
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -495,9 +477,7 @@ defmodule TdIeWeb.IngestVersionController do
         do_version(conn, user, ingest_version)
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -524,9 +504,7 @@ defmodule TdIeWeb.IngestVersionController do
         deprecate(conn, user, ingest_version)
 
       _ ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -575,14 +553,10 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -612,14 +586,10 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -662,14 +632,10 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -703,14 +669,10 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -747,7 +709,7 @@ defmodule TdIeWeb.IngestVersionController do
       %{}
       |> Map.put("parent_id", parent_id)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
     update_params =
       ingest_version_params
@@ -756,7 +718,7 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.update("content", %{}, & &1)
       |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
     related_to = Map.get(update_params, "related_to")
 
@@ -794,9 +756,7 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       {:name_not_available} ->
         conn
@@ -811,12 +771,11 @@ defmodule TdIeWeb.IngestVersionController do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdIeWeb.ChangesetView, "error.json", changeset: changeset)
+        |> put_view(TdIeWeb.ChangesetView)
+        |> render("error.json", changeset: changeset)
 
       _error ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 

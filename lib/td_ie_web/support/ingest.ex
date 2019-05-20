@@ -10,9 +10,7 @@ defmodule TdIeWeb.IngestSupport do
   def handle_ingest_errors(conn, error) do
     case error do
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       {:ingest_not_found} ->
         conn
@@ -32,7 +30,8 @@ defmodule TdIeWeb.IngestSupport do
       {:error, %Ecto.Changeset{data: %{__struct__: _}} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdIeWeb.ChangesetView, "error.json",
+        |> put_view(TdIeWeb.ChangesetView)
+        |> render("error.json",
           changeset: changeset,
           prefix: "ingest.error"
         )
@@ -40,7 +39,8 @@ defmodule TdIeWeb.IngestSupport do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(TdIeWeb.ChangesetView, "error.json",
+        |> put_view(TdIeWeb.ChangesetView)
+        |> render("error.json",
           changeset: changeset,
           prefix: "ingest.content.error"
         )
@@ -48,9 +48,7 @@ defmodule TdIeWeb.IngestSupport do
       error ->
         Logger.error("Ingest... #{inspect(error)}")
 
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(ErrorView, "422.json")
+        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 end

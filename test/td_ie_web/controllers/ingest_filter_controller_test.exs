@@ -28,13 +28,13 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   describe "index" do
     @tag :admin_authenticated
     test "lists all filters (admin user)", %{conn: conn} do
-      conn = get(conn, ingest_filter_path(conn, :index))
+      conn = get(conn, Routes.ingest_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == MockSearch.get_filters(%{})
     end
 
     @tag authenticated_user: @user_name
     test "lists all filters (non-admin user)", %{conn: conn} do
-      conn = get(conn, ingest_filter_path(conn, :index))
+      conn = get(conn, Routes.ingest_filter_path(conn, :index))
       assert json_response(conn, 200)["data"] == %{}
     end
   end

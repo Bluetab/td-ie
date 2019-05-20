@@ -25,14 +25,10 @@ defmodule TdIeWeb.SearchController do
       send_resp(conn, :ok, "")
     else
       false ->
-        conn
-        |> put_status(:forbidden)
-        |> render(ErrorView, "403.json")
+        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
       _error ->
-        conn
-        |> put_status(:internal_server_error)
-        |> render(ErrorView, "500.json")
+        conn |> put_status(:internal_server_error) |> put_view(ErrorView) |> render("500.json")
     end
   end
 end

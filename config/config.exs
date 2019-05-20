@@ -13,8 +13,7 @@ config :td_ie,
 config :td_ie, TdIeWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "/dcHCF/jz9hccq5nBQpPl02KfE9ch3y5XtglF/KqnY3IsHe98gylfgDzHLVDFaTy",
-  render_errors: [view: TdIeWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: TdIe.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: TdIeWeb.ErrorView, accepts: ~w(json)]
 
 config :td_ie, :phoenix_swagger,
   swagger_files: %{
@@ -89,6 +88,9 @@ config :td_ie, :audit_service,
 config :logger, :console,
   format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
   metadata: [:request_id]
+
+# Configuration for Phoenix
+config :phoenix, :json_library, Jason
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

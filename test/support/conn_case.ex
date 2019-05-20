@@ -22,7 +22,7 @@ defmodule TdIeWeb.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import TdIeWeb.Router.Helpers
+      alias TdIeWeb.Router.Helpers, as: Routes
       import TdIe.Factory
 
       # The default endpoint for testing
@@ -34,6 +34,7 @@ defmodule TdIeWeb.ConnCase do
 
   setup tags do
     :ok = Sandbox.checkout(TdIe.Repo)
+
     unless tags[:async] do
       Sandbox.mode(TdIe.Repo, {:shared, self()})
     end
@@ -42,12 +43,13 @@ defmodule TdIeWeb.ConnCase do
       tags[:admin_authenticated] ->
         user = create_user(@admin_user_name, is_admin: true)
         create_user_auth_conn(user)
+
       tags[:authenticated_user] ->
         user = create_user(tags[:authenticated_user])
         create_user_auth_conn(user)
-       true ->
-         {:ok, conn: ConnTest.build_conn()}
+
+      true ->
+        {:ok, conn: ConnTest.build_conn()}
     end
   end
-
 end

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- [TD-1774] Newline is missing in logger format
+
+### Changed
+
+- Updated dependencies: phoenix 1.4, ecto 3.0, td_df_lib 2.19.3, td_perms 2.19.1
+
 ## [2.16.0] 2019-04-02
 
 ### Added

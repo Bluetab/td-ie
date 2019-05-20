@@ -216,7 +216,7 @@ defmodule TdIe.Ingests do
     ingest =
       ingest
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
     draft_attrs = Map.from_struct(ingest_version)
 
@@ -224,7 +224,7 @@ defmodule TdIe.Ingests do
       draft_attrs
       |> Map.put("ingest", ingest)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
       |> Map.put("status", Ingest.status().draft)
       |> Map.put("version", ingest_version.version + 1)
 
@@ -619,10 +619,10 @@ defmodule TdIe.Ingests do
   end
 
   defp add_content_if_not_exist(attrs) do
-    if not Map.has_key?(attrs, @content) do
-      Map.put(attrs, @content, %{})
-    else
+    if Map.has_key?(attrs, @content) do
       attrs
+    else
+      Map.put(attrs, @content, %{})
     end
   end
 
@@ -685,14 +685,14 @@ defmodule TdIe.Ingests do
     content_schema = Map.get(attrs, @content_schema)
     changeset = Validation.build_changeset(content, content_schema)
 
-    if not changeset.valid? do
-      attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    else
+    if changeset.valid? do
       attrs
       |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
       |> Map.put(:in_progress, false)
+    else
+      attrs
+      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
+      |> Map.put(:in_progress, true)
     end
   end
 
