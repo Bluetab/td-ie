@@ -37,6 +37,7 @@ defmodule TdIe.Search.Aggregations do
   end
 
   def filter_content_term(%{"type" => "list"}), do: true
+  def filter_content_term(%{"values" => values}) when is_map(values), do: true
   def filter_content_term(_), do: false
 
   defp content_term(field) do

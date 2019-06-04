@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 2019-06-04
+
+## Changed
+
+- [TD-1789] update ES mappings according to template format
+
 ## [2.20.0] 2019-05-27
 
 ### Fixed
