@@ -4,15 +4,13 @@ defmodule TdIe.IngestsTests do
   """
   use TdIe.DataCase
 
+  alias TdCache.TemplateCache
   alias TdIe.Accounts.User
   alias TdIe.Ingests
   alias TdIe.Repo
   alias TdIeWeb.ApiServices.MockTdAuthService
 
-  @df_cache Application.get_env(:td_ie, :df_cache)
-
   setup_all do
-    start_supervised(@df_cache)
     start_supervised(MockTdAuthService)
     :ok
   end
@@ -22,7 +20,7 @@ defmodule TdIe.IngestsTests do
   end
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
   end
 

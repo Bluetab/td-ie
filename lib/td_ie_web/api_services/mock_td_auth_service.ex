@@ -3,10 +3,10 @@ defmodule TdIeWeb.ApiServices.MockTdAuthService do
 
   use Agent
 
+  alias TdCache.TaxonomyCache
   alias TdIe.Accounts.Group
   alias TdIe.Accounts.User
   alias TdIe.Permissions.MockPermissionResolver
-  alias TdPerms.TaxonomyCache
 
   def start_link(_) do
     Agent.start_link(fn -> %{} end, name: MockTdAuthService)

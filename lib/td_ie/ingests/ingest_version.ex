@@ -1,15 +1,17 @@
 defmodule TdIe.Ingests.IngestVersion do
   @moduledoc false
+
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias TdCache.TaxonomyCache
+  alias TdCache.TemplateCache
+  alias TdCache.UserCache
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.RichText
-  alias TdPerms.TaxonomyCache
-  alias TdPerms.UserCache
-
-  @df_cache Application.get_env(:td_ie, :df_cache)
 
   schema "ingest_versions" do
     field(:content, :map)
@@ -148,7 +150,7 @@ defmodule TdIe.Ingests.IngestVersion do
 
   def search_fields(%IngestVersion{last_change_by: last_change_by_id} = ingest_version) do
     template =
-      case @df_cache.get_template_by_name(ingest_version.ingest.type) do
+      case TemplateCache.get_by_name!(ingest_version.ingest.type) do
         nil -> %{content: []}
         template -> template
       end
@@ -158,9 +160,9 @@ defmodule TdIe.Ingests.IngestVersion do
     domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
 
     last_change_by =
-      case UserCache.get_user(last_change_by_id) do
-        nil -> %{}
-        user -> user
+      case UserCache.get(last_change_by_id) do
+        {:ok, nil} -> %{}
+        {:ok, user} -> user
       end
 
     content =

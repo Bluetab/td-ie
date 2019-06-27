@@ -6,7 +6,7 @@ defmodule TdIe.Permissions.MockPermissionResolver do
   use Agent
 
   alias Poision
-  alias TdPerms.TaxonomyCache
+  alias TdCache.TaxonomyCache
 
   @role_permissions %{
     "admin" => [

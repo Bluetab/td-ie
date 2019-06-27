@@ -5,15 +5,10 @@ defmodule TdIe.IngestLoader do
 
   use GenServer
 
+  alias TdCache.IngestCache
   alias TdIe.Ingests
-  alias TdPerms.IngestCache
 
   require Logger
-
-  @cache_ingests_on_startup Application.get_env(
-                              :td_ie,
-                              :cache_ingests_on_startup
-                            )
 
   def start_link(name \\ nil) do
     GenServer.start_link(__MODULE__, nil, name: name)
@@ -29,7 +24,10 @@ defmodule TdIe.IngestLoader do
 
   @impl true
   def init(state) do
-    if @cache_ingests_on_startup, do: schedule_work(:load_ingest_cache, 0)
+    unless Application.get_env(:td_ie, :env) == :test do
+      schedule_work(:load_ingest_cache, 0)
+    end
+
     {:ok, state}
   end
 

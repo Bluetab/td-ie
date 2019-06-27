@@ -9,6 +9,7 @@ defmodule TdIeWeb.IngestController do
 
   import Canada, only: [can?: 2]
 
+  alias TdCache.TemplateCache
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
@@ -16,7 +17,6 @@ defmodule TdIeWeb.IngestController do
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
 
-  @df_cache Application.get_env(:td_ie, :df_cache)
   @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
 
   action_fallback(TdIeWeb.FallbackController)
@@ -110,7 +110,7 @@ defmodule TdIeWeb.IngestController do
 
     ingest_type = ingest_version.ingest.type
     ingest_name = Map.get(ingest_params, "name")
-    %{:content => content_schema} = @df_cache.get_template_by_name(ingest_type)
+    %{:content => content_schema} = TemplateCache.get_by_name!(ingest_type)
 
     ingest_attrs =
       %{}

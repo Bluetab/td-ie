@@ -38,4 +38,4 @@ config :td_ie, :elasticsearch,
   es_port: "${ES_PORT}",
   type_name: "doc"
 
-config :td_perms, redis_host: "${REDIS_HOST}"
+config :td_cache, redis_host: "${REDIS_HOST}"

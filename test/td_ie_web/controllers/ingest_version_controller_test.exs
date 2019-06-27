@@ -5,18 +5,16 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   import TdIeWeb.Authentication, only: :functions
   import TdIe.TaxonomyHelper, only: :functions
 
+  alias TdCache.TemplateCache
   alias TdIe.Ingests.Ingest
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuditService
   alias TdIeWeb.ApiServices.MockTdAuthService
 
-  @df_cache Application.get_env(:td_ie, :df_cache)
-
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
-    start_supervised(@df_cache)
     :ok
   end
 
@@ -231,7 +229,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         end)
 
       update_attrs = Map.put(template, :content, updated_content)
-      @df_cache.put_template(update_attrs)
+      TemplateCache.put(update_attrs)
 
       conn =
         post(
@@ -306,12 +304,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   def create_template do
     attrs = %{id: 0, label: "some type", name: "some_type", content: [], scope: "ie"}
 
-    @df_cache.put_template(attrs)
+    TemplateCache.put(attrs)
     :ok
   end
 
   def create_template(template) do
-    @df_cache.put_template(template)
+    TemplateCache.put(template)
     template
   end
 end
