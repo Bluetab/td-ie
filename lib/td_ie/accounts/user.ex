@@ -1,6 +1,7 @@
 defmodule TdIe.Accounts.User do
   @moduledoc false
 
+  @derive Jason.Encoder
   defstruct id: 0,
             user_name: nil,
             password: nil,

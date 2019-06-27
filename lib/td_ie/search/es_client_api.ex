@@ -1,20 +1,22 @@
 defmodule TdIe.ESClientApi do
-  use HTTPoison.Base
-  require Logger
-  alias Poison, as: JSON
-
   @moduledoc false
+
+  use HTTPoison.Base
+
+  alias Jason, as: JSON
+
+  require Logger
 
   @doc """
   Loads all index configuration into elasticsearch
   """
   def create_indexes do
     json = File.read!(Path.join(:code.priv_dir(:td_ie), "static/indexes.json"))
-    json_decode = json |> Poison.decode!()
+    json_decode = json |> JSON.decode!()
 
     Enum.map(json_decode, fn x ->
       index_name = x |> Map.keys() |> List.first()
-      mapping = x[index_name] |> Poison.encode!()
+      mapping = x[index_name] |> JSON.encode!()
       %HTTPoison.Response{body: _response, status_code: status} = put!(index_name, mapping)
       Logger.info("Create index #{index_name} status #{status}")
     end)
@@ -34,7 +36,7 @@ defmodule TdIe.ESClientApi do
 
   defp build_bulk_doc(item) do
     search_fields = item.__struct__.search_fields(item)
-    "#{search_fields |> Poison.encode!()}"
+    "#{search_fields |> JSON.encode!()}"
   end
 
   defp build_bulk_metadata(index_name, item) do
@@ -68,7 +70,7 @@ defmodule TdIe.ESClientApi do
   """
   def delete_indexes(options \\ []) do
     json = File.read!(Path.join(:code.priv_dir(:td_ie), "static/indexes.json"))
-    json_decode = json |> Poison.decode!()
+    json_decode = json |> JSON.decode!()
 
     Enum.map(json_decode, fn x ->
       index_name = x |> Map.keys() |> List.first()
@@ -90,7 +92,7 @@ defmodule TdIe.ESClientApi do
   """
   def process_response_body(body) do
     body
-    |> Poison.decode!()
+    |> JSON.decode!()
   end
 
   @doc """
