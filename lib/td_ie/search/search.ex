@@ -1,12 +1,14 @@
 defmodule TdIe.Search do
-  require Logger
+  @moduledoc """
+  Search Engine calls
+  """
+
+  alias Jason, as: JSON
   alias TdIe.ESClientApi
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
 
-  @moduledoc """
-    Search Engine calls
-  """
+  require Logger
 
   def put_bulk_search(:ingest) do
     ingests = Ingests.list_all_ingest_versions()
@@ -20,7 +22,7 @@ defmodule TdIe.Search do
       ESClientApi.index_content(
         ingest_version.__struct__.index_name(),
         ingest_version.id,
-        search_fields |> Poison.encode!()
+        search_fields |> JSON.encode!()
       )
 
     case response do

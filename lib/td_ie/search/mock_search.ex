@@ -1,7 +1,7 @@
 defmodule TdIe.Search.MockSearch do
   @moduledoc false
 
-  alias Poison
+  alias Jason, as: JSON
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
 
@@ -15,8 +15,8 @@ defmodule TdIe.Search.MockSearch do
     Ingests.list_all_ingest_versions()
     |> Enum.map(&IngestVersion.search_fields(&1))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
@@ -25,8 +25,8 @@ defmodule TdIe.Search.MockSearch do
     |> Enum.filter(&(&1.ingest_id == ingest_id))
     |> Enum.map(&IngestVersion.search_fields(&1))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
@@ -37,8 +37,8 @@ defmodule TdIe.Search.MockSearch do
     |> Enum.map(&IngestVersion.search_fields(&1))
     |> Enum.filter(&matches(&1, query))
     |> Enum.map(&%{_source: &1})
-    |> Poison.encode!()
-    |> Poison.decode!()
+    |> JSON.encode!()
+    |> JSON.decode!()
     |> search_results
   end
 
