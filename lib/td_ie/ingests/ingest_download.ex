@@ -1,15 +1,15 @@
 defmodule TdIe.Ingest.Download do
   @moduledoc """
-    Helper module to download ingests.
+  Helper module to download ingests.
   """
-  @df_cache Application.get_env(:td_ie, :df_cache)
+
+  alias TdCache.TemplateCache
 
   def to_csv(ingests) do
     ingests_by_type = Enum.group_by(ingests, &(&1 |> Map.get("template") |> Map.get("name")))
     types = Map.keys(ingests_by_type)
 
-    templates_by_type =
-      Enum.reduce(types, %{}, &Map.put(&2, &1, @df_cache.get_template_by_name(&1)))
+    templates_by_type = Enum.reduce(types, %{}, &Map.put(&2, &1, TemplateCache.get_by_name!(&1)))
 
     list =
       Enum.reduce(types, [], fn type, acc ->

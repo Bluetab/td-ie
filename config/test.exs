@@ -18,7 +18,6 @@ config :td_ie, TdIe.Repo,
   hostname: "postgres",
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :td_ie, df_cache: TdPerms.MockDynamicFormCache
 config :td_ie, permission_resolver: TdIe.Permissions.MockPermissionResolver
 
 config :td_ie, :elasticsearch,
@@ -33,5 +32,4 @@ config :td_ie, :audit_service,
   audit_port: "4007",
   audit_domain: ""
 
-config :td_perms, redis_host: "redis"
-config :td_ie, cache_ingests_on_startup: false
+config :td_cache, redis_host: "redis"

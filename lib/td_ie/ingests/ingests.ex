@@ -6,12 +6,12 @@ defmodule TdIe.Ingests do
   import Ecto.Query, warn: false
   import Ecto.Changeset
   alias Ecto.Multi
+  alias TdCache.TaxonomyCache
   alias TdDfLib.Validation
   alias TdIe.IngestLoader
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
-  alias TdPerms.TaxonomyCache
   alias ValidationError
 
   @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]

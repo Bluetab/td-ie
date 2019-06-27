@@ -2,7 +2,7 @@ defmodule TdIe.TaxonomyHelper do
   @moduledoc """
   Helper functions on taxonomy iteration
   """
-  alias TdPerms.TaxonomyCache
+  alias TdCache.TaxonomyCache
   @valid_attrs %{id: 1, name: "domain name", parent_ids: []}
 
   def domain_fixture(attrs \\ %{}) do
@@ -11,11 +11,11 @@ defmodule TdIe.TaxonomyHelper do
       |> Enum.into(@valid_attrs)
 
     final_attrs
-      |> Map.get(:id)
-      |> TaxonomyCache.delete_domain()
+    |> Map.get(:id)
+    |> TaxonomyCache.delete_domain()
 
     final_attrs
-      |> TaxonomyCache.put_domain()
+    |> TaxonomyCache.put_domain()
 
     final_attrs
   end

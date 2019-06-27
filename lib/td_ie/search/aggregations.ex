@@ -1,9 +1,9 @@
 defmodule TdIe.Search.Aggregations do
   @moduledoc """
-    Aggregations for elasticsearch
+  Aggregations for elasticsearch
   """
 
-  @df_cache Application.get_env(:td_ie, :df_cache)
+  alias TdCache.TemplateCache
 
   def aggregation_terms do
     static_keywords = [
@@ -22,7 +22,7 @@ defmodule TdIe.Search.Aggregations do
     ]
 
     dynamic_keywords =
-      @df_cache.list_templates()
+      TemplateCache.list!()
       |> Enum.flat_map(&template_terms/1)
 
     (static_keywords ++ dynamic_keywords)

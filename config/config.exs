@@ -5,6 +5,9 @@
 # is restricted to this project.
 use Mix.Config
 
+# Environment
+config :td_ie, :env, Mix.env()
+
 # General application configuration
 config :td_ie,
   ecto_repos: [TdIe.Repo]
@@ -27,7 +30,7 @@ config :td_ie, TdIe.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "SuperSecretTruedat"
 
-config :td_perms,
+config :td_cache,
   permissions: [
     :is_admin,
     :create_acl_entry,
@@ -70,12 +73,13 @@ config :td_perms,
     :view_published_ingests,
     :view_versioned_ingests,
     :view_rejected_ingests,
-    :view_deprecated_ingests
+    :view_deprecated_ingests,
+    :manage_confidential_structures,
+    :manage_ingest_relations,
+    :view_data_structures_profile
   ]
 
-config :td_ie, permission_resolver: TdPerms.Permissions
-config :td_ie, df_cache: TdPerms.DynamicFormCache
-config :td_ie, cache_ingests_on_startup: true
+config :td_ie, permission_resolver: TdCache.Permissions
 
 config :td_ie, :audit_service,
   protocol: "http",

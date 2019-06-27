@@ -5,9 +5,9 @@ defmodule TdIeWeb.IngestVersionView do
   use TdIeWeb, :view
   use TdIeWeb.Hypermedia, :view
 
+  alias TdCache.IngestCache
+  alias TdCache.UserCache
   alias TdIeWeb.IngestVersionView
-  alias TdPerms.IngestCache
-  alias TdPerms.UserCache
 
   def render("index.json", %{
         ingest_versions: ingest_versions,
@@ -108,6 +108,8 @@ defmodule TdIeWeb.IngestVersionView do
           ingest_version: ingest_version
         } = assigns
       ) do
+    {:ok, user} = UserCache.get(ingest_version.last_change_by)
+
     %{
       id: ingest_version.id,
       ingest_id: ingest_version.ingest.id,
@@ -124,7 +126,7 @@ defmodule TdIeWeb.IngestVersionView do
       current: ingest_version.current,
       version: ingest_version.version,
       in_progress: ingest_version.in_progress,
-      last_change_user: UserCache.get_user(ingest_version.last_change_by)
+      last_change_user: user
     }
     |> add_reject_reason(
       ingest_version.reject_reason,

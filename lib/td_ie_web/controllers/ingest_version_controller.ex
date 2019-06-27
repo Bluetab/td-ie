@@ -10,6 +10,7 @@ defmodule TdIeWeb.IngestVersionController do
 
   import Canada, only: [can?: 2]
 
+  alias TdCache.TemplateCache
   alias TdIe.Audit
   alias TdIe.Ingest.Download
   alias TdIe.Ingest.Search
@@ -20,8 +21,6 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
-
-  @df_cache Application.get_env(:td_ie, :df_cache)
 
   @events %{
     create_ingest_draft: "create_ingest_draft",
@@ -140,7 +139,7 @@ defmodule TdIeWeb.IngestVersionController do
     validate_required_ingest_fields(ingest_params)
 
     ingest_type = Map.get(ingest_params, "type")
-    template = @df_cache.get_template_by_name(ingest_type)
+    template = TemplateCache.get_by_name!(ingest_type)
     content_schema = Map.get(template, :content)
     ingest_name = Map.get(ingest_params, "name")
 
@@ -840,6 +839,6 @@ defmodule TdIeWeb.IngestVersionController do
     version
     |> Map.get(:ingest)
     |> Map.get(:type)
-    |> @df_cache.get_template_by_name
+    |> TemplateCache.get_by_name!()
   end
 end
