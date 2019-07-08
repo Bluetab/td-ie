@@ -417,19 +417,19 @@ defmodule TdIe.IngestsTests do
 
     test "check_ingest_name_availability/2 check not available" do
       user = build(:user)
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
+      name = random_name()
+      ingest_version = insert(:ingest_version, name: name, last_change_by: user.id)
       type = ingest_version.ingest.type
-      name = ingest_version.name
 
       assert {:name_not_available} == Ingests.check_ingest_name_availability(type, name)
     end
 
     test "check_ingest_name_availability/2 check available" do
       user = build(:user)
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
+      name = random_name()
+      ingest_version = insert(:ingest_version, name: name, last_change_by: user.id)
       exclude_ingest_id = ingest_version.ingest.id
       type = ingest_version.ingest.type
-      name = ingest_version.name
 
       assert {:name_available} ==
                Ingests.check_ingest_name_availability(
@@ -440,6 +440,8 @@ defmodule TdIe.IngestsTests do
     end
 
     test "check_ingest_name_availability/3 check not available" do
+      [name1, name2] = 1..10 |> Enum.map(fn _ -> random_name() end) |> Enum.uniq() |> Enum.take(2)
+
       user = build(:user)
       domain_id = 1
       i1 = insert(:ingest, domain_id: domain_id)
@@ -449,7 +451,7 @@ defmodule TdIe.IngestsTests do
         insert(
           :ingest_version,
           last_change_by: user.id,
-          name: "first",
+          name: name1,
           ingest: i1
         )
 
@@ -457,14 +459,14 @@ defmodule TdIe.IngestsTests do
         insert(
           :ingest_version,
           last_change_by: user.id,
-          name: "second",
+          name: name2,
           ingest: i2
         )
 
       assert {:name_not_available} ==
                Ingests.check_ingest_name_availability(
                  second.ingest.type,
-                 "first",
+                 name1,
                  second.id
                )
     end
@@ -887,5 +889,10 @@ defmodule TdIe.IngestsTests do
       ingest_execution = ingest_execution_fixture()
       assert %Ecto.Changeset{} = Ingests.change_ingest_execution(ingest_execution)
     end
+  end
+
+  defp random_name do
+    id = :rand.uniform(100_000_000)
+    "Concept #{id}"
   end
 end
