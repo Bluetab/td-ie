@@ -17,7 +17,6 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
-  alias TdIe.Repo
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
@@ -44,11 +43,7 @@ defmodule TdIeWeb.IngestVersionController do
     description("Ingest Versions")
 
     parameters do
-      search(
-        :body,
-        Schema.ref(:IngestVersionFilterRequest),
-        "Search query and filter parameters"
-      )
+      search(:body, Schema.ref(:IngestVersionFilterRequest), "Search query and filter parameters")
     end
 
     response(200, "OK", Schema.ref(:IngestVersionsResponse))
@@ -66,11 +61,7 @@ defmodule TdIeWeb.IngestVersionController do
     description("Ingest Versions")
 
     parameters do
-      search(
-        :body,
-        Schema.ref(:IngestVersionFilterRequest),
-        "Search query and filter parameters"
-      )
+      search(:body, Schema.ref(:IngestVersionFilterRequest), "Search query and filter parameters")
     end
 
     response(200, "OK", Schema.ref(:IngestVersionsResponse))
@@ -98,11 +89,7 @@ defmodule TdIeWeb.IngestVersionController do
 
     conn
     |> put_resp_header("x-total-count", "#{total}")
-    |> render(
-      "list.json",
-      ingest_versions: ingest_versions,
-      hypermedia: hypermedia
-    )
+    |> render("list.json", ingest_versions: ingest_versions, hypermedia: hypermedia)
   end
 
   def csv(conn, params) do
@@ -121,11 +108,7 @@ defmodule TdIeWeb.IngestVersionController do
     produces("application/json")
 
     parameters do
-      ingest(
-        :body,
-        Schema.ref(:IngestVersionCreate),
-        "Ingest create attrs"
-      )
+      ingest(:body, Schema.ref(:IngestVersionCreate), "Ingest create attrs")
     end
 
     response(201, "Created", Schema.ref(:IngestVersionResponse))
@@ -142,7 +125,6 @@ defmodule TdIeWeb.IngestVersionController do
     template = TemplateCache.get_by_name!(ingest_type)
     content_schema = Map.get(template, :content)
     ingest_name = Map.get(ingest_params, "name")
-
     domain_id = Map.get(ingest_params, "domain_id")
 
     resource_domain =
@@ -150,12 +132,9 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put(:resource_id, domain_id)
       |> Map.put(:resource_type, "domain")
 
-    parent_id = Map.get(ingest_params, "parent_id", nil)
-
     ingest_attrs =
       %{}
       |> Map.put("domain_id", domain_id)
-      |> Map.put("parent_id", parent_id)
       |> Map.put("type", ingest_type)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
@@ -165,17 +144,13 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", conn.assigns.current_user.id)
       |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
       |> Map.put("status", Ingest.status().draft)
       |> Map.put("version", 1)
 
-    related_to = Map.get(creation_attrs, "related_to")
-
     with true <- can?(user, create_ingest(resource_domain)),
          {:name_available} <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
-         {:valid_related_to} <- check_valid_related_to(ingest_type, related_to),
          {:ok, %IngestVersion{} = version} <- Ingests.create_ingest(creation_attrs) do
       ingest_id = version.ingest.id
 
@@ -189,20 +164,10 @@ defmodule TdIeWeb.IngestVersionController do
 
       Audit.create_event(conn, audit, @events.create_ingest_draft)
 
-      conn =
-        conn
-        |> put_status(:created)
-        |> put_resp_header(
-          "location",
-          Routes.ingest_path(conn, :show, version.ingest)
-        )
-        |> render(
-          "show.json",
-          ingest_version: version,
-          template: template
-        )
-
       conn
+      |> put_status(:created)
+      |> put_resp_header("location", Routes.ingest_path(conn, :show, version.ingest))
+      |> render("show.json", ingest_version: version, template: template)
     else
       error ->
         IngestSupport.handle_ingest_errors(conn, error)
@@ -224,14 +189,6 @@ defmodule TdIeWeb.IngestVersionController do
     end
   end
 
-  defp check_valid_related_to(_type, []), do: {:valid_related_to}
-
-  defp check_valid_related_to(type, ids) do
-    input_count = length(ids)
-    actual_count = Ingests.count_published_ingests(type, ids)
-    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
-  end
-
   swagger_path :versions do
     description("List Ingest Versions")
 
@@ -249,9 +206,7 @@ defmodule TdIeWeb.IngestVersionController do
 
     case Search.list_ingest_versions(ingest_version.ingest_id, user) do
       %{results: ingest_versions} ->
-        render(
-          conn,
-          "versions.json",
+        render(conn, "versions.json",
           ingest_versions: ingest_versions,
           hypermedia: hypermedia("ingest_version", conn, ingest_versions)
         )
@@ -279,15 +234,9 @@ defmodule TdIeWeb.IngestVersionController do
 
     with true <- can?(user, view_ingest(ingest_version)) do
       template = get_template(ingest_version)
+      ingest_version = Ingests.with_domain(ingest_version)
 
-      ingest_version =
-        ingest_version
-        |> Repo.preload(ingest: [:children, :parent])
-        |> Ingests.retrieve_parent(:domain)
-
-      render(
-        conn,
-        "show.json",
+      render(conn, "show.json",
         ingest_version: ingest_version,
         hypermedia: hypermedia("ingest_version", conn, ingest_version),
         template: template
@@ -320,9 +269,7 @@ defmodule TdIeWeb.IngestVersionController do
 
     with true <- can?(user, delete(ingest_version)),
          {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version) do
-      audit_payload =
-        ingest_version
-        |> Map.take([:version])
+      audit_payload = Map.take(ingest_version, [:version])
 
       audit = %{
         "audit" => %{
@@ -644,9 +591,7 @@ defmodule TdIeWeb.IngestVersionController do
     with true <- can?(user, version(ingest_version)),
          {:ok, %{current: %IngestVersion{} = new_version}} <-
            Ingests.new_ingest_version(user, ingest_version) do
-      audit_payload =
-        new_version
-        |> Map.take([:version])
+      audit_payload = Map.take(new_version, [:version])
 
       audit = %{
         "audit" => %{
@@ -680,12 +625,7 @@ defmodule TdIeWeb.IngestVersionController do
     produces("application/json")
 
     parameters do
-      ingest_version(
-        :body,
-        Schema.ref(:IngestVersionUpdate),
-        "Ingest Version update attrs"
-      )
-
+      ingest_version(:body, Schema.ref(:IngestVersionUpdate), "Ingest Version update attrs")
       id(:path, :integer, "Ingest Version ID", required: true)
     end
 
@@ -702,11 +642,8 @@ defmodule TdIeWeb.IngestVersionController do
     template = get_template(ingest_version)
     content_schema = Map.get(template, :content)
 
-    parent_id = Map.get(ingest_version_params, "parent_id", nil)
-
     ingest_attrs =
       %{}
-      |> Map.put("parent_id", parent_id)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
 
@@ -715,11 +652,8 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
-
-    related_to = Map.get(update_params, "related_to")
 
     with true <- can?(user, update(ingest_version)),
          {:name_available} <-
@@ -728,12 +662,8 @@ defmodule TdIeWeb.IngestVersionController do
              ingest_name,
              ingest_version.ingest.id
            ),
-         {:valid_related_to} <- Ingests.check_valid_related_to(template.name, related_to),
          {:ok, %IngestVersion{} = ingest_version} <-
-           Ingests.update_ingest_version(
-             ingest_version,
-             update_params
-           ) do
+           Ingests.update_ingest_version(ingest_version, update_params) do
       audit_payload = get_changed_params(ingest_version, ingest_version)
 
       audit = %{
@@ -762,11 +692,6 @@ defmodule TdIeWeb.IngestVersionController do
         |> put_status(:unprocessable_entity)
         |> json(%{errors: %{name: ["bc_version unique"]}})
 
-      {:not_valid_related_to} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{errors: %{related_to: ["bc_version invalid"]}})
-
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -778,10 +703,7 @@ defmodule TdIeWeb.IngestVersionController do
     end
   end
 
-  defp get_changed_params(
-         %IngestVersion{} = old,
-         %IngestVersion{} = new
-       ) do
+  defp get_changed_params(%IngestVersion{} = old, %IngestVersion{} = new) do
     fields_to_compare = [:name, :description]
 
     diffs =

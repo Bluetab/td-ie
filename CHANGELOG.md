@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Removed
+
+- [TD-1994] Remove deprecated relations (parent_id, related_to) from model
+
 ## [3.1.0] 2019-07-08
 
 ### Changed

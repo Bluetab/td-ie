@@ -120,7 +120,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: %{},
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -148,7 +147,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: nil,
         content: %{},
-        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
@@ -183,7 +181,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -219,7 +216,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -264,7 +260,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -300,7 +295,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: content,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -373,7 +367,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: ingest_attrs,
         content: nil,
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -402,7 +395,6 @@ defmodule TdIe.IngestsTests do
       creation_attrs = %{
         ingest: ingest_attrs,
         content: %{},
-        related_to: [],
         name: "some name",
         description: to_rich_text("some description"),
         last_change_by: user.id,
@@ -499,7 +491,6 @@ defmodule TdIe.IngestsTests do
         ingest: ingest_attrs,
         ingest_id: ingest_version.ingest.id,
         content: %{},
-        related_to: [],
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
@@ -554,7 +545,6 @@ defmodule TdIe.IngestsTests do
         ingest: ingest_attrs,
         ingest_id: ingest_version.ingest.id,
         content: update_content,
-        related_to: [],
         name: "updated name",
         description: to_rich_text("updated description"),
         last_change_by: user.id,
@@ -581,7 +571,6 @@ defmodule TdIe.IngestsTests do
       version_attrs = %{
         ingest: nil,
         content: %{},
-        related_to: [],
         name: nil,
         description: nil,
         last_change_by: nil,
@@ -626,67 +615,6 @@ defmodule TdIe.IngestsTests do
       user = build(:user)
       ingest = insert(:ingest, last_change_by: user.id)
       assert %Ecto.Changeset{} = Ingests.change_ingest(ingest)
-    end
-  end
-
-  describe "ingest hierarchy" do
-    defp create_hierarchy do
-      domain_id = 1
-      parent = build(:ingest, domain_id: domain_id)
-      parent_version = insert(:ingest_version, ingest: parent)
-      child = build(:ingest, domain_id: domain_id, parent_id: parent_version.ingest.id)
-      child_version = insert(:ingest_version, ingest: child)
-
-      {
-        parent_version.ingest.id,
-        child_version.ingest.id
-      }
-    end
-
-    test "check parents" do
-      {parent_id, child_id} = create_hierarchy()
-
-      parent =
-        parent_id
-        |> Ingests.get_current_version_by_ingest_id!()
-        |> Map.get(:ingest)
-
-      child =
-        child_id
-        |> Ingests.get_current_version_by_ingest_id!()
-        |> Map.get(:ingest)
-        |> Repo.preload(:parent)
-
-      assert child.parent.id == parent.id
-    end
-
-    test "check children" do
-      {parent_id, child_id} = create_hierarchy()
-
-      parent =
-        parent_id
-        |> Ingests.get_current_version_by_ingest_id!()
-        |> Map.get(:ingest)
-        |> Repo.preload(:children)
-
-      child =
-        child_id
-        |> Ingests.get_current_version_by_ingest_id!()
-        |> Map.get(:ingest)
-
-      assert Enum.map(parent.children, & &1.id) == [child.id]
-    end
-
-    test "delete_ingest_version/1 delete parent ingest with children" do
-      {parent_id, child_id} = create_hierarchy()
-      parent = Ingests.get_current_version_by_ingest_id!(parent_id)
-      Ingests.delete_ingest_version(parent)
-
-      assert_raise Ecto.NoResultsError, fn ->
-        Ingests.get_current_version_by_ingest_id!(parent_id)
-      end
-
-      assert Ingests.get_current_version_by_ingest_id!(child_id)
     end
   end
 
@@ -893,6 +821,6 @@ defmodule TdIe.IngestsTests do
 
   defp random_name do
     id = :rand.uniform(100_000_000)
-    "Concept #{id}"
+    "Ingest #{id}"
   end
 end

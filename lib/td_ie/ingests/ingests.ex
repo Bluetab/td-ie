@@ -21,7 +21,7 @@ defmodule TdIe.Ingests do
   @content_schema :content_schema
 
   @doc """
-    check ingest name availability
+  check ingest name availability
   """
   def check_ingest_name_availability(type, name, exclude_ingest_id \\ nil)
 
@@ -71,7 +71,7 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-    Fetch an exsisting ingest by its id
+  Fetch an exsisting ingest by its id
   """
   def get_ingest!(ingest_id) do
     Repo.one!(
@@ -82,9 +82,9 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-    count published business ingests
-    ingest must be of indicated type
-    ingest are resticted to indicated id list
+  count published business ingests
+  ingest must be of indicated type
+  ingest are resticted to indicated id list
   """
   def count_published_ingests(type, ids) do
     published = Ingest.status().published
@@ -208,7 +208,6 @@ defmodule TdIe.Ingests do
 
   @doc """
   Creates a new ingest version.
-
   """
   def new_ingest_version(user, %IngestVersion{} = ingest_version) do
     ingest = ingest_version.ingest
@@ -489,21 +488,21 @@ defmodule TdIe.Ingests do
     |> Repo.one!()
   end
 
-  def retrieve_parent(%IngestVersion{ingest: ingest} = ingest_version, target_key) do
-    parent_domain =
+  def with_domain(%IngestVersion{ingest: ingest} = ingest_version) do
+    domain =
       ingest
       |> Map.get(:domain_id)
       |> retrieve_domain()
 
-    ingest_version |> Map.put(target_key, parent_domain)
+    Map.put(ingest_version, :domain, domain)
   end
 
-  def retrieve_parent(%Ingest{domain_id: domain_id} = ingest, target_key) do
-    parent_domain =
+  def with_domain(%Ingest{domain_id: domain_id} = ingest) do
+    domain =
       domain_id
       |> retrieve_domain()
 
-    ingest |> Map.put(target_key, parent_domain)
+    Map.put(ingest, :domain, domain)
   end
 
   def retrieve_domain(nil), do: %{}
@@ -539,18 +538,12 @@ defmodule TdIe.Ingests do
       ingest_id = ingest.id
 
       Multi.new()
-      |> Multi.update_all(
-        :detatch_children,
-        from(child in Ingest, where: child.parent_id == ^ingest_id),
-        set: [parent_id: nil]
-      )
       |> Multi.delete(:ingest_version, ingest_version)
       |> Multi.delete(:ingest, ingest)
       |> Repo.transaction()
       |> case do
         {:ok,
          %{
-           detatch_children: {_, nil},
            ingest: %Ingest{},
            ingest_version: %IngestVersion{} = version
          }} ->
@@ -753,8 +746,6 @@ defmodule TdIe.Ingests do
   end
 
   def get_ingest_by_name(name) do
-    # Repo.all from r in IngestVersion, where:
-
     Ingest
     |> join(:left, [v], _ in assoc(v, :versions))
     |> where([i, v], i.id == v.ingest_id and ilike(v.name, ^"%#{name}%"))
@@ -769,14 +760,6 @@ defmodule TdIe.Ingests do
     |> preload([_, i], ingest: i)
     |> order_by(asc: :version)
     |> Repo.all()
-  end
-
-  def check_valid_related_to(_type, []), do: {:valid_related_to}
-
-  def check_valid_related_to(type, ids) do
-    input_count = length(ids)
-    actual_count = count_published_ingests(type, ids)
-    if input_count == actual_count, do: {:valid_related_to}, else: {:not_valid_related_to}
   end
 
   alias TdIe.Ingests.IngestExecution

@@ -15,7 +15,6 @@ defmodule TdIe.Ingests.IngestVersion do
 
   schema "ingest_versions" do
     field(:content, :map)
-    field(:related_to, {:array, :integer})
     field(:description, :map)
     field(:last_change_at, :utc_datetime)
     field(:mod_comments, :string)
@@ -36,7 +35,6 @@ defmodule TdIe.Ingests.IngestVersion do
     ingest_version
     |> cast(attrs, [
       :content,
-      :related_to,
       :name,
       :description,
       :last_change_by,
@@ -48,7 +46,6 @@ defmodule TdIe.Ingests.IngestVersion do
     |> put_assoc(:ingest, attrs.ingest)
     |> validate_required([
       :content,
-      :related_to,
       :name,
       :last_change_by,
       :last_change_at,
@@ -65,7 +62,6 @@ defmodule TdIe.Ingests.IngestVersion do
     ingest_version
     |> cast(attrs, [
       :content,
-      :related_to,
       :name,
       :description,
       :last_change_by,
@@ -77,7 +73,6 @@ defmodule TdIe.Ingests.IngestVersion do
     |> put_change(:status, Ingest.status().draft)
     |> validate_required([
       :content,
-      :related_to,
       :name,
       :last_change_by,
       :last_change_at,

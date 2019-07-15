@@ -22,14 +22,6 @@ defmodule TdIeWeb.SwaggerDefinitions do
 
             type(:string, "Ingest type", required: true)
             content(:object, "Ingest content", required: true)
-
-            related_to(
-              :array,
-              "Related Ingests",
-              items: %{type: :integer},
-              required: true
-            )
-
             name(:string, "Ingest name", required: true)
             description(:object, "Ingest description", required: true)
             last_change_by(:integer, "Ingest last updated by", required: true)
@@ -214,22 +206,11 @@ defmodule TdIeWeb.SwaggerDefinitions do
             ingest_id(:integer, "Ingest unique id", required: true)
             type(:string, "Ingest type", required: true)
             content(:object, "Ingest Version content", required: true)
-
-            related_to(
-              :array,
-              "Related Ingests",
-              items: %{type: :integer},
-              required: true
-            )
-
             name(:string, "Ingest Version name", required: true)
             description(:object, "Ingest Version description", required: true)
             last_change_by(:integer, "Ingest Version last change by", required: true)
             last_change_at(:string, "Ingest Version last change at", required: true)
             domain(Schema.ref(:DomainRef))
-            parent_id([:integer, :null], "Parent Ingest ID", required: true)
-            parent(:object, "Parent Ingest", required: false)
-            children(:array, "Children Ingests", required: false)
             status(:string, "Ingest Version status", required: true)
             current(:boolean, "Is this the current version?", required: true)
             version(:integer, "Ingest Version version number", required: true)
@@ -256,7 +237,6 @@ defmodule TdIeWeb.SwaggerDefinitions do
                   content(:object, "Ingest Version content")
                   name(:string, "Ingest Version name")
                   description(:object, "Ingest Version description")
-                  parent_id(:object, "Parent Ingest ID")
                 end
               end
             )
@@ -298,7 +278,6 @@ defmodule TdIeWeb.SwaggerDefinitions do
                   name(:string, "Ingest name", required: true)
                   description(:object, "Ingest description", required: true)
                   domain_id(:integer, "Ingest Domain ID", required: false)
-                  parent_id(:integer, "Parent Ingest ID", required: false)
                 end
               end
             )
