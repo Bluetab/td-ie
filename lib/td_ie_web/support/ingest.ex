@@ -22,11 +22,6 @@ defmodule TdIeWeb.IngestSupport do
         |> put_status(:unprocessable_entity)
         |> json(%{errors: [@errors.existing_ingest]})
 
-      {:not_valid_related_to} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{errors: %{related_to: ["invalid"]}})
-
       {:error, %Ecto.Changeset{data: %{__struct__: _}} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)

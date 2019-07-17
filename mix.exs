@@ -60,7 +60,7 @@ defmodule TdIe.Mixfile do
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.5"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.2.0"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.0.1"}
     ]
   end

@@ -17,7 +17,6 @@ defmodule TdIe.Factory do
   def ingest_factory do
     %Ingest{
       domain_id: 1,
-      parent_id: nil,
       type: "some_type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
@@ -28,7 +27,6 @@ defmodule TdIe.Factory do
     %IngestVersion{
       ingest: build(:ingest),
       content: %{},
-      related_to: [],
       name: "My ingest",
       description: %{"document" => "My ingest description"},
       last_change_by: 1,

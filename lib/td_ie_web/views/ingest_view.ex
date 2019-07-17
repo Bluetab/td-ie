@@ -26,7 +26,6 @@ defmodule TdIeWeb.IngestView do
       ingest_version_id: ingest_version.id,
       type: ingest_version.ingest.type,
       content: ingest_version.content,
-      related_to: ingest_version.related_to,
       name: ingest_version.name,
       description: ingest_version.description,
       last_change_by: ingest_version.last_change_by,

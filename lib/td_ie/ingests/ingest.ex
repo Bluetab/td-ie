@@ -15,8 +15,6 @@ defmodule TdIe.Ingests.Ingest do
   }
 
   schema "ingests" do
-    belongs_to(:parent, Ingest)
-    has_many(:children, Ingest, foreign_key: :parent_id)
     field(:domain_id, :integer)
     field(:type, :string)
     field(:last_change_by, :integer)
@@ -55,7 +53,7 @@ defmodule TdIe.Ingests.Ingest do
   @doc false
   def changeset(%Ingest{} = ingest, attrs) do
     ingest
-    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at, :parent_id])
+    |> cast(attrs, [:domain_id, :type, :last_change_by, :last_change_at])
     |> validate_required([:domain_id, :type, :last_change_by, :last_change_at])
   end
 end

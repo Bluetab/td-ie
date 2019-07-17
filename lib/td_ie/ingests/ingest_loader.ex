@@ -14,12 +14,12 @@ defmodule TdIe.IngestLoader do
     GenServer.start_link(__MODULE__, nil, name: name)
   end
 
-  def refresh(ingest_id) do
-    GenServer.call(TdIe.IngestLoader, {:refresh, ingest_id})
+  def refresh(id) do
+    GenServer.call(TdIe.IngestLoader, {:refresh, id})
   end
 
-  def delete(ingest_id) do
-    GenServer.call(TdIe.IngestLoader, {:delete, ingest_id})
+  def delete(id) do
+    GenServer.call(TdIe.IngestLoader, {:delete, id})
   end
 
   @impl true
@@ -32,14 +32,14 @@ defmodule TdIe.IngestLoader do
   end
 
   @impl true
-  def handle_call({:refresh, ingest_id}, _from, state) do
-    load_ingest(ingest_id)
+  def handle_call({:refresh, id}, _from, state) do
+    load_ingest(id)
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_call({:delete, ingest_id}, _from, state) do
-    IngestCache.delete_ingest(ingest_id)
+  def handle_call({:delete, id}, _from, state) do
+    IngestCache.delete(id)
     {:reply, :ok, state}
   end
 
@@ -54,9 +54,9 @@ defmodule TdIe.IngestLoader do
     Process.send_after(self(), action, seconds)
   end
 
-  defp load_ingest(ingest_id) do
+  defp load_ingest(id) do
     ingest =
-      ingest_id
+      id
       |> Ingests.get_currently_published_version!()
       |> load_ingest_version_data()
 
@@ -82,7 +82,7 @@ defmodule TdIe.IngestLoader do
     results =
       ingests
       |> Enum.map(&Map.take(&1, [:id, :domain_id, :name, :ingest_version_id]))
-      |> Enum.map(&IngestCache.put_ingest(&1))
+      |> Enum.map(&IngestCache.put/1)
       |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do

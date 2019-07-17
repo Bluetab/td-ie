@@ -5,14 +5,10 @@ defmodule TdIeWeb.IngestVersionView do
   use TdIeWeb, :view
   use TdIeWeb.Hypermedia, :view
 
-  alias TdCache.IngestCache
   alias TdCache.UserCache
   alias TdIeWeb.IngestVersionView
 
-  def render("index.json", %{
-        ingest_versions: ingest_versions,
-        hypermedia: hypermedia
-      }) do
+  def render("index.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
     render_many_hypermedia(
       ingest_versions,
       hypermedia,
@@ -32,13 +28,7 @@ defmodule TdIeWeb.IngestVersionView do
     }
   end
 
-  def render(
-        "show.json",
-        %{
-          ingest_version: ingest_version,
-          hypermedia: hypermedia
-        } = assigns
-      ) do
+  def render("show.json", %{ingest_version: ingest_version, hypermedia: hypermedia} = assigns) do
     render_one_hypermedia(
       ingest_version,
       hypermedia,
@@ -60,10 +50,7 @@ defmodule TdIeWeb.IngestVersionView do
     }
   end
 
-  def render("list.json", %{
-        ingest_versions: ingest_versions,
-        hypermedia: hypermedia
-      }) do
+  def render("list.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
     render_many_hypermedia(
       ingest_versions,
       hypermedia,
@@ -83,8 +70,6 @@ defmodule TdIeWeb.IngestVersionView do
       "description",
       "domain",
       "status",
-      "rule_count",
-      "link_count",
       "content",
       "last_change_by",
       "last_change_at",
@@ -102,31 +87,24 @@ defmodule TdIeWeb.IngestVersionView do
     |> Map.put("type", type)
   end
 
-  def render(
-        "ingest_version.json",
-        %{
-          ingest_version: ingest_version
-        } = assigns
-      ) do
+  def render("ingest_version.json", %{ingest_version: ingest_version} = assigns) do
     {:ok, user} = UserCache.get(ingest_version.last_change_by)
 
     %{
-      id: ingest_version.id,
-      ingest_id: ingest_version.ingest.id,
-      parent_id: ingest_version.ingest.parent_id,
-      type: ingest_version.ingest.type,
       content: ingest_version.content,
-      related_to: ingest_version.related_to,
-      name: ingest_version.name,
-      description: ingest_version.description,
-      last_change_by: ingest_version.last_change_by,
-      last_change_at: ingest_version.last_change_at,
-      domain: Map.get(ingest_version, :domain),
-      status: ingest_version.status,
       current: ingest_version.current,
-      version: ingest_version.version,
+      description: ingest_version.description,
+      domain: Map.get(ingest_version, :domain),
+      id: ingest_version.id,
       in_progress: ingest_version.in_progress,
-      last_change_user: user
+      ingest_id: ingest_version.ingest.id,
+      last_change_at: ingest_version.last_change_at,
+      last_change_by: ingest_version.last_change_by,
+      last_change_user: user,
+      name: ingest_version.name,
+      status: ingest_version.status,
+      type: ingest_version.ingest.type,
+      version: ingest_version.version
     }
     |> add_reject_reason(
       ingest_version.reject_reason,
@@ -137,14 +115,9 @@ defmodule TdIeWeb.IngestVersionView do
       ingest_version.version
     )
     |> add_template(assigns)
-    |> add_parent(ingest_version.ingest)
-    |> add_children(ingest_version.ingest)
   end
 
-  def render("versions.json", %{
-        ingest_versions: ingest_versions,
-        hypermedia: hypermedia
-      }) do
+  def render("versions.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
     render_many_hypermedia(
       ingest_versions,
       hypermedia,
@@ -190,49 +163,6 @@ defmodule TdIeWeb.IngestVersionView do
       template ->
         template_view = Map.take(template, [:content, :label])
         Map.put(ingest, :template, template_view)
-    end
-  end
-
-  def add_parent(ingest_version_map, ingest) do
-    case Ecto.assoc_loaded?(ingest.parent) do
-      true ->
-        parent_map =
-          case ingest.parent do
-            nil ->
-              %{}
-
-            parent ->
-              %{
-                id: IngestCache.get_ingest_version_id(parent.id),
-                name: IngestCache.get_name(parent.id)
-              }
-          end
-
-        Map.put(ingest_version_map, :parent, parent_map)
-
-      false ->
-        ingest_version_map
-    end
-  end
-
-  def add_children(ingest_version_map, ingest) do
-    case Ecto.assoc_loaded?(ingest.children) do
-      true ->
-        children_map =
-          ingest.children
-          |> Enum.reduce([], fn child, acc ->
-            child_map = %{
-              id: IngestCache.get_ingest_version_id(child.id),
-              name: IngestCache.get_name(child.id)
-            }
-
-            [child_map | acc]
-          end)
-
-        Map.put(ingest_version_map, :children, children_map)
-
-      false ->
-        ingest_version_map
     end
   end
 end

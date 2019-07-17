@@ -80,7 +80,7 @@ defmodule TdIeWeb.IngestController do
     ingest =
       id
       |> Ingests.get_current_version_by_ingest_id!()
-      |> Ingests.retrieve_parent(:domain)
+      |> Ingests.with_domain()
 
     render(
       conn,
@@ -122,12 +122,9 @@ defmodule TdIeWeb.IngestController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.update("related_to", [], & &1)
       |> Map.put("last_change_by", user.id)
       |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
       |> Map.put("in_progress", ingest_version.in_progress)
-
-    related_to = Map.get(update_params, "related_to")
 
     with true <- can?(user, update(ingest_version)),
          {:name_available} <-
@@ -136,7 +133,6 @@ defmodule TdIeWeb.IngestController do
              ingest_name,
              id
            ),
-         {:valid_related_to} <- Ingests.check_valid_related_to(ingest_type, related_to),
          {:ok, %IngestVersion{} = ingest} <-
            Ingests.update_ingest_version(
              ingest_version,
