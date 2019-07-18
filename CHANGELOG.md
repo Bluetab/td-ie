@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
-## Removed
+### Removed
 
 - [TD-1994] Remove deprecated relations (parent_id, related_to) from model
+
+### Changed
+
+- [TD-2002] Update td-cache and delete permissions list from config
 
 ## [3.1.0] 2019-07-08
 
@@ -15,13 +19,13 @@
 
 ## [3.0.0] 2019-06-25
 
-## Changed
+### Changed
 
 - [TD-1893] Use CI_JOB_ID instead of CI_PIPELINE_ID
 
 ## [2.21.0] 2019-06-04
 
-## Changed
+### Changed
 
 - [TD-1789] update ES mappings according to template format
 
