@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [3.2.0] 2019-07-24
 
 ### Removed
 
@@ -68,13 +68,13 @@
 
 ### Added
 
-- Added support for Ingest Executions   
+- Added support for Ingest Executions
 
 ## [0.0.3] 2018-12-07
 
 ### Added
 
-- New post endpoint which recieves some params in order to narrow the retrieved filters   
+- New post endpoint which recieves some params in order to narrow the retrieved filters
 
 ## [0.0.2] 2018-12-03
 
