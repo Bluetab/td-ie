@@ -1,7 +1,8 @@
 defmodule TdBg.Search.AggregationsTest do
+  alias TdCache.TemplateCache
   use TdIe.DataCase
   alias TdIe.Search.Aggregations
-  alias TdCache.TemplateCache
+  
 
   def create_template(template) do
     TemplateCache.put(template)
