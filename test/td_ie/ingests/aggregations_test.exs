@@ -1,4 +1,4 @@
-defmodule TdBg.Search.AggregationsTest do
+defmodule TdIe.Search.AggregationsTest do
   alias TdCache.TemplateCache
   use TdIe.DataCase
   alias TdIe.Search.Aggregations
