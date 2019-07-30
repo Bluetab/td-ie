@@ -5,6 +5,7 @@
 ### Changed
 
 - [TD-1985] Type of template field user with an aggregation size of 50
+- [TD-1995] add new file description in ingest_ecutions
 
 ## [3.2.0] 2019-07-24
 

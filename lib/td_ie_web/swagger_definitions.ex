@@ -134,6 +134,7 @@ defmodule TdIeWeb.SwaggerDefinitions do
             status(:string, "Ingest execution status", required: true)
             start_timestamp(:string, "Ingest execution start timestamp", required: true)
             end_timestamp(:string, "Ingest execution end timestamp", required: true)
+            description(:string, "Ingest execution description")
           end
         end,
       IngestExecutionUpdate:
@@ -145,6 +146,7 @@ defmodule TdIeWeb.SwaggerDefinitions do
                   status(:string, "Ingest execution status", required: true)
                   start_timestamp(:string, "Ingest execution start timestamp", required: true)
                   end_timestamp(:string, "Ingest execution end timestamp", required: true)
+                  description(:string, "Ingest execution description")
                 end
               end
             )
@@ -180,6 +182,7 @@ defmodule TdIeWeb.SwaggerDefinitions do
                   status(:string, "Ingest execution status", required: true)
                   start_timestamp(:string, "Ingest execution start timestamp", required: true)
                   end_timestamp(:string, "Ingest execution end timestamp", required: true)
+                  description(:string, "Ingest execution description")
                 end
               end
             )
