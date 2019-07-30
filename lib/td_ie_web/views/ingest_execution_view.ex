@@ -18,7 +18,8 @@ defmodule TdIeWeb.IngestExecutionView do
       end_timestamp: ingest_execution.end_timestamp,
       status: ingest_execution.status,
       file_name: ingest_execution.file_name,
-      file_size: ingest_execution.file_size
+      file_size: ingest_execution.file_size,
+      description: ingest_execution.description
     }
   end
 end
