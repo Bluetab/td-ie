@@ -8,6 +8,7 @@ defmodule TdIe.Ingests.IngestVersion do
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
   alias TdCache.UserCache
+  alias TdDfLib.Format
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
@@ -160,8 +161,13 @@ defmodule TdIe.Ingests.IngestVersion do
         {:ok, user} -> user
       end
 
+    template_content = Map.get(template, :content)
+
     content =
-      Enum.reduce(Map.get(template, :content), ingest_version.content, &fill_content(&2, &1))
+      ingest_version
+      |> Map.get(:content)
+      |> Format.apply_template(template_content)
+      |> Format.search_values(template_content)
 
     %{
       id: ingest_version.id,
@@ -189,15 +195,6 @@ defmodule TdIe.Ingests.IngestVersion do
   defp retrieve_domain_ids(nil), do: []
 
   defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
-
-  defp fill_content(content, %{"type" => type, "name" => name}) when type == "list" do
-    case Map.has_key?(content, name) do
-      true -> content
-      false -> Map.put(content, name, "")
-    end
-  end
-
-  defp fill_content(content, _field), do: content
 
   def index_name do
     "ingest"
