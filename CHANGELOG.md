@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-1560] Enriched description field in template content
+
 ### Changed
 
 - [TD-1985] Type of template field user with an aggregation size of 50
