@@ -161,13 +161,10 @@ defmodule TdIe.Ingests.IngestVersion do
         {:ok, user} -> user
       end
 
-    template_content = Map.get(template, :content)
-
     content =
       ingest_version
       |> Map.get(:content)
-      |> Format.apply_template(template_content)
-      |> Format.search_values(template_content)
+      |> Format.search_values(template)
 
     %{
       id: ingest_version.id,
