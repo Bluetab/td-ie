@@ -17,6 +17,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
     file_name: "some file_name",
     file_size: 42,
     description: "some description",
+    records: 10
   }
   @update_attrs %{
     end_timestamp: ~N[2011-05-18 15:01:01.000000],
@@ -25,6 +26,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
     file_name: "some updated file_name",
     file_size: 53,
     description: "some updated description",
+    records: 11
   }
   @invalid_attrs %{end_timestamp: nil, start_timestamp: nil, status: nil, ingest_id: nil}
 
@@ -74,6 +76,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "file_name" => "some file_name",
                "file_size" => 42,
                "description" => "some description",
+               "records" => 10,
              }
     end
 
@@ -180,6 +183,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "file_name" => "some updated file_name",
                "file_size" => 53,
                "description" => "some updated description",
+               "records" => 11,
              }
     end
 
