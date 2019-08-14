@@ -19,7 +19,8 @@ defmodule TdIeWeb.IngestExecutionView do
       status: ingest_execution.status,
       file_name: ingest_execution.file_name,
       file_size: ingest_execution.file_size,
-      description: ingest_execution.description
+      description: ingest_execution.description,
+      records: ingest_execution.records
     }
   end
 end

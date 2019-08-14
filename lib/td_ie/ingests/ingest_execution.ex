@@ -11,6 +11,7 @@ defmodule TdIe.Ingests.IngestExecution do
     field(:file_size, :integer)
     field(:ingest_id, :id)
     field(:description, :string)
+    field(:records, :integer)
 
     timestamps(type: :utc_datetime)
   end
@@ -25,7 +26,8 @@ defmodule TdIe.Ingests.IngestExecution do
       :file_name,
       :file_size,
       :ingest_id,
-      :description
+      :description,
+      :records
     ])
     |> validate_required([:start_timestamp, :status])
   end

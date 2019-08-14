@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2045] Add file records in ingest_executions
+
 ## [3.3.0] 2019-08-05
 
 ### Added
