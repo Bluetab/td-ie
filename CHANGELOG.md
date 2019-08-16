@@ -4,7 +4,8 @@
 
 ### Added
 
-- [TD-2045] Add file records in ingest_executions
+- [TD-2045] File records in ingest_executions
+- [TD-2036] Ability to check create permission on ingest
 
 ## [3.3.0] 2019-08-05
 

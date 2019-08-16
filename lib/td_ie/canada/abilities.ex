@@ -27,6 +27,10 @@ defmodule TdIe.Canada.Abilities do
       IngestAbilities.can?(user, :create_ingest)
     end
 
+    def can?(%User{} = user, :create, %IngestVersion{} = _ingest_version) do
+      IngestAbilities.can?(user, :create_ingest)
+    end
+
     def can?(%User{} = user, :update, %IngestVersion{} = ingest_version) do
       IngestAbilities.can?(user, :update, ingest_version)
     end
