@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2053] Create event on ingest publish
+
 ## [3.4.0] 2019-08-19
 
 ### Added
