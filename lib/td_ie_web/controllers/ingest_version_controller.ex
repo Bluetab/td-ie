@@ -10,6 +10,7 @@ defmodule TdIeWeb.IngestVersionController do
 
   import Canada, only: [can?: 2]
 
+  alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
   alias TdIe.Audit
   alias TdIe.Ingest.Download
@@ -489,6 +490,7 @@ defmodule TdIeWeb.IngestVersionController do
       }
 
       Audit.create_event(conn, audit, @events.ingest_published)
+      publish_event(ingest_version)
 
       render(
         conn,
@@ -503,6 +505,22 @@ defmodule TdIeWeb.IngestVersionController do
 
       _error ->
         conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    end
+  end
+
+  defp publish_event(ingest_version) do
+    event = %{
+      event: "publish",
+      id: "#{ingest_version.ingest.id}",
+      version_id: "#{ingest_version.id}"
+    }
+
+    case Publisher.publish(event, "ingests:events") do
+      {:ok, _event_id} ->
+        Logger.info("Event published correctly. Stream: ingests:events")
+
+      _ ->
+        Logger.warn("Publish ingest event failed")
     end
   end
 
