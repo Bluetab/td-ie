@@ -1,10 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [3.5.0] 2019-09-02
 
 ### Added
 
 - [TD-2053] Create event on ingest publish
+
+### Fixed
+
+- [TD-1993] Restrict dynamic index mappings to "ie" scope
 
 ## [3.4.0] 2019-08-19
 

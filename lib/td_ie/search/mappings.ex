@@ -60,7 +60,7 @@ defmodule TdIe.Search.Mappings do
   end
 
   def get_dynamic_mappings do
-    TemplateCache.list!()
+    TemplateCache.list_by_scope!("ie")
     |> Enum.flat_map(&get_mappings/1)
     |> Enum.into(%{})
   end
