@@ -22,7 +22,7 @@ defmodule TdIe.Search.Aggregations do
     ]
 
     dynamic_keywords =
-      TemplateCache.list!()
+      TemplateCache.list_by_scope!("ie")
       |> Enum.flat_map(&template_terms/1)
 
     (static_keywords ++ dynamic_keywords)
