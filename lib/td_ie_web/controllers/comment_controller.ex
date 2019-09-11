@@ -2,8 +2,8 @@ defmodule TdIeWeb.CommentController do
   @moduledoc """
   Controller for comment requests
   """
+  use TdHypermedia, :controller
   use TdIeWeb, :controller
-  use TdIeWeb.Hypermedia, :controller
   use PhoenixSwagger
 
   alias TdIe.Audit

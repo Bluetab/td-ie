@@ -1,11 +1,12 @@
 defmodule TdIeWeb.IngestView do
+  use TdHypermedia, :view
   use TdIeWeb, :view
-  use TdIeWeb.Hypermedia, :view
+
   alias Ecto
   alias TdIeWeb.IngestView
 
-  def render("index.json", %{ingests: ingest_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(ingest_versions, hypermedia, IngestView, "ingest.json")
+  def render("index.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, IngestView, "ingest.json")
   end
 
   def render("index.json", %{ingests: ingest_versions}) do

@@ -3,9 +3,8 @@ defmodule TdIeWeb.IngestVersionController do
   Controller of Ingest version requests
   """
 
-  require Logger
+  use TdHypermedia, :controller
   use TdIeWeb, :controller
-  use TdIeWeb.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -21,6 +20,8 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
+
+  require Logger
 
   @events %{
     create_ingest_draft: "create_ingest_draft",

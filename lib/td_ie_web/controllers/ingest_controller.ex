@@ -2,9 +2,8 @@ defmodule TdIeWeb.IngestController do
   @moduledoc """
   Controller for ingest requests
   """
-  require Logger
+  use TdHypermedia, :controller
   use TdIeWeb, :controller
-  use TdIeWeb.Hypermedia, :controller
   use PhoenixSwagger
 
   import Canada, only: [can?: 2]
@@ -16,6 +15,8 @@ defmodule TdIeWeb.IngestController do
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
+
+  require Logger
 
   @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
 
