@@ -2,19 +2,14 @@ defmodule TdIeWeb.IngestVersionView do
   @moduledoc """
   Ingest version view
   """
+  use TdHypermedia, :view
   use TdIeWeb, :view
-  use TdIeWeb.Hypermedia, :view
 
   alias TdCache.UserCache
   alias TdIeWeb.IngestVersionView
 
-  def render("index.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      ingest_versions,
-      hypermedia,
-      IngestVersionView,
-      "ingest_version.json"
-    )
+  def render("index.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, IngestVersionView, "ingest_version.json")
   end
 
   def render("index.json", %{ingest_versions: ingest_versions}) do
@@ -50,13 +45,8 @@ defmodule TdIeWeb.IngestVersionView do
     }
   end
 
-  def render("list.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      ingest_versions,
-      hypermedia,
-      IngestVersionView,
-      "list_item.json"
-    )
+  def render("list.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, IngestVersionView, "list_item.json")
   end
 
   def render("list.json", %{ingest_versions: ingest_versions}) do
@@ -117,13 +107,8 @@ defmodule TdIeWeb.IngestVersionView do
     |> add_template(assigns)
   end
 
-  def render("versions.json", %{ingest_versions: ingest_versions, hypermedia: hypermedia}) do
-    render_many_hypermedia(
-      ingest_versions,
-      hypermedia,
-      IngestVersionView,
-      "version.json"
-    )
+  def render("versions.json", %{hypermedia: hypermedia}) do
+    render_many_hypermedia(hypermedia, IngestVersionView, "version.json")
   end
 
   def render("version.json", %{ingest_version: ingest_version}) do

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2078] Preserve order of ingests in search response
+
 ## [3.5.1] 2019-09-03
 
 ### Fixed
