@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [3.6.0] 2091-09-16
 
 ### Fixed
 
