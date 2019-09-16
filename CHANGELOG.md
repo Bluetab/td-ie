@@ -1,6 +1,12 @@
 # Changelog
 
-## [3.6.0] 2091-09-16
+## [Unreleased]
+
+### Added
+
+- [TD-1625] Support for df `table` type 
+
+## [3.6.0] 2019-09-16
 
 ### Fixed
 
