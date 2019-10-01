@@ -2,10 +2,9 @@ defmodule TdIe.Ingests.Links do
   @moduledoc """
   The Ingest Links context.
   """
-
+  alias TdCache.LinkCache
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
-  alias TdCache.LinkCache
 
   def get(id) do
     LinkCache.get(id)

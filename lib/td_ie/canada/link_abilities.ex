@@ -2,11 +2,10 @@ defmodule TdIe.Canada.LinkAbilities do
   @moduledoc """
   Canada permissions model for Ingest Link resources
   """
-
-  alias TdIe.Accounts.User
   alias TdCache.Link
-  alias TdIe.Permissions
+  alias TdIe.Accounts.User
   alias TdIe.Ingests
+  alias TdIe.Permissions
 
   require Logger
 

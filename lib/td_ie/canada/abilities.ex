@@ -1,11 +1,11 @@
 defmodule TdIe.Canada.Abilities do
   @moduledoc false
+  alias TdCache.Link
   alias TdIe.Accounts.User
   alias TdIe.Canada.IngestAbilities
+  alias TdIe.Canada.LinkAbilities
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
-  alias TdIe.Canada.LinkAbilities
-  alias TdCache.Link
 
   defimpl Canada.Can, for: User do
     # administrator is superpowerful
