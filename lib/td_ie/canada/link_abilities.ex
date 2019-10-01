@@ -26,6 +26,10 @@ defmodule TdIe.Canada.LinkAbilities do
     end
   end
 
+  def can?(%User{} = user, :delete, %{hint: :link, domain_id: domain_id}) do
+    Permissions.authorized?(user, :manage_ingest_relations, domain_id)
+  end
+
   def can?(%User{} = user, :create_link, %{ingest: ingest_id}) do
     with %{domain_id: domain_id} <-
       Ingests.get_ingest!(String.to_integer(ingest_id)) do
@@ -36,5 +40,7 @@ defmodule TdIe.Canada.LinkAbilities do
     end
   end
 
-
+  def can?(%User{} = user, :create_link, %{domain_id: domain_id}) do
+    Permissions.authorized?(user, :manage_ingest_relations, domain_id)
+  end
 end
