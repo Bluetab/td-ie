@@ -17,6 +17,7 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
+  alias TdIe.Ingests.Links
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
@@ -237,9 +238,12 @@ defmodule TdIeWeb.IngestVersionController do
     with true <- can?(user, view_ingest(ingest_version)) do
       template = get_template(ingest_version)
       ingest_version = Ingests.with_domain(ingest_version)
+      links = Links.get_links(ingest_version)
 
       render(conn, "show.json",
         ingest_version: ingest_version,
+        links: links,
+        links_hypermedia: links_hypermedia(conn, links, ingest_version),
         hypermedia: hypermedia("ingest_version", conn, ingest_version),
         template: template
       )
@@ -250,6 +254,25 @@ defmodule TdIeWeb.IngestVersionController do
       _error ->
         conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
+  end
+
+  defp links_hypermedia(conn, links, ingest_version) do
+    collection_hypermedia(
+      "ingest_version_ingest_link",
+      conn,
+      Enum.map(links, &annotate(&1, ingest_version)),
+      Link
+    )
+  end
+
+  defp annotate(link, %IngestVersion{
+    id: ingest_version_id,
+    ingest: %{domain_id: domain_id}
+  }) do
+    link
+    |> Map.put(:ingest_version_id, ingest_version_id)
+    |> Map.put(:domain_id, domain_id)
+    |> Map.put(:hint, :link)
   end
 
   swagger_path :delete do

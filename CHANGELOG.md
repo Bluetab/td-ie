@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-1625] Support for df `table` type 
+- [TD-1837] Ingest version embedded links
 
 ## [3.6.0] 2019-09-16
 

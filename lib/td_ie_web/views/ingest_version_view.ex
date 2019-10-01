@@ -7,6 +7,7 @@ defmodule TdIeWeb.IngestVersionView do
 
   alias TdCache.UserCache
   alias TdIeWeb.IngestVersionView
+  alias TdIeWeb.LinkView
 
   def render("index.json", %{hypermedia: hypermedia}) do
     render_many_hypermedia(hypermedia, IngestVersionView, "ingest_version.json")
@@ -21,6 +22,20 @@ defmodule TdIeWeb.IngestVersionView do
           "ingest_version.json"
         )
     }
+  end
+
+  def render("show.json", %{ingest_version: ingest_version, hypermedia: hypermedia, links_hypermedia: links_hypermedia} = assigns) do
+    %{"data" => links} = render_many_hypermedia(links_hypermedia, LinkView, "embedded.json")
+    render_one_hypermedia(
+      ingest_version,
+      hypermedia,
+      IngestVersionView,
+      "ingest_version.json",
+      assigns
+      |> Map.drop([:hypermedia])
+      |> Map.delete(:links_hypermedia)
+      |> Map.put("_embedded", %{links: links})
+    )
   end
 
   def render("show.json", %{ingest_version: ingest_version, hypermedia: hypermedia} = assigns) do
@@ -105,6 +120,7 @@ defmodule TdIeWeb.IngestVersionView do
       ingest_version.version
     )
     |> add_template(assigns)
+    |> add_embedded_resources(assigns)
   end
 
   def render("versions.json", %{hypermedia: hypermedia}) do
