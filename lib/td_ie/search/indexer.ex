@@ -48,12 +48,12 @@ defmodule TdIe.Search.Indexer do
     |> Stream.run()
   end
 
-  def delete(ids, :ingest) when is_list(ids) do
-    Enum.each(ids, &delete/1)
+  def delete(versions) when is_list(versions) do
+    Enum.each(versions, &delete/1)
   end
 
-  defp delete(id) do
-    Elasticsearch.delete_document(Cluster, %IngestVersion{id: id}, @index)
+  def delete(version) do
+    Elasticsearch.delete_document(Cluster, version, @index)
   end
 
   defp time(bulk_page_size, fun) do

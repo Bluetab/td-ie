@@ -33,14 +33,6 @@ defmodule TdIe.Search.IndexWorker do
     reindex([id])
   end
 
-  def delete(ids) when is_list(ids) do
-    GenServer.call(__MODULE__, {:delete, ids}, 30_000)
-  end
-
-  def delete(id) do
-    delete([id])
-  end
-
   ## EventStream.Consumer Callbacks
 
   @impl true
@@ -69,17 +61,6 @@ defmodule TdIe.Search.IndexWorker do
     reply = Indexer.reindex(ids, :ingest)
     millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
     Logger.info("Ingests indexed in #{millis}ms")
-
-    {:reply, reply, state}
-  end
-
-  @impl true
-  def handle_call({:delete, ids}, _from, state) do
-    Logger.info("Deleting #{Enum.count(ids)} ingests")
-    start_time = DateTime.utc_now()
-    reply = Indexer.delete(ids, :ingest)
-    millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
-    Logger.info("Ingests deleted in #{millis}ms")
 
     {:reply, reply, state}
   end

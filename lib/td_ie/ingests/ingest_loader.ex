@@ -46,7 +46,6 @@ defmodule TdIe.IngestLoader do
   @impl true
   def handle_call({:delete, id}, _from, state) do
     IngestCache.delete(id)
-    IndexWorker.delete([id])
     {:reply, :ok, state}
   end
 
