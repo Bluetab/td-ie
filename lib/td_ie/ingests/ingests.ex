@@ -12,7 +12,6 @@ defmodule TdIe.Ingests do
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
-  alias TdIe.Search
   alias TdIe.Search.Indexer
   alias ValidationError
 
@@ -536,7 +535,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = version
          }} ->
           IngestLoader.delete(ingest_id)
-          Indexer.delete_search(ingest_version)
+          Indexer.delete(ingest_version)
           {:ok, version}
       end
     else
@@ -553,7 +552,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = deleted_version,
            current: %IngestVersion{} = current_version
          }} ->
-          Indexer.delete_search(deleted_version)
+          Indexer.delete(deleted_version)
           {:ok, current_version}
       end
     end
