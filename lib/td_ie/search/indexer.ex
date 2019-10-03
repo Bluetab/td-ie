@@ -6,6 +6,7 @@ defmodule TdIe.Search.Indexer do
   alias Elasticsearch.Index
   alias Elasticsearch.Index.Bulk
   alias Jason, as: JSON
+  alias TdIe.Search.Cluster
   alias TdIe.Search.Mappings
   alias TdIe.Search.Store
 

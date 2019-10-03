@@ -33,6 +33,18 @@ defmodule TdIe.DataCase do
 
     unless tags[:async] do
       Sandbox.mode(TdIe.Repo, {:shared, self()})
+
+      parent = self()
+
+      case Process.whereis(TdIe.IngestLoader) do
+        nil -> nil
+        pid -> Sandbox.allow(TdIe.Repo, parent, pid)
+      end
+
+      case Process.whereis(TdIe.Search.IndexWorker) do
+        nil -> nil
+        pid -> Sandbox.allow(TdIe.Repo, parent, pid)
+      end
     end
 
     :ok

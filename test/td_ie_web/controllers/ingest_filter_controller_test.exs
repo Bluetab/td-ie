@@ -26,7 +26,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
     @tag :admin_authenticated
     test "lists all filters (admin user)", %{conn: conn} do
       conn = get(conn, Routes.ingest_filter_path(conn, :index))
-      assert json_response(conn, 200)["data"] == MockSearch.get_filters(%{})
+      assert json_response(conn, 200)["data"] == %{}
     end
 
     @tag authenticated_user: @user_name

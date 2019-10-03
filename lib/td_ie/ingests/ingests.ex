@@ -380,11 +380,11 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Returns the list of ingest_versions.
+  Returns the list of ingest versions given a filter.
 
   ## Examples
 
-      iex> list_all_ingest_versions()
+      iex> list_all_ingest_versions(%{id: id})
       [%IngestVersion{}, ...]
 
   """

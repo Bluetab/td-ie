@@ -37,6 +37,19 @@ defmodule TdIeWeb.ConnCase do
 
     unless tags[:async] do
       Sandbox.mode(TdIe.Repo, {:shared, self()})
+
+      parent = self()
+
+      Enum.each([TdIe.IngestLoader, TdIe.Search.IndexWorker], fn worker ->
+        case Process.whereis(worker) do
+          nil ->
+            nil
+
+          pid ->
+            on_exit(fn -> worker.ping(20_000) end)
+            Sandbox.allow(TdIe.Repo, parent, pid)
+        end
+      end)
     end
 
     cond do

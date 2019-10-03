@@ -20,11 +20,7 @@ config :td_ie, TdIe.Repo,
 
 config :td_ie, permission_resolver: TdIe.Permissions.MockPermissionResolver
 
-config :td_ie, :elasticsearch,
-  search_service: TdIe.Search.MockSearch,
-  es_host: "elastic",
-  es_port: 9200,
-  type_name: "doc"
+config :td_ie, TdIe.Search.Cluster, api: TdIe.ElasticsearchMock
 
 config :td_ie, :audit_service,
   api_service: TdIeWeb.ApiServices.MockTdAuditService,

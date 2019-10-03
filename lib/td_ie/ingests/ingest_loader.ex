@@ -27,6 +27,10 @@ defmodule TdIe.IngestLoader do
     GenServer.call(TdIe.IngestLoader, {:delete, id})
   end
 
+  def ping(timeout \\ 5000) do
+    GenServer.call(__MODULE__, :ping, timeout)
+  end
+
   @impl true
   def init(state) do
     unless Application.get_env(:td_ie, :env) == :test do
@@ -47,6 +51,11 @@ defmodule TdIe.IngestLoader do
   def handle_call({:delete, id}, _from, state) do
     IngestCache.delete(id)
     {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call(:ping, _from, state) do
+    {:reply, :pong, state}
   end
 
   @impl true
