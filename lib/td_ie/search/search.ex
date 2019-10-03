@@ -11,8 +11,7 @@ defmodule TdIe.Search do
   require Logger
 
   def put_bulk_search(:ingest) do
-    ingests = Ingests.list_all_ingest_versions()
-    ESClientApi.bulk_index_content(ingests)
+    # TODO
   end
 
   def put_search(%IngestVersion{} = ingest_version) do
