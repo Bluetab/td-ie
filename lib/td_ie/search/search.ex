@@ -5,7 +5,6 @@ defmodule TdIe.Search do
 
   alias Jason, as: JSON
   alias TdIe.ESClientApi
-  alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
 
   require Logger
