@@ -1,7 +1,9 @@
 defmodule TdIe.Canada.Abilities do
   @moduledoc false
+  alias TdCache.Link
   alias TdIe.Accounts.User
   alias TdIe.Canada.IngestAbilities
+  alias TdIe.Canada.LinkAbilities
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
 
@@ -81,6 +83,18 @@ defmodule TdIe.Canada.Abilities do
           %IngestVersion{} = ingest_version
         ) do
       IngestAbilities.can?(user, :view_ingest, ingest_version)
+    end
+
+    def can?(%User{} = user, action, %Link{} = link) do
+      LinkAbilities.can?(user, action, link)
+    end
+
+    def can?(%User{} = user, :create_link, %{ingest: ingest}) do
+      LinkAbilities.can?(user, :create_link, ingest)
+    end
+
+    def can?(%User{} = user, action, %{hint: :link} = resource) do
+      LinkAbilities.can?(user, action, resource)
     end
 
     def can?(%User{is_admin: true}, _action, %{}) do

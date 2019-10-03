@@ -44,6 +44,8 @@ defmodule TdIeWeb.Router do
       post("/version", IngestVersionController, :version)
       post("/redraft", IngestVersionController, :undo_rejection)
       get("/versions", IngestVersionController, :versions)
+      resources("/links", IngestLinkController, only: [:delete])
+      post("/links", IngestLinkController, :create_link)
     end
 
     post("/ingest_versions/search", IngestVersionController, :search)
