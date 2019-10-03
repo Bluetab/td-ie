@@ -6,7 +6,6 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdIe.Permissions.MockPermissionResolver
-  alias TdIe.Search.MockSearch
   alias TdIeWeb.ApiServices.MockTdAuditService
   alias TdIeWeb.ApiServices.MockTdAuthService
 
