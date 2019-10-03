@@ -26,6 +26,9 @@ config :td_ie, TdIe.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
+config :td_ie, TdIe.Search.Cluster,
+  url: "${ES_URL}"
+
 config :td_ie, :audit_service,
   api_service: TdIeWeb.ApiServices.HttpTdAuditService,
   audit_host: "${API_AUDIT_HOST}",

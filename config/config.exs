@@ -47,6 +47,9 @@ config :logger, :console,
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
 
+# Import Elasticsearch config
+import_config "elastic.exs"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
