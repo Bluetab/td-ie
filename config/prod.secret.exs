@@ -42,3 +42,10 @@ config :td_ie, :elasticsearch,
   type_name: "doc"
 
 config :td_cache, redis_host: "${REDIS_HOST}"
+
+config :td_cache, :event_stream,
+  consumer_id: "${HOSTNAME}",
+  consumer_group: "ie",
+  streams: [
+    [key: "template:events", consumer: TdIe.Search.IndexWorker]
+  ]
