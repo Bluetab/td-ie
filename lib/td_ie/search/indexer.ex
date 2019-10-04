@@ -6,10 +6,10 @@ defmodule TdIe.Search.Indexer do
   alias Elasticsearch.Index
   alias Elasticsearch.Index.Bulk
   alias Jason, as: JSON
+  alias TdCache.Redix
   alias TdIe.Search.Cluster
   alias TdIe.Search.Mappings
   alias TdIe.Search.Store
-  alias TdCache.Redix
 
   @index "ingests"
   @index_config Application.get_env(:td_ie, TdIe.Search.Cluster, :indexes)
@@ -57,7 +57,6 @@ defmodule TdIe.Search.Indexer do
     Elasticsearch.delete_document(Cluster, version, @index)
   end
 
-  
   def migrate do
     unless alias_exists?(@index) do
       if can_migrate?() do
