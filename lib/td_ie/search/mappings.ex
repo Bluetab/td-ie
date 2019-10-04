@@ -5,6 +5,9 @@ defmodule TdIe.Search.Mappings do
 
   alias TdCache.TemplateCache
 
+  @raw %{raw: %{type: "keyword"}}
+  @raw_sort %{raw: %{type: "keyword"}, sort: %{type: "keyword", normalizer: "sortable"}}
+
   def get_mappings do
     content_mappings = %{properties: get_dynamic_mappings()}
 
@@ -16,7 +19,7 @@ defmodule TdIe.Search.Mappings do
       template: %{
         properties: %{
           name: %{type: "text"},
-          label: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          label: %{type: "text", fields: @raw}
         }
       },
       status: %{type: "keyword"},
@@ -27,14 +30,14 @@ defmodule TdIe.Search.Mappings do
       domain: %{
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          name: %{type: "text", fields: @raw_sort}
         }
       },
       last_change_by: %{
         properties: %{
           id: %{type: "long"},
-          user_name: %{type: "text", fields: %{raw: %{type: "keyword"}}},
-          full_name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          user_name: %{type: "text", fields: @raw},
+          full_name: %{type: "text", fields: @raw}
         }
       },
       domain_ids: %{type: "long"},
@@ -42,7 +45,7 @@ defmodule TdIe.Search.Mappings do
         type: "nested",
         properties: %{
           id: %{type: "long"},
-          name: %{type: "text", fields: %{raw: %{type: "keyword"}}}
+          name: %{type: "text", fields: @raw}
         }
       },
       content: content_mappings
@@ -84,7 +87,7 @@ defmodule TdIe.Search.Mappings do
   end
 
   defp mapping_type(values) when is_map(values) do
-    %{type: "text", fields: %{raw: %{type: "keyword"}}}
+    %{type: "text", fields: @raw}
   end
 
   defp mapping_type(_default), do: %{type: "text"}
