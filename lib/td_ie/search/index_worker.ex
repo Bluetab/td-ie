@@ -13,8 +13,8 @@ defmodule TdIe.Search.IndexWorker do
 
   ## Client API
 
-  def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, name: name)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def ping(timeout \\ 5000) do
@@ -42,11 +42,22 @@ defmodule TdIe.Search.IndexWorker do
 
   ## GenServer Callbacks
 
-  @impl true
+  @impl GenServer
   def init(state) do
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
     Logger.info("Running #{name}")
+
+    unless Application.get_env(:td_bg, :env) == :test do
+      Process.send_after(self(), :migrate, 0)
+    end
+
     {:ok, state}
+  end
+
+  @impl GenServer
+  def handle_info(:migrate, state) do
+    Indexer.migrate()
+    {:noreply, state}
   end
 
   @impl true
@@ -56,12 +67,7 @@ defmodule TdIe.Search.IndexWorker do
 
   @impl true
   def handle_call({:reindex, ids}, _from, state) do
-    Logger.info("Reindexing #{Enum.count(ids)} ingests")
-    start_time = DateTime.utc_now()
-    reply = Indexer.reindex(ids, :ingest)
-    millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
-    Logger.info("Ingests indexed in #{millis}ms")
-
+    reply = do_reindex(ids)
     {:reply, reply, state}
   end
 
@@ -82,12 +88,11 @@ defmodule TdIe.Search.IndexWorker do
     {:noreply, state}
   end
 
-  defp do_reindex(:all) do
-    Logger.info("Reindexing all ingests")
-    start_time = DateTime.utc_now()
-    Indexer.reindex(:ingest)
-    millis = DateTime.utc_now() |> DateTime.diff(start_time, :millisecond)
-    Logger.info("Ingests indexed in #{millis}ms")
+  defp do_reindex(method) do
+    Timer.time(
+      fn -> Indexer.reindex(method) end,
+      fn millis, _ -> Logger.info("ingests indexed in #{millis}ms") end
+    )
   end
 
   defp reindex_event?(%{event: "add_template", scope: "ie"}), do: true

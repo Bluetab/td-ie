@@ -29,3 +29,5 @@ config :td_ie, :audit_service,
   audit_domain: ""
 
 config :td_cache, redis_host: "redis"
+
+config :td_cache, :event_stream, streams: []

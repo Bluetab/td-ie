@@ -18,8 +18,8 @@ defmodule TdIe.Application do
       # worker(TdIe.Worker, [arg1, arg2, arg3]),
       # Elasticsearch worker
       TdIe.Search.Cluster,
-      worker(TdIe.Search.IndexWorker, [TdIe.Search.IndexWorker]),
-      worker(TdIe.IngestLoader, [TdIe.IngestLoader])
+      TdIe.Search.IndexWorker,
+      TdIe.IngestLoader
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

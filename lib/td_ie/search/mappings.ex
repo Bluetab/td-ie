@@ -67,9 +67,8 @@ defmodule TdIe.Search.Mappings do
 
   defp get_mappings(%{content: content}) do
     content
-    |> Enum.filter(&(Map.get(&1, "type") != "url"))
+    |> Enum.filter(&(Map.get(&1, "type") not in ["url", "table"]))
     |> Enum.map(&field_mapping/1)
-    
   end
 
   defp field_mapping(%{"name" => name, "type" => "enriched_text"}) do

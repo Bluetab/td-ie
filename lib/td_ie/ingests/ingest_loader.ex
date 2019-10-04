@@ -11,8 +11,8 @@ defmodule TdIe.IngestLoader do
 
   require Logger
 
-  def start_link(name \\ nil) do
-    GenServer.start_link(__MODULE__, nil, name: name)
+  def start_link(config \\ []) do
+    GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   def refresh(ids) when is_list(ids) do
