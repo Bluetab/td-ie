@@ -110,6 +110,6 @@ defmodule TdIe.Search.Indexer do
 
   # Ensure only one instance of dq is reindexing by creating a lock in Redis
   defp can_migrate? do
-    Redix.command!(["SET", "TdBg.Search.Indexer:LOCK", node(), "NX", "EX", 3600]) == "OK"
+    Redix.command!(["SET", "TdIe.Search.Indexer:LOCK", node(), "NX", "EX", 3600]) == "OK"
   end
 end
