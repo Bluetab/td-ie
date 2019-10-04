@@ -56,7 +56,7 @@ defmodule TdIe.Search.Mappings do
       }
     }
 
-    %{mappings: %{doc: %{properties: mapping_type}}, settings: settings}
+    %{mappings: %{_doc: %{properties: mapping_type}}, settings: settings}
   end
 
   def get_dynamic_mappings do
@@ -69,6 +69,7 @@ defmodule TdIe.Search.Mappings do
     content
     |> Enum.filter(&(Map.get(&1, "type") != "url"))
     |> Enum.map(&field_mapping/1)
+    
   end
 
   defp field_mapping(%{"name" => name, "type" => "enriched_text"}) do
