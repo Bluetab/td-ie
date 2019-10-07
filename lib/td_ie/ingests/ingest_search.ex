@@ -6,15 +6,14 @@ defmodule TdIe.Ingest.Search do
   alias TdIe.Ingest.Query
   alias TdIe.Ingests.Ingest
   alias TdIe.Permissions
+  alias TdIe.Search
   alias TdIe.Search.Aggregations
-
-  @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
 
   def get_filter_values(%User{is_admin: true}, params) do
     filter_clause = params |> create_filters()
     query = %{} |> create_query(filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
-    @search_service.get_filters(search)
+    Search.get_filters(search)
   end
 
   def get_filter_values(%User{} = user, params) do
@@ -29,7 +28,7 @@ defmodule TdIe.Ingest.Search do
     filter = permissions |> create_filter_clause(filter_clause)
     query = %{} |> create_query(filter)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
-    @search_service.get_filters(search)
+    Search.get_filters(search)
   end
 
   def search_ingest_versions(params, user, page \\ 0, size \\ 50)
@@ -179,7 +178,7 @@ defmodule TdIe.Ingest.Search do
   end
 
   defp do_search(search) do
-    %{results: results, total: total} = @search_service.search("ingest", search)
+    %{results: results, total: total} = Search.search(search)
     results = results |> Enum.map(&Map.get(&1, "_source"))
     %{results: results, total: total}
   end

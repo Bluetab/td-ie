@@ -5,14 +5,9 @@ defmodule TdIe.Ingests.IngestVersion do
 
   import Ecto.Changeset
 
-  alias TdCache.TaxonomyCache
-  alias TdCache.TemplateCache
-  alias TdCache.UserCache
-  alias TdDfLib.Format
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
-  alias TdIe.Ingests.RichText
 
   schema "ingest_versions" do
     field(:content, :map)
@@ -144,59 +139,6 @@ defmodule TdIe.Ingests.IngestVersion do
     ])
   end
 
-  def search_fields(%IngestVersion{last_change_by: last_change_by_id} = ingest_version) do
-    template =
-      case TemplateCache.get_by_name!(ingest_version.ingest.type) do
-        nil -> %{content: []}
-        template -> template
-      end
-
-    domain = Ingests.retrieve_domain(ingest_version.ingest.domain_id)
-    domain_ids = retrieve_domain_ids(Map.get(domain, :id))
-    domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
-
-    last_change_by =
-      case UserCache.get(last_change_by_id) do
-        {:ok, nil} -> %{}
-        {:ok, user} -> user
-      end
-
-    content =
-      ingest_version
-      |> Map.get(:content)
-      |> Format.search_values(template)
-
-    %{
-      id: ingest_version.id,
-      ingest_id: ingest_version.ingest.id,
-      name: ingest_version.name,
-      description: RichText.to_plain_text(ingest_version.description),
-      status: ingest_version.status,
-      version: ingest_version.version,
-      domain: Map.take(domain, [:id, :name]),
-      domain_parents: domain_parents,
-      last_change_by: last_change_by,
-      template: %{
-        name: Map.get(template, :name),
-        label: Map.get(template, :label)
-      },
-      content: content,
-      last_change_at: ingest_version.last_change_at,
-      domain_ids: domain_ids,
-      current: ingest_version.current,
-      in_progress: ingest_version.in_progress,
-      inserted_at: ingest_version.inserted_at
-    }
-  end
-
-  defp retrieve_domain_ids(nil), do: []
-
-  defp retrieve_domain_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
-
-  def index_name do
-    "ingest"
-  end
-
   def has_any_status?(%IngestVersion{status: status}, statuses),
     do: has_any_status?(status, statuses)
 
@@ -231,5 +173,68 @@ defmodule TdIe.Ingests.IngestVersion do
   def is_deletable?(%IngestVersion{current: current, status: status}) do
     valid_statuses = [Ingest.status().draft, Ingest.status().rejected]
     current && Enum.member?(valid_statuses, status)
+  end
+
+  defimpl Elasticsearch.Document do
+    alias TdCache.TaxonomyCache
+    alias TdCache.TemplateCache
+    alias TdCache.UserCache
+    alias TdDfLib.Format
+    alias TdDfLib.RichText
+
+    @impl Elasticsearch.Document
+    def id(%IngestVersion{id: id}), do: id
+
+    @impl Elasticsearch.Document
+    def routing(_), do: false
+
+    @impl Elasticsearch.Document
+    def encode(%IngestVersion{ingest: ingest} = iv) do
+      %{type: type, domain_id: domain_id} = ingest
+      template = TemplateCache.get_by_name!(type) || %{content: []}
+      domain = Ingests.retrieve_domain(domain_id)
+      domain_ids = fetch_parent_ids(domain_id)
+      domain_parents = Enum.map(domain_ids, &%{id: &1, name: TaxonomyCache.get_name(&1)})
+
+      content =
+        iv
+        |> Map.get(:content)
+        |> Format.search_values(template)
+
+      iv
+      |> Map.take([
+        :id,
+        :ingest_id,
+        :name,
+        :status,
+        :version,
+        :last_change_at,
+        :current,
+        :in_progress,
+        :inserted_at
+      ])
+      |> Map.put(:content, content)
+      |> Map.put(:description, RichText.to_plain_text(iv.description))
+      |> Map.put(:domain, Map.take(domain, [:id, :name]))
+      |> Map.put(:domain_ids, domain_ids)
+      |> Map.put(:domain_parents, domain_parents)
+      |> Map.put(:last_change_by, get_last_change_by(iv))
+      |> Map.put(:template, Map.take(template, [:name, :label]))
+    end
+
+    defp fetch_parent_ids(nil), do: []
+
+    defp fetch_parent_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
+
+    defp get_last_change_by(%IngestVersion{last_change_by: last_change_by}) do
+      get_user(last_change_by)
+    end
+
+    defp get_user(user_id) do
+      case UserCache.get(user_id) do
+        {:ok, nil} -> %{}
+        {:ok, user} -> user
+      end
+    end
   end
 end

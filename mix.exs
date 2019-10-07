@@ -60,7 +60,10 @@ defmodule TdIe.Mixfile do
       {:csv, "~> 2.0.0"},
       {:nimble_csv, "~> 0.3"},
       {:codepagex, "~> 0.1.4"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.5.1"},
+      {:elasticsearch,
+       git: "https://github.com/Bluetab/elasticsearch-elixir.git",
+       branch: "feature/bulk-index-action"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.7.2"},
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.7.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"}
     ]

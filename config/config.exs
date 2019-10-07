@@ -47,6 +47,16 @@ config :logger, :console,
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
 
+config :td_cache, :event_stream,
+  consumer_id: "default",
+  consumer_group: "ie",
+  streams: [
+    [key: "template:events", consumer: TdIe.Search.IndexWorker]
+  ]
+
+# Import Elasticsearch config
+import_config "elastic.exs"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

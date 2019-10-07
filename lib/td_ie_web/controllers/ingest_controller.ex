@@ -18,8 +18,6 @@ defmodule TdIeWeb.IngestController do
 
   require Logger
 
-  @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
-
   action_fallback(TdIeWeb.FallbackController)
 
   def swagger_definitions do
@@ -139,7 +137,6 @@ defmodule TdIeWeb.IngestController do
              ingest_version,
              update_params
            ) do
-      @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
       error ->
@@ -218,7 +215,6 @@ defmodule TdIeWeb.IngestController do
              ingest_version,
              attrs
            ) do
-      @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
       false ->
@@ -234,7 +230,6 @@ defmodule TdIeWeb.IngestController do
 
     with true <- can?(user, reject(ingest_version)),
          {:ok, %IngestVersion{} = ingest} <- Ingests.reject_ingest_version(ingest_version, attrs) do
-      @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
       false ->
@@ -254,7 +249,6 @@ defmodule TdIeWeb.IngestController do
              ingest_version,
              attrs
            ) do
-      @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
       false ->
@@ -288,7 +282,6 @@ defmodule TdIeWeb.IngestController do
              ingest_version,
              attrs
            ) do
-      @search_service.put_search(ingest_version)
       render(conn, "show.json", ingest: ingest)
     else
       false ->

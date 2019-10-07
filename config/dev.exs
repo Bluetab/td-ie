@@ -52,10 +52,4 @@ config :td_ie, :audit_service,
   audit_port: "4007",
   audit_domain: ""
 
-config :td_ie, :elasticsearch,
-  search_service: TdIe.Search,
-  es_host: "localhost",
-  es_port: 9200,
-  type_name: "doc"
-
 config :td_cache, redis_host: "localhost"
