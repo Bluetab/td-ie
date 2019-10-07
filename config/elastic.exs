@@ -24,7 +24,7 @@ config :td_ie, TdIe.Search.Cluster,
       # This file describes the mappings and settings for your index. It will
       # be posted as-is to Elasticsearch when you create your index, and
       # therefore allows all the settings you could post directly.
-      settings: "priv/elasticsearch/ingests.json",
+      settings: %{},
 
       # This store module must implement a store behaviour. It will be used to
       # fetch data for each source in each indexes' `sources` list, below:
