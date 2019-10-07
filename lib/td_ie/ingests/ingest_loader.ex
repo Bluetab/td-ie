@@ -61,7 +61,6 @@ defmodule TdIe.IngestLoader do
   @impl true
   def handle_info(:load_ingest_cache, state) do
     load_all_ingests()
-    IndexWorker.reindex(:all)
 
     {:noreply, state}
   end
