@@ -26,16 +26,20 @@ config :td_ie, TdIe.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "${GUARDIAN_SECRET_KEY}"
 
+config :td_ie, TdIe.Search.Cluster,
+  url: "${ES_URL}"
+
 config :td_ie, :audit_service,
   api_service: TdIeWeb.ApiServices.HttpTdAuditService,
   audit_host: "${API_AUDIT_HOST}",
   audit_port: "${API_AUDIT_PORT}",
   audit_domain: ""
 
-config :td_ie, :elasticsearch,
-  search_service: TdIe.Search,
-  es_host: "${ES_HOST}",
-  es_port: "${ES_PORT}",
-  type_name: "doc"
-
 config :td_cache, redis_host: "${REDIS_HOST}"
+
+config :td_cache, :event_stream,
+  consumer_id: "${HOSTNAME}",
+  consumer_group: "ie",
+  streams: [
+    [key: "template:events", consumer: TdIe.Search.IndexWorker]
+  ]

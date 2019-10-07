@@ -12,9 +12,8 @@ defmodule TdIe.Ingests do
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
+  alias TdIe.Search.Indexer
   alias ValidationError
-
-  @search_service Application.get_env(:td_ie, :elasticsearch)[:search_service]
 
   @changeset :changeset
   @content :content
@@ -198,7 +197,6 @@ defmodule TdIe.Ingests do
         new_version = get_ingest_version!(ingest_version.id)
         ingest_id = new_version.ingest_id
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         {:ok, new_version}
 
       _ ->
@@ -237,7 +235,6 @@ defmodule TdIe.Ingests do
       {:ok, %{current: new_version}} ->
         ingest_id = new_version.ingest_id
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -275,7 +272,6 @@ defmodule TdIe.Ingests do
         updated_version = get_ingest_version!(ingest_version.id)
         ingest_id = updated_version.ingest_id
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         {:ok, updated_version}
 
       _ ->
@@ -296,7 +292,6 @@ defmodule TdIe.Ingests do
       {:ok, updated_version} ->
         ingest_id = updated_version.ingest_id
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -328,18 +323,11 @@ defmodule TdIe.Ingests do
     case result do
       {:ok, %{published: %IngestVersion{ingest_id: ingest_id}}} ->
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         result
 
       _ ->
         result
     end
-  end
-
-  def index_ingest_versions(ingest_id) do
-    ingest_id
-    |> list_ingest_versions(nil)
-    |> Enum.each(&@search_service.put_search/1)
   end
 
   def reject_ingest_version(%IngestVersion{} = ingest_version, attrs) do
@@ -352,7 +340,6 @@ defmodule TdIe.Ingests do
       {:ok, updated_version} ->
         ingest_id = updated_version.ingest_id
         IngestLoader.refresh(ingest_id)
-        index_ingest_versions(ingest_id)
         result
 
       _ ->
@@ -393,11 +380,11 @@ defmodule TdIe.Ingests do
   end
 
   @doc """
-  Returns the list of ingest_versions.
+  Returns the list of ingest versions given a filter.
 
   ## Examples
 
-      iex> list_all_ingest_versions()
+      iex> list_all_ingest_versions(%{id: id})
       [%IngestVersion{}, ...]
 
   """
@@ -548,7 +535,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = version
          }} ->
           IngestLoader.delete(ingest_id)
-          @search_service.delete_search(ingest_version)
+          Indexer.delete(ingest_version)
           {:ok, version}
       end
     else
@@ -565,7 +552,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = deleted_version,
            current: %IngestVersion{} = current_version
          }} ->
-          @search_service.delete_search(deleted_version)
+          Indexer.delete(deleted_version)
           {:ok, current_version}
       end
     end
