@@ -21,7 +21,7 @@ defmodule TdIeWeb.SearchController do
     user = conn.assigns[:current_user]
 
     with true <- can?(user, reindex_all(Ingest)) do
-      :ok = Indexer.reindex(:all) |> IO.inspect
+      :ok = Indexer.reindex(:all)
       send_resp(conn, :ok, "")
     else
       false ->
