@@ -7,6 +7,10 @@
 - [TD-1721] Reindex automatically when a template changes
   - Breaking change: New environment variable ES_URL replaces existing ES_HOST/ES_PORT
 
+### Fixed
+
+- [TD-2178] Use ingest version id instead of ingest id when reindexing
+
 ## [3.7.0] 2019-09-31
 
 ### Added
