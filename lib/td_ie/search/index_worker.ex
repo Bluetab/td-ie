@@ -95,7 +95,7 @@ defmodule TdIe.Search.IndexWorker do
     )
   end
 
-  defp reindex_event?(%{event: "add_template", scope: "ie"}), do: true
+  defp reindex_event?(%{event: "template_updated", scope: "ie"}), do: true
 
   defp reindex_event?(_), do: false
 end

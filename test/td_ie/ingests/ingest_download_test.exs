@@ -4,13 +4,6 @@ defmodule TdIe.IngestDownloadTests do
   """
   use TdIe.DataCase
 
-  alias TdCache.TemplateCache
-
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
-  end
-
   describe "ingest_download" do
     alias TdIe.Ingest.Download
 
@@ -19,7 +12,7 @@ defmodule TdIe.IngestDownloadTests do
       field_name = "field_name"
       field_label = "field_label"
 
-      create_template(%{
+      Templates.create_template(%{
         id: 0,
         name: template_name,
         label: "label",
