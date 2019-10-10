@@ -4,7 +4,6 @@ defmodule TdIe.IngestsTests do
   """
   use TdIe.DataCase
 
-  alias TdCache.TemplateCache
   alias TdIe.Accounts.User
   alias TdIe.Ingests
   alias TdIe.Repo
@@ -19,11 +18,6 @@ defmodule TdIe.IngestsTests do
     %{"document" => plain}
   end
 
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
-  end
-
   describe "ingests" do
     alias TdIe.Ingests.Ingest
     alias TdIe.Ingests.IngestVersion
@@ -32,7 +26,7 @@ defmodule TdIe.IngestsTests do
       template_content = [%{name: "fieldname", type: "string", required: false}]
 
       template =
-        create_template(%{
+        Templates.create_template(%{
           id: 0,
           name: "onefield",
           content: template_content,

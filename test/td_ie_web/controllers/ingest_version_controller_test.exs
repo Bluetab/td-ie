@@ -5,7 +5,6 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   import TdIeWeb.Authentication, only: :functions
   import TdIe.TaxonomyHelper, only: :functions
 
-  alias TdCache.TemplateCache
   alias TdIe.Ingests.Ingest
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuditService
@@ -26,7 +25,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     @tag :admin_authenticated
     test "shows the specified ingest_version including it's name, description, domain and content",
          %{conn: conn} do
-      create_template()
+      Templates.create_template()
       domain_attrs = domain_fixture()
 
       ingest_version =
@@ -62,7 +61,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "find ingests by id and status", %{conn: conn} do
       published = Ingest.status().published
       draft = Ingest.status().draft
-      create_template()
+      Templates.create_template()
       domain_attrs = domain_fixture()
       id = [create_version(domain_attrs, "one", draft).ingest_id]
       id = [create_version(domain_attrs, "two", published).ingest_id | id]
@@ -82,7 +81,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     @tag :admin_authenticated
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
       domain_attrs = domain_fixture()
-      create_template()
+      Templates.create_template()
 
       creation_attrs = %{
         content: %{},
@@ -128,7 +127,13 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
       domain_attrs = domain_fixture()
 
-      create_template(%{id: 0, name: "some_type", content: [], label: "label", scope: "ie"})
+      Templates.create_template(%{
+        id: 0,
+        name: "some_type",
+        content: [],
+        label: "label",
+        scope: "ie"
+      })
 
       creation_attrs = %{
         content: %{},
@@ -156,7 +161,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "find ingest by name", %{conn: conn} do
       published = Ingest.status().published
       draft = Ingest.status().draft
-      create_template()
+      Templates.create_template()
       domain_attrs = domain_fixture()
       id = [create_version(domain_attrs, "one", draft).ingest.id]
       id = [create_version(domain_attrs, "two", published).ingest.id | id]
@@ -174,7 +179,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "versions" do
     @tag :admin_authenticated
     test "lists ingest_versions", %{conn: conn} do
-      create_template()
+      Templates.create_template()
       ingest_version = insert(:ingest_version)
 
       conn =
@@ -196,7 +201,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       template_content = [%{"name" => "fieldname", "type" => "string", "required" => false}]
 
       template =
-        create_template(%{
+        Templates.create_template(%{
           id: 0,
           name: "onefield",
           content: template_content,
@@ -228,8 +233,9 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           [Map.put(field, "required", true) | acc]
         end)
 
-      update_attrs = Map.put(template, :content, updated_content)
-      TemplateCache.put(update_attrs)
+      template
+      |> Map.put(:content, updated_content)
+      |> Templates.create_template()
 
       conn =
         post(
@@ -251,7 +257,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      create_template()
+      Templates.create_template()
       user = build(:user)
       ingest_version = insert(:ingest_version, last_change_by: user.id)
       ingest_version_id = ingest_version.id
@@ -299,17 +305,5 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   defp to_rich_text(plain) do
     %{"document" => plain}
-  end
-
-  def create_template do
-    attrs = %{id: 0, label: "some type", name: "some_type", content: [], scope: "ie"}
-
-    TemplateCache.put(attrs)
-    :ok
-  end
-
-  def create_template(template) do
-    TemplateCache.put(template)
-    template
   end
 end

@@ -8,7 +8,6 @@ defmodule TdIeWeb.IngestControllerTest do
   import TdIeWeb.Authentication, only: :functions
   import TdIe.TaxonomyHelper, only: :functions
 
-  alias TdCache.TemplateCache
   alias TdIe.Ingests.Ingest
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuthService
@@ -149,7 +148,7 @@ defmodule TdIeWeb.IngestControllerTest do
   defp create_template(_) do
     attrs = %{id: 0, label: "some type", name: "some_type", content: [], scope: "ie"}
 
-    TemplateCache.put(attrs)
+    Templates.create_template(attrs)
     :ok
   end
 end
