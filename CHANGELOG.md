@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2179] When changing the status of an ingest we retrieve domain information
+
 ## [3.8.0] 2019-10-14
 
 ### Changed
@@ -15,7 +21,7 @@
 
 ### Added
 
-- [TD-1625] Support for df `table` type 
+- [TD-1625] Support for df `table` type
 - [TD-1837] Ingest version embedded links
 
 ## [3.6.0] 2019-09-16

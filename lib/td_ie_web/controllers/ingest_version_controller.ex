@@ -266,9 +266,9 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   defp annotate(link, %IngestVersion{
-    id: ingest_version_id,
-    ingest: %{domain_id: domain_id}
-  }) do
+         id: ingest_version_id,
+         ingest: %{domain_id: domain_id}
+       }) do
     link
     |> Map.put(:ingest_version_id, ingest_version_id)
     |> Map.put(:domain_id, domain_id)
@@ -519,7 +519,7 @@ defmodule TdIeWeb.IngestVersionController do
       render(
         conn,
         "show.json",
-        ingest_version: ingest,
+        ingest_version: Ingests.with_domain(ingest),
         hypermedia: hypermedia("ingest_version", conn, ingest),
         template: get_template(ingest_version)
       )
@@ -568,7 +568,7 @@ defmodule TdIeWeb.IngestVersionController do
       render(
         conn,
         "show.json",
-        ingest_version: version,
+        ingest_version: Ingests.with_domain(version),
         hypermedia: hypermedia("ingest_version", conn, version),
         template: get_template(ingest_version)
       )
@@ -614,7 +614,7 @@ defmodule TdIeWeb.IngestVersionController do
       render(
         conn,
         "show.json",
-        ingest_version: ingest,
+        ingest_version: Ingests.with_domain(ingest),
         hypermedia: hypermedia("ingest_version", conn, ingest),
         template: get_template(ingest)
       )
