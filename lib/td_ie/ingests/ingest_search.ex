@@ -43,11 +43,14 @@ defmodule TdIe.Ingest.Search do
         _ -> create_query(params, filter_clause)
       end
 
+    sort = Map.get(params, "sort", ["_score", "name.raw"])
+
     search = %{
       from: page * size,
       size: size,
       query: query,
-      aggs: Aggregations.aggregation_terms()
+      aggs: Aggregations.aggregation_terms(),
+      sort: sort
     }
 
     do_search(search)
@@ -110,8 +113,9 @@ defmodule TdIe.Ingest.Search do
     filter = permissions |> create_filter_clause(user_defined_filters)
 
     query = create_query(params, filter)
+    sort = Map.get(params, "sort", ["_score", "name.raw"])
 
-    %{from: page * size, size: size, query: query}
+    %{from: page * size, size: size, query: query, sort: sort}
     |> do_search
   end
 

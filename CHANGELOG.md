@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- [TD-2180] Take into account sort parmas on ingests' search
+
 ### Fixed
 
 - [TD-2179] When changing the status of an ingest we retrieve domain information
