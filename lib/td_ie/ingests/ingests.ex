@@ -479,7 +479,7 @@ defmodule TdIe.Ingests do
     domain =
       ingest
       |> Map.get(:domain_id)
-      |> retrieve_domain()
+      |> get_domain()
 
     Map.put(ingest_version, :domain, domain)
   end
@@ -487,24 +487,15 @@ defmodule TdIe.Ingests do
   def with_domain(%Ingest{domain_id: domain_id} = ingest) do
     domain =
       domain_id
-      |> retrieve_domain()
+      |> get_domain()
 
     Map.put(ingest, :domain, domain)
   end
 
-  def retrieve_domain(nil), do: %{}
+  def get_domain(nil), do: %{}
 
-  def retrieve_domain(domain_id) do
-    domain_name = TaxonomyCache.get_name(domain_id)
-    return_domain_value(domain_id, domain_name)
-  end
-
-  def return_domain_value(_domain_id, nil), do: %{}
-
-  def return_domain_value(domain_id, domain_name) do
-    Map.new()
-    |> Map.put(:id, domain_id)
-    |> Map.put(:name, domain_name)
+  def get_domain(domain_id) do
+    TaxonomyCache.get_domain(domain_id)
   end
 
   @doc """
