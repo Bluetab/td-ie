@@ -192,7 +192,7 @@ defmodule TdIe.Ingests.IngestVersion do
     def encode(%IngestVersion{ingest: ingest} = iv) do
       %{type: type, domain_id: domain_id} = ingest
       template = TemplateCache.get_by_name!(type) || %{content: []}
-      domain = Ingests.get_domain(domain_id)
+      domain = Ingests.get_domain(domain_id) || %{}
       domain_ids = fetch_parent_ids(domain_id)
       domain_parents = Enum.map(domain_ids, &TaxonomyCache.get_domain/1)
 
