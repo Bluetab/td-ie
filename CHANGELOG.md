@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Added
+
+- [TD-2328] external_id in ingests domains
+
 ## [3.9.0] 2019-10-28
 
 ### Changed
