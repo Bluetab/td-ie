@@ -19,9 +19,14 @@ defmodule TdIe.IngestDownloadTests do
         scope: "ie",
         content: [
           %{
-            "name" => field_name,
-            "type" => "list",
-            "label" => field_label
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => field_name,
+                "type" => "list",
+                "label" => field_label
+              }
+            ]
           }
         ]
       })

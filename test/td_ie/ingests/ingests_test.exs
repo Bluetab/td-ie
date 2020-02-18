@@ -23,7 +23,10 @@ defmodule TdIe.IngestsTests do
     alias TdIe.Ingests.IngestVersion
 
     defp fixture do
-      template_content = [%{name: "fieldname", type: "string", required: false}]
+      template_content = [%{
+        "name" => "group",
+        "fields" => [%{name: "fieldname", type: "string", required: false}]
+      }]
 
       template =
         Templates.create_template(%{
