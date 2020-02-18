@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2344] Added missing flatten of df fields on search mapping
+
 ## [3.9.0] 2019-10-28
 
 ### Changed
