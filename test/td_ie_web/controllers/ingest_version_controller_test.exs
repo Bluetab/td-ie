@@ -14,6 +14,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
+    domain_fixture()
     :ok
   end
 
