@@ -4,6 +4,7 @@ defmodule TdIe.Ingest.Download do
   """
 
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   def to_csv(ingests) do
     ingests_by_type = Enum.group_by(ingests, &(&1 |> Map.get("template") |> Map.get("name")))
@@ -24,7 +25,9 @@ defmodule TdIe.Ingest.Download do
   end
 
   defp template_ingests_to_csv(template, ingests, add_separation) do
-    content = template.content
+    content = template
+      |> Map.get(:content)
+      |> Format.flatten_content_fields()
     content_fields = Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type"])]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
 
