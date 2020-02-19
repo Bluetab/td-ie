@@ -14,6 +14,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     start_supervised(MockTdAuthService)
     start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
+    domain_fixture()
     :ok
   end
 
@@ -198,7 +199,10 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "create new version with modified template", %{
       conn: conn
     } do
-      template_content = [%{"name" => "fieldname", "type" => "string", "required" => false}]
+      template_content = [%{
+        "name" => "group",
+        "fields" => [%{"name" => "fieldname", "type" => "string", "required" => false}]
+      }]
 
       template =
         Templates.create_template(%{

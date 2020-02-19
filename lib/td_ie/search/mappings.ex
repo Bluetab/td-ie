@@ -4,6 +4,7 @@ defmodule TdIe.Search.Mappings do
   """
 
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   @raw %{raw: %{type: "keyword"}}
   @raw_sort %{raw: %{type: "keyword"}, sort: %{type: "keyword", normalizer: "sortable"}}
@@ -70,6 +71,7 @@ defmodule TdIe.Search.Mappings do
 
   defp get_mappings(%{content: content}) do
     content
+    |> Format.flatten_content_fields
     |> Enum.map(&field_mapping/1)
   end
 

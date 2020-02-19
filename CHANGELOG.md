@@ -1,10 +1,16 @@
 # Changelog
 
-## [Unreleased] 
+## [Unreleased]
 
 ### Added
 
 - [TD-2328] external_id in ingests domains
+
+## [3.15.1] 2020-02-19
+
+### Fixed
+
+- [TD-2344] Added missing flatten of df fields on search mapping
 
 ## [3.9.0] 2019-10-28
 
