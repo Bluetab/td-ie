@@ -248,7 +248,10 @@ defmodule TdIeWeb.IngestVersionController do
         template: template
       )
     else
-      conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
+      conn
+      |> put_status(:forbidden)
+      |> put_view(ErrorView)
+      |> render("403.json")
     end
   end
 

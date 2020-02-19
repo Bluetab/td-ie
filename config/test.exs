@@ -16,18 +16,12 @@ config :td_ie, TdIe.Repo,
   password: "postgres",
   database: "td_ie_test",
   hostname: "postgres",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: 1
 
 config :td_ie, permission_resolver: TdIe.Permissions.MockPermissionResolver
-
 config :td_ie, TdIe.Search.Cluster, api: TdIe.ElasticsearchMock
-
-config :td_ie, :audit_service,
-  api_service: TdIeWeb.ApiServices.MockTdAuditService,
-  audit_host: "localhost",
-  audit_port: "4007",
-  audit_domain: ""
+config :td_ie, :audit_service, api_service: TdIeWeb.ApiServices.MockTdAuditService
 
 config :td_cache, redis_host: "redis"
-
 config :td_cache, :event_stream, streams: []
