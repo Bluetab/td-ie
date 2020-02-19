@@ -485,10 +485,7 @@ defmodule TdIe.Ingests do
   end
 
   def with_domain(%Ingest{domain_id: domain_id} = ingest) do
-    domain =
-      domain_id
-      |> get_domain()
-
+    domain = get_domain(domain_id)
     Map.put(ingest, :domain, domain)
   end
 

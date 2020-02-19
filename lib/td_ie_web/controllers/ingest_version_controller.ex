@@ -235,7 +235,7 @@ defmodule TdIeWeb.IngestVersionController do
     user = conn.assigns[:current_user]
     ingest_version = Ingests.get_ingest_version!(id)
 
-    with true <- can?(user, view_ingest(ingest_version)) do
+    if can?(user, view_ingest(ingest_version)) do
       template = get_template(ingest_version)
       ingest_version = Ingests.with_domain(ingest_version)
       links = Links.get_links(ingest_version)
@@ -248,11 +248,7 @@ defmodule TdIeWeb.IngestVersionController do
         template: template
       )
     else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+      conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
     end
   end
 

@@ -194,7 +194,7 @@ defmodule TdIe.Ingests.IngestVersion do
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain = Ingests.get_domain(domain_id) || %{}
       domain_ids = fetch_parent_ids(domain_id)
-      domain_parents = Enum.map(domain_ids, &TaxonomyCache.get_domain/1)
+      domain_parents = Enum.map(domain_ids, &get_domain/1)
 
       content =
         iv
@@ -225,6 +225,13 @@ defmodule TdIe.Ingests.IngestVersion do
     defp fetch_parent_ids(nil), do: []
 
     defp fetch_parent_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
+
+    defp get_domain(id) do
+      case TaxonomyCache.get_domain(id) do
+        %{} = domain -> Map.take(domain, [:id, :external_id, :name])
+        nil -> %{id: id}
+      end
+    end
 
     defp get_last_change_by(%IngestVersion{last_change_by: last_change_by}) do
       get_user(last_change_by)

@@ -7,7 +7,7 @@ defmodule TdIe.Mixfile do
       app: :td_ie,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "3.9.0-local"
+          nil -> "3.16.0-local"
           v -> v
         end,
       elixir: "~> 1.6",
@@ -43,22 +43,20 @@ defmodule TdIe.Mixfile do
       {:phoenix_ecto, "~> 4.0", override: true},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
-      {:postgrex, ">= 0.0.0"},
+      {:postgrex, "~> 0.15.0"},
       {:gettext, "~> 0.11"},
-      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.7-alpha"},
+      {:cabbage, only: [:test], git: "https://github.com/Bluetab/cabbage", tag: "v0.3.8-alpha"},
       {:httpoison, "~> 1.0"},
       {:distillery, "~> 2.0", runtime: false},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.2", only: [:dev, :test], runtime: false},
       {:guardian, "~> 1.0"},
       {:canada, "~> 1.0.1"},
-      {:ex_machina, "~> 2.2.2", only: [:test]},
+      {:ex_machina, "~> 2.3", only: [:test]},
       {:corsica, "~> 1.0"},
-      {:phoenix_swagger, "~> 0.8.0"},
-      {:ex_json_schema, "~> 0.5"},
+      {:phoenix_swagger, "~> 0.8.2"},
+      {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
-      {:csv, "~> 2.0.0"},
-      {:nimble_csv, "~> 0.3"},
-      {:codepagex, "~> 0.1.4"},
+      {:csv, "~> 2.3"},
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
