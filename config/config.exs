@@ -46,6 +46,7 @@ config :logger, :console,
 
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
+config :phoenix_swagger, json_library: Jason
 
 config :td_cache, :event_stream,
   consumer_id: "default",

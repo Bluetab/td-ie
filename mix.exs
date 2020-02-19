@@ -40,7 +40,6 @@ defmodule TdIe.Mixfile do
     [
       {:phoenix, "~> 1.4.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:plug, "~> 1.7"},
       {:phoenix_ecto, "~> 4.0", override: true},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
