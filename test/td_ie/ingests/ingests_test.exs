@@ -23,10 +23,12 @@ defmodule TdIe.IngestsTests do
     alias TdIe.Ingests.IngestVersion
 
     defp fixture do
-      template_content = [%{
-        "name" => "group",
-        "fields" => [%{name: "fieldname", type: "string", required: false}]
-      }]
+      template_content = [
+        %{
+          "name" => "group",
+          "fields" => [%{name: "fieldname", type: "string", required: false}]
+        }
+      ]
 
       template =
         Templates.create_template(%{
@@ -429,35 +431,15 @@ defmodule TdIe.IngestsTests do
     end
 
     test "check_ingest_name_availability/3 check not available" do
-      [name1, name2] = 1..10 |> Enum.map(fn _ -> random_name() end) |> Enum.uniq() |> Enum.take(2)
-
-      user = build(:user)
-      domain_id = 1
-      i1 = insert(:ingest, domain_id: domain_id)
-      i2 = insert(:ingest, domain_id: domain_id)
-
-      _first =
-        insert(
-          :ingest_version,
-          last_change_by: user.id,
-          name: name1,
-          ingest: i1
-        )
-
-      second =
-        insert(
-          :ingest_version,
-          last_change_by: user.id,
-          name: name2,
-          ingest: i2
-        )
+      assert [%{name: name}, %{ingest: %{id: exclude_id, type: type}}] =
+               1..10
+               |> Enum.map(fn _ -> random_name() end)
+               |> Enum.uniq()
+               |> Enum.take(2)
+               |> Enum.map(&insert(:ingest_version, name: &1))
 
       assert {:name_not_available} ==
-               Ingests.check_ingest_name_availability(
-                 second.ingest.type,
-                 name1,
-                 second.id
-               )
+               Ingests.check_ingest_name_availability(type, name, exclude_id)
     end
 
     test "count_published_ingests/2 check count" do

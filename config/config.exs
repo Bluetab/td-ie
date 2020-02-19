@@ -18,6 +18,20 @@ config :td_ie, TdIeWeb.Endpoint,
   secret_key_base: "/dcHCF/jz9hccq5nBQpPl02KfE9ch3y5XtglF/KqnY3IsHe98gylfgDzHLVDFaTy",
   render_errors: [view: TdIeWeb.ErrorView, accepts: ~w(json)]
 
+# Configures Elixir's Logger
+# set EX_LOGGER_FORMAT environment variable to override Elixir's Logger format
+# (without the 'end of line' character)
+# EX_LOGGER_FORMAT='$date $time [$level] $message'
+config :logger, :console,
+  format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
+  level: :info,
+  metadata: [:pid, :module],
+  utc_log: true
+
+# Configuration for Phoenix
+config :phoenix, :json_library, Jason
+config :phoenix_swagger, json_library: Jason
+
 config :td_ie, :phoenix_swagger,
   swagger_files: %{
     "priv/static/swagger.json" => [router: TdIeWeb.Router]
@@ -33,19 +47,14 @@ config :td_ie, TdIe.Auth.Guardian,
 config :td_ie, permission_resolver: TdCache.Permissions
 
 config :td_ie, :audit_service,
-  protocol: "http",
-  audits_path: "/api/audits/"
+  api_service: TdIeWeb.ApiServices.HttpTdAuditService,
+  audit_domain: "",
+  audit_host: "localhost",
+  audit_port: "4007",
+  audits_path: "/api/audits/",
+  protocol: "http"
 
-# Configures Elixir's Logger
-# set EX_LOGGER_FORMAT environment variable to override Elixir's Logger format
-# (without the 'end of line' character)
-# EX_LOGGER_FORMAT='$date $time [$level] $message'
-config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
-  metadata: [:request_id]
-
-# Configuration for Phoenix
-config :phoenix, :json_library, Jason
+config :td_ie, TdIe.Repo, pool_size: 10
 
 config :td_cache, :event_stream,
   consumer_id: "default",

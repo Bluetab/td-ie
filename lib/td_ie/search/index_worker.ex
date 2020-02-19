@@ -47,7 +47,7 @@ defmodule TdIe.Search.IndexWorker do
     name = String.replace_prefix("#{__MODULE__}", "Elixir.", "")
     Logger.info("Running #{name}")
 
-    unless Application.get_env(:td_bg, :env) == :test do
+    unless Application.get_env(:td_ie, :env) == :test do
       Process.send_after(self(), :migrate, 0)
     end
 

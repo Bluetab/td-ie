@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2328] Include `external_id` in ingests domain response
+
+### Changed
+
+- [TD-940] Updated to Elixir 1.10
+
 ## [3.15.1] 2020-02-19
 
 ### Fixed
