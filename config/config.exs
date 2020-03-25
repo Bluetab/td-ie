@@ -60,7 +60,8 @@ config :td_cache, :event_stream,
   consumer_id: "default",
   consumer_group: "ie",
   streams: [
-    [key: "template:events", consumer: TdIe.Search.IndexWorker]
+    [key: "template:events", consumer: TdIe.Search.IndexWorker],
+    [key: "domain:events", consumer: TdIe.Cache.DomainEventConsumer]
   ]
 
 # Import Elasticsearch config

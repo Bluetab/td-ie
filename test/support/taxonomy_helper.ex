@@ -3,7 +3,13 @@ defmodule TdIe.TaxonomyHelper do
   Helper functions on taxonomy iteration
   """
   alias TdCache.TaxonomyCache
-  @valid_attrs %{id: 1, name: "domain name", parent_ids: []}
+
+  @valid_attrs %{
+    id: :random.uniform(1_000_000),
+    name: "domain name",
+    parent_ids: [],
+    updated_at: DateTime.utc_now()
+  }
 
   def domain_fixture(attrs \\ %{}) do
     final_attrs =

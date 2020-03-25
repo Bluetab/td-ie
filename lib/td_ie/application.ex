@@ -19,7 +19,8 @@ defmodule TdIe.Application do
       # Elasticsearch worker
       TdIe.Search.Cluster,
       TdIe.Search.IndexWorker,
-      TdIe.IngestLoader
+      TdIe.IngestLoader,
+      TdIe.Cache.DomainEventConsumer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
