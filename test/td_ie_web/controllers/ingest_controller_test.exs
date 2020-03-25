@@ -33,9 +33,9 @@ defmodule TdIeWeb.IngestControllerTest do
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
       domain = domain_fixture()
       user = build(:user)
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
-      ingest = ingest_version.ingest
+      ingest = insert(:ingest, domain_id: domain.id)
       ingest_id = ingest.id
+      insert(:ingest_version, ingest: ingest, last_change_by: user.id)
 
       update_attrs = %{
         content: %{},

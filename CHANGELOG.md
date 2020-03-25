@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2364] Reindex ingests on domain update
+
 ## [3.16.0] 2020-02-25
 
 ### Added

@@ -28,10 +28,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
          %{conn: conn} do
       Templates.create_template()
       domain_attrs = domain_fixture()
+      ingest = insert(:ingest, domain_id: domain_attrs.id)
 
       ingest_version =
         insert(
           :ingest_version,
+          ingest: ingest,
           content: %{"foo" => "bar"},
           name: "Concept Name",
           description: to_rich_text("The awesome ingest")
