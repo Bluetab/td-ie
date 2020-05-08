@@ -190,11 +190,13 @@ defmodule TdIe.Ingests.IngestVersion do
 
     @impl Elasticsearch.Document
     def encode(%IngestVersion{ingest: ingest} = iv) do
-      %{type: type, domain_id: domain_id} = ingest
+      %{type: type, domain_id: domain_id, executions: executions} = ingest
+
       template = TemplateCache.get_by_name!(type) || %{content: []}
       domain = Ingests.get_domain(domain_id) || %{}
       domain_ids = fetch_parent_ids(domain_id)
       domain_parents = Enum.map(domain_ids, &get_domain/1)
+      last_execution = Ingests.get_last_execution(executions)
 
       content =
         iv
@@ -220,6 +222,8 @@ defmodule TdIe.Ingests.IngestVersion do
       |> Map.put(:domain_parents, domain_parents)
       |> Map.put(:last_change_by, get_last_change_by(iv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
+      |> Map.put(:execution_status, Map.get(last_execution, :status))
+      |> Map.put(:last_execution, Map.get(last_execution, :execution))
     end
 
     defp fetch_parent_ids(nil), do: []

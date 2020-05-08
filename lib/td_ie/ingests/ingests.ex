@@ -376,6 +376,7 @@ defmodule TdIe.Ingests do
     |> join(:left, [v], _ in assoc(v, :ingest))
     |> preload([_, i], ingest: i)
     |> order_by(asc: :version)
+    |> preload(ingest: :executions)
     |> Repo.all()
   end
 
@@ -833,5 +834,35 @@ defmodule TdIe.Ingests do
   """
   def change_ingest_execution(%IngestExecution{} = ingest_execution) do
     IngestExecution.changeset(ingest_execution, %{})
+  end
+
+  def get_last_execution([]), do: %{}
+
+  def get_last_execution(executions) do
+    start_execution = last_execution(executions, :start_timestamp)
+    end_execution = last_execution(executions, :end_timestamp)
+
+    [end_execution, start_execution]
+    |> Enum.filter(& &1)
+    |> Enum.sort_by(&elem(&1, 0), {:desc, NaiveDateTime})
+    |> case do
+      [] ->
+        Map.new()
+
+      [head | _] ->
+        execution = elem(head, 0)
+        status = head |> elem(1) |> Map.get(:status)
+        %{execution: execution, status: status}
+    end
+  end
+
+  defp last_execution(executions, key) do
+    executions
+    |> Enum.filter(&Map.get(&1, key))
+    |> Enum.sort_by(&Map.get(&1, key), {:desc, NaiveDateTime})
+    |> case do
+      [] -> nil
+      [head | _] -> {Map.get(head, key), head}
+    end
   end
 end
