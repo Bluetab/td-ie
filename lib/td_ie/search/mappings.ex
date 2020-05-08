@@ -49,7 +49,9 @@ defmodule TdIe.Search.Mappings do
           name: %{type: "text", fields: @raw}
         }
       },
-      content: content_mappings
+      content: content_mappings,
+      execution_status: %{type: "text", fields: @raw_sort},
+      last_execution: %{type: "date", format: "strict_date_optional_time||epoch_millis"}
     }
 
     settings = %{
