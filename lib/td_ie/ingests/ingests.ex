@@ -787,6 +787,14 @@ defmodule TdIe.Ingests do
     %IngestExecution{}
     |> IngestExecution.changeset(attrs)
     |> Repo.insert()
+    |> case do
+      {:ok, ingest_execution} ->
+        refresh_ingest(ingest_execution)
+        {:ok, ingest_execution}
+
+      err ->
+        err
+    end
   end
 
   @doc """
@@ -805,6 +813,14 @@ defmodule TdIe.Ingests do
     ingest_execution
     |> IngestExecution.changeset(attrs)
     |> Repo.update()
+    |> case do
+      {:ok, ingest_execution} ->
+        refresh_ingest(ingest_execution)
+        {:ok, ingest_execution}
+
+      err ->
+        err
+    end
   end
 
   @doc """
@@ -820,7 +836,16 @@ defmodule TdIe.Ingests do
 
   """
   def delete_ingest_execution(%IngestExecution{} = ingest_execution) do
-    Repo.delete(ingest_execution)
+    ingest_execution
+    |> Repo.delete()
+    |> case do
+      {:ok, %IngestExecution{}} ->
+        refresh_ingest(ingest_execution)
+        {:ok, %IngestExecution{}}
+
+      err ->
+        err
+    end
   end
 
   @doc """
@@ -853,6 +878,12 @@ defmodule TdIe.Ingests do
         execution = elem(head, 0)
         status = head |> elem(1) |> Map.get(:status)
         %{execution: execution, status: status}
+    end
+  end
+
+  defp refresh_ingest(%IngestExecution{ingest_id: ingest_id}) do
+    unless is_nil(ingest_id) do
+      IngestLoader.refresh(ingest_id)
     end
   end
 

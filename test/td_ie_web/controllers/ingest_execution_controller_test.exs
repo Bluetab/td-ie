@@ -53,8 +53,9 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "create ingest_execution" do
     @tag :admin_authenticated
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      %{id: ingest_id} = insert(:ingest)
-
+      ingest = insert(:ingest)
+      ingest_id = Map.get(ingest, :id)
+      insert(:ingest_version, ingest: ingest)
       conn =
         post(conn, Routes.ingest_ingest_execution_path(conn, :create, ingest_id),
           ingest_execution: @create_attrs
@@ -158,7 +159,9 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "update ingest_execution" do
     @tag :admin_authenticated
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      %{id: ingest_id} = insert(:ingest)
+      ingest = insert(:ingest)
+      ingest_id = Map.get(ingest, :id)
+      insert(:ingest_version, ingest: ingest)
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
       %{id: id} = ingest_execution
 
@@ -204,7 +207,9 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "delete ingest_execution" do
     @tag :admin_authenticated
     test "deletes chosen ingest_execution", %{conn: conn} do
-      %{id: ingest_id} = insert(:ingest)
+      ingest = insert(:ingest)
+      ingest_id = Map.get(ingest, :id)
+      insert(:ingest_version, ingest: ingest)
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
       conn =
