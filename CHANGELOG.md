@@ -6,6 +6,10 @@
 
 - [TD-2586] Fields `last_execution` and `execution_status` on search 
 
+### Changed
+
+- [TD-2490] td-cache: Updated Taxonomy information on domain update
+
 ## [3.19.0] 2020-04-06
 
 ### Added
