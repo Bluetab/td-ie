@@ -19,7 +19,8 @@ defmodule TdIe.Search.Aggregations do
       {"status", %{terms: %{field: "status"}}},
       {"current", %{terms: %{field: "current"}}},
       {"in_progress", %{terms: %{field: "in_progress"}}},
-      {"template", %{terms: %{field: "template.label.raw", size: 50}}}
+      {"template", %{terms: %{field: "template.label.raw", size: 50}}},
+      {"execution_status", %{terms: %{field: "execution_status"}} }
     ]
 
     dynamic_keywords =
