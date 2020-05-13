@@ -605,8 +605,7 @@ defmodule TdIe.IngestsTests do
       ingest_version = insert(:ingest_version)
       ingest_versions = Ingests.list_all_ingest_versions()
 
-      assert ingest_versions
-             |> Enum.map(fn iv -> ingest_version_preload(iv) end) == [ingest_version]
+      assert Enum.map(ingest_versions, & &1.id) == [ingest_version.id]
     end
 
     test "find_ingest_versions/1 returns filtered ingest_versions" do
@@ -795,6 +794,42 @@ defmodule TdIe.IngestsTests do
     test "change_ingest_execution/1 returns a ingest_execution changeset" do
       ingest_execution = ingest_execution_fixture()
       assert %Ecto.Changeset{} = Ingests.change_ingest_execution(ingest_execution)
+    end
+
+    test "get_last_execution/1 returns all ingest executions" do
+      %{id: ingest_id} = insert(:ingest)
+      init = DateTime.to_unix(DateTime.utc_now())
+      start_timestamp = DateTime.from_unix!(init + 1)
+      end_timestamp = DateTime.from_unix!(init + 2)
+
+      ie =
+        insert(:ingest_execution,
+          ingest_id: ingest_id,
+          start_timestamp: start_timestamp,
+          end_timestamp: end_timestamp
+        )
+
+      start_timestamp = DateTime.from_unix!(init + 1)
+      end_timestamp = DateTime.from_unix!(init + 3)
+
+      ie_1 =
+        insert(:ingest_execution,
+          ingest_id: ingest_id,
+          start_timestamp: start_timestamp,
+          end_timestamp: end_timestamp
+        )
+
+      start_timestamp = DateTime.from_unix!(init + 4)
+
+      ie_2 =
+        insert(:ingest_execution,
+          ingest_id: ingest_id,
+          start_timestamp: start_timestamp,
+          end_timestamp: nil
+        )
+
+      assert Ingests.get_last_execution([]) == %{}
+      assert Ingests.get_last_execution([ie_2, ie, ie_1]) == %{execution: ie_2.start_timestamp, status: ie_2.status}
     end
   end
 

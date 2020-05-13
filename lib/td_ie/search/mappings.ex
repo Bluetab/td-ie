@@ -49,10 +49,13 @@ defmodule TdIe.Search.Mappings do
           name: %{type: "text", fields: @raw}
         }
       },
+      execution_status: %{type: "text", fields: @raw_sort},
+      last_execution: %{type: "date", format: "strict_date_optional_time||epoch_millis"},
       content: content_mappings
     }
 
     settings = %{
+      number_of_shards: 1,
       analysis: %{
         normalizer: %{
           sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}

@@ -3,6 +3,7 @@ defmodule TdIe.Ingests.Ingest do
   use Ecto.Schema
   import Ecto.Changeset
   alias TdIe.Ingests.Ingest
+  alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
 
   @status %{
@@ -21,6 +22,7 @@ defmodule TdIe.Ingests.Ingest do
     field(:last_change_at, :utc_datetime)
 
     has_many(:versions, IngestVersion)
+    has_many(:executions, IngestExecution)
 
     timestamps(type: :utc_datetime)
   end

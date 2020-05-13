@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased] 
+
+### Added
+
+- [TD-2586] Fields `last_execution` and `execution_status` on search 
 
 ### Changed
 

@@ -81,7 +81,9 @@ defmodule TdIeWeb.IngestVersionView do
       "inserted_at",
       "updated_at",
       "domain_parents",
-      "in_progress"
+      "in_progress",
+      "execution_status",
+      "last_execution"
     ]
 
     type = get_in(ingest_version, ["template", "name"])
