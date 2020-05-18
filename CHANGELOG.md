@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased] 
+## [3.22.0] 2020-05-18
 
 ### Added
 
-- [TD-2586] Fields `last_execution` and `execution_status` on search 
+- [TD-2586] Fields `last_execution` and `execution_status` on search
 
 ### Changed
 
