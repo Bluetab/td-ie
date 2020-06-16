@@ -2,128 +2,142 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdIeWeb.Authentication, only: :functions
-  import TdIe.TaxonomyHelper, only: :functions
-
+  alias TdCache.TaxonomyCache
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(MockTdAuthService)
     start_supervised(MockPermissionResolver)
-    domain_fixture()
-    :ok
+    %{id: domain_id} = domain = build(:domain)
+    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
+    TaxonomyCache.put_domain(domain)
+    Templates.create_template()
+    [domain: domain]
   end
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    [conn: put_req_header(conn, "accept", "application/json")]
   end
 
-  describe "show" do
+  describe "GET /api/ingest_versions/:id" do
     @tag :admin_authenticated
     test "shows the specified ingest_version including it's name, description, domain and content",
-         %{conn: conn} do
-      Templates.create_template()
-      domain_attrs = domain_fixture()
-      ingest = insert(:ingest, domain_id: domain_attrs.id)
+         %{conn: conn, domain: domain} do
+      %{id: domain_id, name: domain_name} = domain
 
-      ingest_version =
+      %{name: name, description: description, ingest_id: ingest_id, content: content} =
+        ingest_version =
         insert(
           :ingest_version,
-          ingest: ingest,
+          ingest: build(:ingest, domain_id: domain_id),
           content: %{"foo" => "bar"},
-          name: "Concept Name",
+          name: "Ingest Name",
           description: to_rich_text("The awesome ingest")
         )
 
-      conn = get(conn, Routes.ingest_version_path(conn, :show, ingest_version.id))
-      data = json_response(conn, 200)["data"]
-      assert data["name"] == ingest_version.name
-      assert data["description"] == ingest_version.description
-      assert data["ingest_id"] == ingest_version.ingest.id
-      assert data["content"] == ingest_version.content
-      assert data["domain"]["id"] == ingest_version.ingest.domain_id
-      assert data["domain"]["id"] == Map.get(domain_attrs, :id)
-      assert data["domain"]["name"] == Map.get(domain_attrs, :name)
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :show, ingest_version.id))
+               |> json_response(:ok)
+
+      assert %{
+               "name" => ^name,
+               "description" => ^description,
+               "ingest_id" => ^ingest_id,
+               "content" => ^content,
+               "domain" => %{"id" => ^domain_id, "name" => ^domain_name}
+             } = data
+    end
+
+    @tag :admin_authenticated
+    test "excludes email and is_admin from last_change_user", %{conn: conn} do
+      ingest_version = insert(:ingest_version, ingest: build(:ingest))
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :show, ingest_version.id))
+               |> json_response(:ok)
+
+      assert %{"last_change_user" => last_change_user} = data
+      assert Map.keys(last_change_user) == ["full_name", "id", "user_name"]
     end
   end
 
-  describe "index" do
+  describe "GET /api/ingest_versions" do
     @tag :admin_authenticated
     test "lists all ingest_versions", %{conn: conn} do
-      conn = get(conn, Routes.ingest_version_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+      assert %{"data" => []} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :index))
+               |> json_response(:ok)
     end
   end
 
-  describe "search" do
+  describe "POST /api/ingest_versions/search" do
     @tag :admin_authenticated
-    test "find ingests by id and status", %{conn: conn} do
-      Templates.create_template()
-      domain_attrs = domain_fixture()
-      id = [create_version(domain_attrs, "one", "draft").ingest_id]
-      id = [create_version(domain_attrs, "two", "published").ingest_id | id]
-      id = [create_version(domain_attrs, "three", "published").ingest_id | id]
+    test "excludes email from last_change_by", %{conn: conn} do
+      insert(:ingest_version)
 
-      conn =
-        get(conn, Routes.ingest_path(conn, :search), %{
-          id: Enum.join(id, ","),
-          status: "published"
-        })
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.ingest_version_path(conn, :search, %{}))
+               |> json_response(:ok)
 
-      assert 2 == length(json_response(conn, 200)["data"])
+      assert [%{"last_change_by" => last_change_by}] = data
+      assert Map.keys(last_change_by) == ["full_name", "id", "user_name"]
     end
   end
 
   describe "create ingest" do
     @tag :admin_authenticated
-    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      domain_attrs = domain_fixture()
-      Templates.create_template()
+    test "renders ingest when data is valid", %{
+      conn: conn,
+      domain: domain,
+      swagger_schema: schema
+    } do
+      %{id: domain_id, name: domain_name} = domain
 
       creation_attrs = %{
-        content: %{},
-        type: "some_type",
-        name: "Some name",
-        description: to_rich_text("Some description"),
-        domain_id: Map.get(domain_attrs, :id),
-        in_progress: false
+        "content" => %{},
+        "type" => "some_type",
+        "name" => "Some name",
+        "description" => to_rich_text("Some description"),
+        "domain_id" => domain_id,
+        "in_progress" => false
       }
 
-      conn =
-        post(
-          conn,
-          Routes.ingest_version_path(conn, :create),
-          ingest_version: creation_attrs
-        )
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.ingest_version_path(conn, :create), ingest_version: creation_attrs)
+               |> validate_resp_schema(schema, "IngestVersionResponse")
+               |> json_response(:created)
 
-      validate_resp_schema(conn, schema, "IngestVersionResponse")
-      assert %{"ingest_id" => id} = json_response(conn, 201)["data"]
+      assert %{"ingest_id" => id} = data
 
-      conn = recycle_and_put_headers(conn)
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_path(conn, :show, id))
+               |> validate_resp_schema(schema, "IngestResponse")
+               |> json_response(:ok)
 
-      conn = get(conn, Routes.ingest_path(conn, :show, id))
-      validate_resp_schema(conn, schema, "IngestResponse")
-      ingest = json_response(conn, 200)["data"]
-
-      %{
-        id: id,
-        last_change_by: Integer.mod(:binary.decode_unsigned("app-admin"), 100_000),
-        version: 1
-      }
-      |> Enum.each(&assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
+      assert %{"id" => ^id, "version" => 1} = data
 
       creation_attrs
-      |> Map.drop([:domain_id])
-      |> Enum.each(&assert ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
+      |> Map.delete("domain_id")
+      |> Enum.each(&assert Map.get(data, elem(&1, 0)) == elem(&1, 1))
 
-      assert ingest["domain"]["id"] == Map.get(domain_attrs, :id)
-      assert ingest["domain"]["name"] == Map.get(domain_attrs, :name)
+      assert data["domain"]["id"] == domain_id
+      assert data["domain"]["name"] == domain_name
     end
 
     @tag :admin_authenticated
-    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      domain_attrs = domain_fixture()
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      domain: domain,
+      swagger_schema: schema
+    } do
+      %{id: domain_id} = domain
 
       Templates.create_template(%{
         id: 0,
@@ -138,66 +152,73 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         type: "some_type",
         name: nil,
         description: to_rich_text("Some description"),
-        domain_id: Map.get(domain_attrs, :id),
+        domain_id: domain_id,
         in_progress: false
       }
 
-      conn =
-        post(
-          conn,
-          Routes.ingest_version_path(conn, :create),
-          ingest_version: creation_attrs
-        )
+      assert %{"errors" => errors} =
+               conn
+               |> post(Routes.ingest_version_path(conn, :create), ingest_version: creation_attrs)
+               |> validate_resp_schema(schema, "IngestVersionResponse")
+               |> json_response(:unprocessable_entity)
 
-      validate_resp_schema(conn, schema, "IngestVersionResponse")
-      assert json_response(conn, 422)["errors"] != %{}
+      assert errors != %{}
     end
   end
 
   describe "index_by_name" do
     @tag :admin_authenticated
-    test "find ingest by name", %{conn: conn} do
-      Templates.create_template()
-      domain_attrs = domain_fixture()
-      id = [create_version(domain_attrs, "one", "draft").ingest.id]
-      id = [create_version(domain_attrs, "two", "published").ingest.id | id]
-      [create_version(domain_attrs, "two", "published").ingest.id | id]
+    test "find ingest by name", %{conn: conn, domain: domain} do
+      %{id: domain_id} = domain
 
-      conn = get(conn, Routes.ingest_version_path(conn, :index), %{query: "two"})
-      assert 2 == length(json_response(conn, 200)["data"])
+      Enum.each(
+        [{"one", "draft"}, {"two", "published"}, {"two", "published"}],
+        fn {name, status} ->
+          insert(:ingest_version, name: name, status: status, domain_id: domain_id)
+        end
+      )
 
-      conn = recycle_and_put_headers(conn)
-      conn = get(conn, Routes.ingest_version_path(conn, :index), %{query: "one"})
-      assert 1 == length(json_response(conn, 200)["data"])
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :index), %{query: "two"})
+               |> json_response(:ok)
+
+      assert length(data) == 2
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :index), %{query: "one"})
+               |> json_response(:ok)
+
+      assert length(data) == 1
     end
   end
 
   describe "versions" do
     @tag :admin_authenticated
     test "lists ingest_versions", %{conn: conn} do
-      Templates.create_template()
-      ingest_version = insert(:ingest_version)
+      %{name: name} = ingest_version = insert(:ingest_version)
 
-      conn =
-        get(
-          conn,
-          Routes.ingest_version_ingest_version_path(conn, :versions, ingest_version.id)
-        )
+      assert %{"data" => data} =
+               conn
+               |> get(
+                 Routes.ingest_version_ingest_version_path(conn, :versions, ingest_version.id)
+               )
+               |> json_response(:ok)
 
-      [data | _] = json_response(conn, 200)["data"]
-      assert data["name"] == ingest_version.name
+      assert [%{"name" => ^name} | _] = data
     end
   end
 
   describe "create new versions" do
     @tag :admin_authenticated
-    test "create new version with modified template", %{
-      conn: conn
-    } do
-      template_content = [%{
-        "name" => "group",
-        "fields" => [%{"name" => "fieldname", "type" => "string", "required" => false}]
-      }]
+    test "create new version with modified template", %{conn: conn} do
+      template_content = [
+        %{
+          "name" => "group",
+          "fields" => [%{"name" => "fieldname", "type" => "string", "required" => false}]
+        }
+      ]
 
       template =
         Templates.create_template(%{
@@ -210,20 +231,10 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       user = build(:user)
 
-      ingest =
-        insert(
-          :ingest,
-          type: template.name,
-          last_change_by: user.id
-        )
+      ingest = insert(:ingest, type: template.name, last_change_by: user.id)
 
       ingest_version =
-        insert(
-          :ingest_version,
-          ingest: ingest,
-          last_change_by: user.id,
-          status: "published"
-        )
+        insert(:ingest_version, ingest: ingest, last_change_by: user.id, status: "published")
 
       updated_content =
         template
@@ -236,70 +247,47 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       |> Map.put(:content, updated_content)
       |> Templates.create_template()
 
-      conn =
-        post(
-          conn,
-          Routes.ingest_version_ingest_version_path(
-            conn,
-            :version,
-            ingest_version.id
-          )
-        )
-
-      assert json_response(conn, 201)["data"]
+      assert %{"data" => _data} =
+               conn
+               |> post(
+                 Routes.ingest_version_ingest_version_path(conn, :version, ingest_version.id)
+               )
+               |> json_response(:created)
     end
   end
 
   describe "update ingest_version" do
     @tag :admin_authenticated
-    test "renders ingest_version when data is valid", %{
-      conn: conn,
-      swagger_schema: schema
-    } do
-      Templates.create_template()
+    test "renders ingest_version when data is valid", %{conn: conn, swagger_schema: schema} do
       user = build(:user)
       ingest_version = insert(:ingest_version, last_change_by: user.id)
       ingest_version_id = ingest_version.id
 
       update_attrs = %{
-        content: %{},
-        name: "The new name",
-        description: to_rich_text("The new description"),
-        in_progress: false
+        "content" => %{},
+        "name" => "The new name",
+        "description" => to_rich_text("The new description"),
+        "in_progress" => false
       }
 
-      conn =
-        put(
-          conn,
-          Routes.ingest_version_path(conn, :update, ingest_version),
-          ingest_version: update_attrs
-        )
+      assert %{"data" => %{"id" => ^ingest_version_id}} =
+               conn
+               |> put(
+                 Routes.ingest_version_path(conn, :update, ingest_version),
+                 ingest_version: update_attrs
+               )
+               |> validate_resp_schema(schema, "IngestVersionResponse")
+               |> json_response(:ok)
 
-      validate_resp_schema(conn, schema, "IngestVersionResponse")
-      assert %{"id" => ^ingest_version_id} = json_response(conn, 200)["data"]
-
-      conn = recycle_and_put_headers(conn)
-      conn = get(conn, Routes.ingest_version_path(conn, :show, ingest_version_id))
-      validate_resp_schema(conn, schema, "IngestVersionResponse")
-
-      updated_ingest_version = json_response(conn, 200)["data"]
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :show, ingest_version_id))
+               |> validate_resp_schema(schema, "IngestVersionResponse")
+               |> json_response(:ok)
 
       update_attrs
-      |> Enum.each(
-        &assert updated_ingest_version |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1)
-      )
+      |> Enum.each(&assert Map.get(data, elem(&1, 0)) == elem(&1, 1))
     end
-  end
-
-  defp create_version(%{id: id}, name, status) do
-    ingest = insert(:ingest, domain_id: id)
-
-    insert(
-      :ingest_version,
-      ingest: ingest,
-      name: name,
-      status: status
-    )
   end
 
   defp to_rich_text(plain) do
