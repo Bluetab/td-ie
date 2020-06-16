@@ -6,12 +6,10 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdIe.Permissions.MockPermissionResolver
-  alias TdIeWeb.ApiServices.MockTdAuditService
   alias TdIeWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
     :ok
   end

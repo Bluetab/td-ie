@@ -73,10 +73,6 @@ defmodule TdIe.Canada.Abilities do
       IngestAbilities.can?(user, :delete, ingest_version)
     end
 
-    def can?(%User{} = user, :view_versions, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :view_versions, ingest_version)
-    end
-
     def can?(
           %User{} = user,
           :view_ingest,

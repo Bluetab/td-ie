@@ -5,9 +5,7 @@ defmodule TdIeWeb.IngestLinkController do
 
   import Canada, only: [can?: 2]
 
-  alias Jason, as: JSON
   alias TdIe.Ingests.Links
-  alias TdIeWeb.ErrorView
   alias TdIeWeb.SwaggerDefinitions
 
   require Logger
@@ -35,30 +33,9 @@ defmodule TdIeWeb.IngestLinkController do
     user = conn.assigns[:current_user]
 
     with {:ok, link} <- Links.get(id),
-         true <- can?(user, delete(link)),
+         {:can, true} <- {:can, can?(user, delete(link))},
          {:ok, _} <- Links.delete(id) do
       send_resp(conn, :accepted, "")
-    else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> put_view(ErrorView)
-        |> render("403.json")
-
-      {:error, error} ->
-        Logger.error("While reading link... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> send_resp(422, JSON.encode!(error))
-
-      error ->
-        Logger.error("While reading link... #{inspect(error)}")
-
-        conn
-        |> put_status(:unprocessable_entity)
-        |> put_view(ErrorView)
-        |> render("422.json")
     end
   end
 

@@ -15,7 +15,7 @@ defmodule TdIeWeb.CommentView do
       id: comment.id,
       resource_id: comment.resource_id,
       resource_type: comment.resource_type,
-      created_at: comment.created_at,
+      created_at: comment.inserted_at,
       user: comment.user,
       content: comment.content
     }

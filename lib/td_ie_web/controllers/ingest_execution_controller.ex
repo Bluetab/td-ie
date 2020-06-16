@@ -54,7 +54,8 @@ defmodule TdIeWeb.IngestExecutionController do
     params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
 
     with %Ingest{domain_id: domain_id} <- Ingests.get_ingest!(ingest_id),
-         true <- can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
+         {:can, true} <-
+           {:can, can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
          {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
       conn
       |> put_status(:created)
@@ -167,8 +168,9 @@ defmodule TdIeWeb.IngestExecutionController do
         params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
 
         with %Ingest{domain_id: domain_id} <- ingest,
-             true <-
-               can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id})),
+             {:can, true} <-
+               {:can,
+                can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
              {:ok, %IngestExecution{} = ingest_execution} <-
                Ingests.create_ingest_execution(params) do
           conn

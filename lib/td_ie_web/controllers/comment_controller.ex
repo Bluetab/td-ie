@@ -1,23 +1,12 @@
 defmodule TdIeWeb.CommentController do
-  @moduledoc """
-  Controller for comment requests
-  """
-  use TdHypermedia, :controller
   use TdIeWeb, :controller
+  use TdHypermedia, :controller
   use PhoenixSwagger
 
-  alias TdIe.Audit
   alias TdIe.Comments
-  alias TdIe.Comments.Comment
   alias TdIeWeb.SwaggerDefinitions
 
   action_fallback(TdIeWeb.FallbackController)
-
-  @events %{
-    update_comment: "update_comment",
-    create_comment: "create_comment",
-    delete_comment: "delete_comment"
-  }
 
   @available_filters ["resource_id", "resource_type"]
 
@@ -53,40 +42,22 @@ defmodule TdIeWeb.CommentController do
   end
 
   def create(conn, %{"comment" => comment_params}) do
-    current_user = conn.assigns[:current_user]
+    user = conn.assigns[:current_user]
 
     creation_attrs =
       comment_params
       |> Map.put("user", %{
-        "user_id" => current_user.id,
-        "full_name" => current_user.full_name,
-        "user_name" => current_user.user_name
+        "user_id" => user.id,
+        "full_name" => user.full_name,
+        "user_name" => user.user_name
       })
-      |> is_timestamp_informed?
 
-    with {:ok, %Comment{} = comment} <- Comments.create_comment(creation_attrs) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => comment.id,
-          "resource_type" => "comment",
-          "payload" => comment_params
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.create_comment)
-
+    with {:ok, %{comment: comment}} <- Comments.create_comment(creation_attrs, user) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.comment_path(conn, :show, comment))
       |> render("show.json", comment: comment)
     end
-  end
-
-  defp is_timestamp_informed?(comment_params) do
-    if Map.has_key?(comment_params, "created_at"),
-      do: comment_params,
-      else:
-        Map.put(comment_params, "created_at", DateTime.utc_now() |> DateTime.truncate(:second))
   end
 
   swagger_path :show do
@@ -102,36 +73,7 @@ defmodule TdIeWeb.CommentController do
   end
 
   def show(conn, %{"id" => id}) do
-    comment = Comments.get_comment!(id)
-    render(conn, "show.json", comment: comment)
-  end
-
-  swagger_path :update do
-    description("Update Comments")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Comment ID", required: true)
-      comment(:body, Schema.ref(:CommentUpdate), "Comment update attrs")
-    end
-
-    response(201, "OK", Schema.ref(:CommentResponse))
-    response(400, "Client Error")
-  end
-
-  def update(conn, %{"id" => id, "comment" => comment_params}) do
-    comment = Comments.get_comment!(id)
-
-    with {:ok, %Comment{} = comment} <- Comments.update_comment(comment, comment_params) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => id,
-          "resource_type" => "comment",
-          "payload" => comment_params
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.update_comment)
+    with {:ok, comment} <- Comments.get_comment(id) do
       render(conn, "show.json", comment: comment)
     end
   end
@@ -149,11 +91,10 @@ defmodule TdIeWeb.CommentController do
   end
 
   def delete(conn, %{"id" => id}) do
-    comment = Comments.get_comment!(id)
+    user = conn.assigns[:current_user]
 
-    with {:ok, %Comment{}} <- Comments.delete_comment(comment) do
-      audit = %{"audit" => %{"resource_id" => id, "resource_type" => "comment", "payload" => %{}}}
-      Audit.create_event(conn, audit, @events.delete_comment)
+    with {:ok, comment} <- Comments.get_comment(id),
+         {:ok, _} <- Comments.delete_comment(comment, user) do
       send_resp(conn, :no_content, "")
     end
   end
