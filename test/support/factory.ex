@@ -1,6 +1,12 @@
 defmodule TdIe.Factory do
-  @moduledoc false
+  @moduledoc """
+  ExMachina factory for Ingest tests
+  """
+
   use ExMachina.Ecto, repo: TdIe.Repo
+  use TdDfLib.TemplateFactory
+
+  alias TdIe.Comments.Comment
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
@@ -19,7 +25,7 @@ defmodule TdIe.Factory do
       domain_id: 1,
       type: "some_type",
       last_change_by: 1,
-      last_change_at: DateTime.utc_now() |> DateTime.truncate(:second)
+      last_change_at: DateTime.utc_now()
     }
   end
 
@@ -30,8 +36,8 @@ defmodule TdIe.Factory do
       name: "My ingest",
       description: %{"document" => "My ingest description"},
       last_change_by: 1,
-      last_change_at: DateTime.utc_now() |> DateTime.truncate(:second),
-      status: Ingest.status().draft,
+      last_change_at: DateTime.utc_now(),
+      status: "draft",
       version: 1,
       in_progress: false
     }
@@ -43,6 +49,23 @@ defmodule TdIe.Factory do
       start_timestamp: ~N[2010-04-17 14:00:00.000000],
       end_timestamp: ~N[2010-04-17 14:00:00.000000],
       status: "status"
+    }
+  end
+
+  def comment_factory do
+    %Comment{
+      resource_type: "resource_type",
+      resource_id: sequence(:resource_id, & &1),
+      user: build(:comment_user),
+      content: sequence("comment_content")
+    }
+  end
+
+  def comment_user_factory do
+    %{
+      id: sequence(:user_id, & &1),
+      user_name: sequence("user_name"),
+      full_name: sequence("full_name")
     }
   end
 end

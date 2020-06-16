@@ -46,15 +46,11 @@ config :td_ie, TdIe.Auth.Guardian,
 
 config :td_ie, permission_resolver: TdCache.Permissions
 
-config :td_ie, :audit_service,
-  api_service: TdIeWeb.ApiServices.HttpTdAuditService,
-  audit_domain: "",
-  audit_host: "localhost",
-  audit_port: "4007",
-  audits_path: "/api/audits/",
-  protocol: "http"
-
 config :td_ie, TdIe.Repo, pool_size: 10
+
+config :td_cache, :audit,
+  service: "td_ie",
+  stream: "audit:events"
 
 config :td_cache, :event_stream,
   consumer_id: "default",

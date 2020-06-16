@@ -8,7 +8,6 @@ defmodule TdIeWeb.IngestControllerTest do
   import TdIeWeb.Authentication, only: :functions
   import TdIe.TaxonomyHelper, only: :functions
 
-  alias TdIe.Ingests.Ingest
   alias TdIe.Permissions.MockPermissionResolver
   alias TdIeWeb.ApiServices.MockTdAuthService
 
@@ -96,11 +95,11 @@ defmodule TdIeWeb.IngestControllerTest do
     setup [:create_template]
 
     @transitions [
-      {Ingest.status().draft, Ingest.status().pending_approval},
-      {Ingest.status().pending_approval, Ingest.status().published},
-      {Ingest.status().pending_approval, Ingest.status().rejected},
-      {Ingest.status().rejected, Ingest.status().draft},
-      {Ingest.status().published, Ingest.status().deprecated}
+      {"draft", "pending_approval"},
+      {"pending_approval", "published"},
+      {"pending_approval", "rejected"},
+      {"rejected", "draft"},
+      {"published", "deprecated"}
     ]
 
     Enum.each(@transitions, fn transition ->

@@ -40,7 +40,7 @@ defmodule TdIeWeb.ConnCase do
 
       parent = self()
 
-      Enum.each([TdIe.IngestLoader, TdIe.Search.IndexWorker], fn worker ->
+      Enum.each([TdIe.Cache.IngestLoader, TdIe.Search.IndexWorker], fn worker ->
         case Process.whereis(worker) do
           nil ->
             nil

@@ -16,10 +16,9 @@ defmodule TdIe.Ingests.IngestExecution do
 
     belongs_to(:ingest, Ingest, on_replace: :update)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
-  @doc false
   def changeset(ingest_execution, attrs) do
     ingest_execution
     |> cast(attrs, [

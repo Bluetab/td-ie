@@ -5,14 +5,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   import TdIeWeb.Authentication, only: :functions
   import TdIe.TaxonomyHelper, only: :functions
 
-  alias TdIe.Ingests.Ingest
   alias TdIe.Permissions.MockPermissionResolver
-  alias TdIeWeb.ApiServices.MockTdAuditService
   alias TdIeWeb.ApiServices.MockTdAuthService
 
   setup_all do
     start_supervised(MockTdAuthService)
-    start_supervised(MockTdAuditService)
     start_supervised(MockPermissionResolver)
     domain_fixture()
     :ok
@@ -62,18 +59,16 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "search" do
     @tag :admin_authenticated
     test "find ingests by id and status", %{conn: conn} do
-      published = Ingest.status().published
-      draft = Ingest.status().draft
       Templates.create_template()
       domain_attrs = domain_fixture()
-      id = [create_version(domain_attrs, "one", draft).ingest_id]
-      id = [create_version(domain_attrs, "two", published).ingest_id | id]
-      id = [create_version(domain_attrs, "three", published).ingest_id | id]
+      id = [create_version(domain_attrs, "one", "draft").ingest_id]
+      id = [create_version(domain_attrs, "two", "published").ingest_id | id]
+      id = [create_version(domain_attrs, "three", "published").ingest_id | id]
 
       conn =
         get(conn, Routes.ingest_path(conn, :search), %{
           id: Enum.join(id, ","),
-          status: published
+          status: "published"
         })
 
       assert 2 == length(json_response(conn, 200)["data"])
@@ -162,13 +157,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "index_by_name" do
     @tag :admin_authenticated
     test "find ingest by name", %{conn: conn} do
-      published = Ingest.status().published
-      draft = Ingest.status().draft
       Templates.create_template()
       domain_attrs = domain_fixture()
-      id = [create_version(domain_attrs, "one", draft).ingest.id]
-      id = [create_version(domain_attrs, "two", published).ingest.id | id]
-      [create_version(domain_attrs, "two", published).ingest.id | id]
+      id = [create_version(domain_attrs, "one", "draft").ingest.id]
+      id = [create_version(domain_attrs, "two", "published").ingest.id | id]
+      [create_version(domain_attrs, "two", "published").ingest.id | id]
 
       conn = get(conn, Routes.ingest_version_path(conn, :index), %{query: "two"})
       assert 2 == length(json_response(conn, 200)["data"])
@@ -229,7 +222,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           :ingest_version,
           ingest: ingest,
           last_change_by: user.id,
-          status: Ingest.status().published
+          status: "published"
         )
 
       updated_content =

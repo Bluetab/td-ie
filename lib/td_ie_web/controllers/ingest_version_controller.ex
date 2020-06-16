@@ -9,32 +9,18 @@ defmodule TdIeWeb.IngestVersionController do
 
   import Canada, only: [can?: 2]
 
-  alias TdCache.EventStream.Publisher
   alias TdCache.TemplateCache
-  alias TdIe.Audit
   alias TdIe.Ingest.Download
   alias TdIe.Ingest.Search
   alias TdIe.Ingests
-  alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.Links
+  alias TdIe.Ingests.Workflow
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
   alias TdIeWeb.SwaggerDefinitions
 
   require Logger
-
-  @events %{
-    create_ingest_draft: "create_ingest_draft",
-    update_ingest_draft: "update_ingest_draft",
-    delete_ingest_draft: "delete_ingest_draft",
-    new_ingest_draft: "new_ingest_draft",
-    ingest_sent_for_approval: "ingest_sent_for_approval",
-    ingest_rejected: "ingest_rejected",
-    ingest_rejection_canceled: "ingest_rejection_canceled",
-    ingest_published: "ingest_published",
-    ingest_deprecated: "ingest_deprecated"
-  }
 
   action_fallback(TdIeWeb.FallbackController)
 
@@ -140,7 +126,7 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("domain_id", domain_id)
       |> Map.put("type", ingest_type)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
+      |> Map.put("last_change_at", DateTime.utc_now())
 
     creation_attrs =
       ingest_params
@@ -148,25 +134,13 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
       |> Map.put("last_change_by", conn.assigns.current_user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
-      |> Map.put("status", Ingest.status().draft)
+      |> Map.put("last_change_at", DateTime.utc_now())
+      |> Map.put("status", "draft")
       |> Map.put("version", 1)
 
-    with true <- can?(user, create_ingest(resource_domain)),
-         {:name_available} <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
-         {:ok, %IngestVersion{} = version} <- Ingests.create_ingest(creation_attrs) do
-      ingest_id = version.ingest.id
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => creation_attrs
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.create_ingest_draft)
-
+    with {:can, true} <- {:can, can?(user, create_ingest(resource_domain))},
+         :ok <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
+         {:ok, %IngestVersion{} = version} <- Workflow.create_ingest(creation_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.ingest_path(conn, :show, version.ingest))
@@ -235,7 +209,7 @@ defmodule TdIeWeb.IngestVersionController do
     user = conn.assigns[:current_user]
     ingest_version = Ingests.get_ingest_version!(id)
 
-    if can?(user, view_ingest(ingest_version)) do
+    with {:can, true} <- {:can, can?(user, view_ingest(ingest_version))} do
       template = get_template(ingest_version)
       ingest_version = Ingests.with_domain(ingest_version)
       links = Links.get_links(ingest_version)
@@ -247,11 +221,6 @@ defmodule TdIeWeb.IngestVersionController do
         hypermedia: hypermedia("ingest_version", conn, ingest_version),
         template: template
       )
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
     end
   end
 
@@ -288,30 +257,11 @@ defmodule TdIeWeb.IngestVersionController do
 
   def delete(conn, %{"id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    ingest_id = ingest_version.ingest.id
 
-    with true <- can?(user, delete(ingest_version)),
-         {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version) do
-      audit_payload = Map.take(ingest_version, [:version])
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.delete_ingest_draft)
-
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:can, true} <- {:can, can?(user, delete(ingest_version))},
+         {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version, user) do
       send_resp(conn, :no_content, "")
-    else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
   end
 
@@ -330,15 +280,20 @@ defmodule TdIeWeb.IngestVersionController do
 
   def send_for_approval(conn, %{"ingest_version_id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    draft = Ingest.status().draft
 
-    case {ingest_version.status, ingest_version.current} do
-      {^draft, true} ->
-        send_for_approval(conn, user, ingest_version)
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, "draft", true} <- {:status, ingest_version.status, ingest_version.current},
+         {:can, true} <- {:can, can?(user, send_for_approval(ingest_version))},
+         {:ok, %{updated: updated}} <- Workflow.submit_ingest_version(ingest_version, user) do
+      render(
+        conn,
+        "show.json",
+        ingest_version: Ingests.with_domain(updated),
+        hypermedia: hypermedia("ingest_version", conn, updated),
+        template: get_template(updated)
+      )
+    else
+      {:status, _, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -357,15 +312,22 @@ defmodule TdIeWeb.IngestVersionController do
 
   def publish(conn, %{"ingest_version_id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    pending_approval = Ingest.status().pending_approval
 
-    case {ingest_version.status, ingest_version.current} do
-      {^pending_approval, true} ->
-        publish(conn, user, ingest_version)
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, {"pending_approval", true}} <-
+           {:status, {ingest_version.status, ingest_version.current}},
+         {:can, true} <- {:can, can?(user, publish(ingest_version))},
+         {:ok, %{published: %IngestVersion{} = ingest}} <-
+           Workflow.publish_ingest_version(ingest_version, user) do
+      render(
+        conn,
+        "show.json",
+        ingest_version: Ingests.with_domain(ingest),
+        hypermedia: hypermedia("ingest_version", conn, ingest),
+        template: get_template(ingest_version)
+      )
+    else
+      {:status, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -385,15 +347,23 @@ defmodule TdIeWeb.IngestVersionController do
 
   def reject(conn, %{"ingest_version_id" => id} = params) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    pending_approval = Ingest.status().pending_approval
+    reason = Map.get(params, "reject_reason")
 
-    case {ingest_version.status, ingest_version.current} do
-      {^pending_approval, true} ->
-        reject(conn, user, ingest_version, Map.get(params, "reject_reason"))
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, "pending_approval", true} <-
+           {:status, ingest_version.status, ingest_version.current},
+         {:can, true} <- {:can, can?(user, reject(ingest_version))},
+         {:ok, %{rejected: version}} <-
+           Workflow.reject_ingest_version(ingest_version, reason, user) do
+      render(
+        conn,
+        "show.json",
+        ingest_version: Ingests.with_domain(version),
+        hypermedia: hypermedia("ingest_version", conn, version),
+        template: get_template(ingest_version)
+      )
+    else
+      {:status, _, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -412,15 +382,20 @@ defmodule TdIeWeb.IngestVersionController do
 
   def undo_rejection(conn, %{"ingest_version_id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    rejected = Ingest.status().rejected
 
-    case {ingest_version.status, ingest_version.current} do
-      {^rejected, true} ->
-        undo_rejection(conn, user, ingest_version)
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, "rejected", true} <- {:status, ingest_version.status, ingest_version.current},
+         {:can, true} <- {:can, can?(user, undo_rejection(ingest_version))},
+         {:ok, %{updated: updated}} <- Workflow.undo_rejected_ingest_version(ingest_version, user) do
+      render(
+        conn,
+        "show.json",
+        ingest_version: Ingests.with_domain(updated),
+        hypermedia: hypermedia("ingest_version", conn, updated),
+        template: get_template(updated)
+      )
+    else
+      {:status, _, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -439,15 +414,22 @@ defmodule TdIeWeb.IngestVersionController do
 
   def version(conn, %{"ingest_version_id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    published = Ingest.status().published
 
-    case {ingest_version.status, ingest_version.current} do
-      {^published, true} ->
-        do_version(conn, user, ingest_version)
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, "published", true} <- {:status, ingest_version.status, ingest_version.current},
+         {:can, true} <- {:can, can?(user, version(ingest_version))},
+         {:ok, %{current: %IngestVersion{} = new_version}} <-
+           Workflow.new_ingest_version(ingest_version, user) do
+      conn
+      |> put_status(:created)
+      |> render(
+        "show.json",
+        ingest_version: new_version,
+        hypermedia: hypermedia("ingest_version", conn, new_version),
+        template: get_template(new_version)
+      )
+    else
+      {:status, _, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -466,198 +448,20 @@ defmodule TdIeWeb.IngestVersionController do
 
   def deprecate(conn, %{"ingest_version_id" => id}) do
     user = conn.assigns[:current_user]
-    ingest_version = Ingests.get_ingest_version!(id)
-    published = Ingest.status().published
 
-    case {ingest_version.status, ingest_version.current} do
-      {^published, true} ->
-        deprecate(conn, user, ingest_version)
-
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
-    end
-  end
-
-  defp send_for_approval(conn, user, ingest_version) do
-    update_status(
-      conn,
-      ingest_version,
-      Ingest.status().pending_approval,
-      @events.ingest_sent_for_approval,
-      can?(user, send_for_approval(ingest_version))
-    )
-  end
-
-  defp undo_rejection(conn, user, ingest_version) do
-    update_status(
-      conn,
-      ingest_version,
-      Ingest.status().draft,
-      @events.ingest_rejection_canceled,
-      can?(user, undo_rejection(ingest_version))
-    )
-  end
-
-  defp publish(conn, user, ingest_version) do
-    ingest_id = ingest_version.ingest.id
-
-    with true <- can?(user, publish(ingest_version)),
-         {:ok, %{published: %IngestVersion{} = ingest}} <-
-           Ingests.publish_ingest_version(ingest_version) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.ingest_published)
-      publish_event(ingest_version)
-
+    with ingest_version <- Ingests.get_ingest_version!(id),
+         {:status, "published", true} <- {:status, ingest_version.status, ingest_version.current},
+         {:can, true} <- {:can, can?(user, deprecate(ingest_version))},
+         {:ok, %{updated: updated}} <- Workflow.deprecate_ingest_version(ingest_version, user) do
       render(
         conn,
         "show.json",
-        ingest_version: Ingests.with_domain(ingest),
-        hypermedia: hypermedia("ingest_version", conn, ingest),
-        template: get_template(ingest_version)
+        ingest_version: Ingests.with_domain(updated),
+        hypermedia: hypermedia("ingest_version", conn, updated),
+        template: get_template(updated)
       )
     else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
-    end
-  end
-
-  defp publish_event(ingest_version) do
-    event = %{
-      event: "publish",
-      id: "#{ingest_version.ingest.id}",
-      version_id: "#{ingest_version.id}"
-    }
-
-    case Publisher.publish(event, "ingests:events") do
-      {:ok, _event_id} ->
-        Logger.info("Event published correctly. Stream: ingests:events")
-
-      _ ->
-        Logger.warn("Publish ingest event failed")
-    end
-  end
-
-  defp reject(conn, user, ingest_version, reason) do
-    attrs = %{reject_reason: reason}
-
-    with true <- can?(user, reject(ingest_version)),
-         {:ok, %IngestVersion{} = version} <- Ingests.reject_ingest_version(ingest_version, attrs) do
-      ingest_id = version.ingest.id
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.ingest_rejected)
-
-      render(
-        conn,
-        "show.json",
-        ingest_version: Ingests.with_domain(version),
-        hypermedia: hypermedia("ingest_version", conn, version),
-        template: get_template(ingest_version)
-      )
-    else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
-    end
-  end
-
-  defp deprecate(conn, user, ingest_version) do
-    update_status(
-      conn,
-      ingest_version,
-      Ingest.status().deprecated,
-      @events.ingest_deprecated,
-      can?(user, deprecate(ingest_version))
-    )
-  end
-
-  defp update_status(conn, ingest_version, status, event, authorized) do
-    attrs = %{status: status}
-    ingest_id = ingest_version.ingest.id
-
-    with true <- authorized,
-         {:ok, %IngestVersion{} = ingest} <-
-           Ingests.update_ingest_version_status(
-             ingest_version,
-             attrs
-           ) do
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => %{}
-        }
-      }
-
-      Audit.create_event(conn, audit, event)
-
-      render(
-        conn,
-        "show.json",
-        ingest_version: Ingests.with_domain(ingest),
-        hypermedia: hypermedia("ingest_version", conn, ingest),
-        template: get_template(ingest)
-      )
-    else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
-    end
-  end
-
-  defp do_version(conn, user, ingest_version) do
-    ingest_id = ingest_version.ingest.id
-
-    with true <- can?(user, version(ingest_version)),
-         {:ok, %{current: %IngestVersion{} = new_version}} <-
-           Ingests.new_ingest_version(user, ingest_version) do
-      audit_payload = Map.take(new_version, [:version])
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.new_ingest_draft)
-
-      conn
-      |> put_status(:created)
-      |> render(
-        "show.json",
-        ingest_version: new_version,
-        hypermedia: hypermedia("ingest_version", conn, new_version),
-        template: get_template(new_version)
-      )
-    else
-      false ->
-        conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
-
-      _error ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
+      {:status, _, _} -> {:error, :unprocessable_entity}
     end
   end
 
@@ -678,7 +482,6 @@ defmodule TdIeWeb.IngestVersionController do
     user = conn.assigns[:current_user]
 
     ingest_version = Ingests.get_ingest_version!(id)
-    ingest_id = ingest_version.ingest.id
     ingest_name = Map.get(ingest_version_params, "name")
     template = get_template(ingest_version)
     content_schema = Map.get(template, :content)
@@ -686,7 +489,7 @@ defmodule TdIeWeb.IngestVersionController do
     ingest_attrs =
       %{}
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
+      |> Map.put("last_change_at", DateTime.utc_now())
 
     update_params =
       ingest_version_params
@@ -694,29 +497,17 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
       |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
+      |> Map.put("last_change_at", DateTime.utc_now())
 
-    with true <- can?(user, update(ingest_version)),
-         {:name_available} <-
+    with {:can, true} <- {:can, can?(user, update(ingest_version))},
+         :ok <-
            Ingests.check_ingest_name_availability(
              template.name,
              ingest_name,
              ingest_version.ingest.id
            ),
          {:ok, %IngestVersion{} = ingest_version} <-
-           Ingests.update_ingest_version(ingest_version, update_params) do
-      audit_payload = get_changed_params(ingest_version, ingest_version)
-
-      audit = %{
-        "audit" => %{
-          "resource_id" => ingest_id,
-          "resource_type" => "ingest",
-          "payload" => audit_payload
-        }
-      }
-
-      Audit.create_event(conn, audit, @events.update_ingest_draft)
-
+           Workflow.update_ingest_version(ingest_version, update_params) do
       render(
         conn,
         "show.json",
@@ -728,7 +519,7 @@ defmodule TdIeWeb.IngestVersionController do
       false ->
         conn |> put_status(:forbidden) |> put_view(ErrorView) |> render("403.json")
 
-      {:name_not_available} ->
+      {:error, :name_not_available} ->
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: %{name: ["bc_version unique"]}})
@@ -742,60 +533,6 @@ defmodule TdIeWeb.IngestVersionController do
       _error ->
         conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
     end
-  end
-
-  defp get_changed_params(%IngestVersion{} = old, %IngestVersion{} = new) do
-    fields_to_compare = [:name, :description]
-
-    diffs =
-      Enum.reduce(fields_to_compare, %{}, fn field, acc ->
-        oldval = Map.get(old, field)
-        newval = Map.get(new, field)
-
-        case oldval == newval do
-          true -> acc
-          false -> Map.put(acc, field, newval)
-        end
-      end)
-
-    oldcontent = Map.get(old, :content)
-    newcontent = Map.get(new, :content)
-
-    added_keys = Map.keys(newcontent) -- Map.keys(oldcontent)
-
-    added =
-      Enum.reduce(added_keys, %{}, fn key, acc ->
-        Map.put(acc, key, Map.get(newcontent, key))
-      end)
-
-    removed_keys = Map.keys(oldcontent) -- Map.keys(newcontent)
-
-    removed =
-      Enum.reduce(removed_keys, %{}, fn key, acc ->
-        Map.put(acc, key, Map.get(oldcontent, key))
-      end)
-
-    changed_keys = Map.keys(newcontent) -- removed_keys -- added_keys
-
-    changed =
-      Enum.reduce(changed_keys, %{}, fn key, acc ->
-        oldval = Map.get(oldcontent, key)
-        newval = Map.get(newcontent, key)
-
-        case oldval == newval do
-          true -> acc
-          false -> Map.put(acc, key, newval)
-        end
-      end)
-
-    changed_content =
-      %{}
-      |> Map.put(:added, added)
-      |> Map.put(:removed, removed)
-      |> Map.put(:changed, changed)
-
-    diffs
-    |> Map.put(:content, changed_content)
   end
 
   def get_template(%IngestVersion{} = version) do

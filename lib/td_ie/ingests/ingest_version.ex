@@ -9,10 +9,12 @@ defmodule TdIe.Ingests.IngestVersion do
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
 
+  @valid_status ["draft", "pending_approval", "rejected", "published", "versioned", "deprecated"]
+
   schema "ingest_versions" do
     field(:content, :map)
     field(:description, :map)
-    field(:last_change_at, :utc_datetime)
+    field(:last_change_at, :utc_datetime_usec)
     field(:mod_comments, :string)
     field(:last_change_by, :integer)
     field(:name, :string)
@@ -23,10 +25,9 @@ defmodule TdIe.Ingests.IngestVersion do
     field(:in_progress, :boolean, default: false)
     belongs_to(:ingest, Ingest, on_replace: :update)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
-  @doc false
   def create_changeset(%IngestVersion{} = ingest_version, attrs) do
     ingest_version
     |> cast(attrs, [
@@ -49,7 +50,7 @@ defmodule TdIe.Ingests.IngestVersion do
       :ingest,
       :in_progress
     ])
-    |> put_change(:status, Ingest.status().draft)
+    |> put_change(:status, "draft")
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -66,7 +67,7 @@ defmodule TdIe.Ingests.IngestVersion do
       :in_progress
     ])
     |> cast_assoc(:ingest)
-    |> put_change(:status, Ingest.status().draft)
+    |> put_change(:status, "draft")
     |> validate_required([
       :content,
       :name,
@@ -78,22 +79,14 @@ defmodule TdIe.Ingests.IngestVersion do
     |> validate_length(:mod_comments, max: 500)
   end
 
-  @doc false
-  def update_status_changeset(%IngestVersion{} = ingest_version, attrs) do
+  def status_changeset(%IngestVersion{} = ingest_version, status, user_id) do
     ingest_version
-    |> cast(attrs, [:status])
+    |> cast(%{status: status}, [:status])
     |> validate_required([:status])
-    |> validate_inclusion(:status, Map.values(Ingest.status()))
+    |> validate_inclusion(:status, @valid_status)
+    |> put_audit(user_id)
   end
 
-  @doc false
-  def not_anymore_current_changeset(%IngestVersion{} = ingest_version) do
-    ingest_version
-    |> cast(%{}, [])
-    |> put_change(:current, false)
-  end
-
-  @doc false
   def current_changeset(%IngestVersion{} = ingest_version) do
     ingest_version
     |> Map.get(:ingest_id)
@@ -102,15 +95,14 @@ defmodule TdIe.Ingests.IngestVersion do
     |> put_change(:current, true)
   end
 
-  @doc false
-  def reject_changeset(%IngestVersion{} = ingest_version, attrs) do
+  def reject_changeset(%IngestVersion{} = ingest_version, %{} = params, user_id) do
     ingest_version
-    |> cast(attrs, [:reject_reason])
+    |> cast(params, [:reject_reason])
     |> validate_length(:reject_reason, max: 500)
-    |> put_change(:status, Ingest.status().rejected)
+    |> put_change(:status, "rejected")
+    |> put_audit(user_id)
   end
 
-  @doc false
   def changeset(%IngestVersion{} = ingest_version, attrs) do
     ingest_version
     |> cast(attrs, [
@@ -139,6 +131,14 @@ defmodule TdIe.Ingests.IngestVersion do
     ])
   end
 
+  defp put_audit(%{changes: changes} = changeset, _user_id) when changes == %{}, do: changeset
+
+  defp put_audit(%{} = changeset, user_id) do
+    changeset
+    |> put_change(:last_change_by, user_id)
+    |> put_change(:last_change_at, DateTime.utc_now())
+  end
+
   def has_any_status?(%IngestVersion{status: status}, statuses),
     do: has_any_status?(status, statuses)
 
@@ -149,29 +149,29 @@ defmodule TdIe.Ingests.IngestVersion do
   end
 
   def is_updatable?(%IngestVersion{current: current, status: status}) do
-    current && status == Ingest.status().draft
+    current && status == "draft"
   end
 
   def is_publishable?(%IngestVersion{current: current, status: status}) do
-    current && status == Ingest.status().pending_approval
+    current && status == "pending_approval"
   end
 
   def is_rejectable?(%IngestVersion{} = ingest_version),
     do: is_publishable?(ingest_version)
 
   def is_versionable?(%IngestVersion{current: current, status: status}) do
-    current && status == Ingest.status().published
+    current && status == "published"
   end
 
   def is_deprecatable?(%IngestVersion{} = ingest_version),
     do: is_versionable?(ingest_version)
 
   def is_undo_rejectable?(%IngestVersion{current: current, status: status}) do
-    current && status == Ingest.status().rejected
+    current && status == "rejected"
   end
 
   def is_deletable?(%IngestVersion{current: current, status: status}) do
-    valid_statuses = [Ingest.status().draft, Ingest.status().rejected]
+    valid_statuses = ["draft", "rejected"]
     current && Enum.member?(valid_statuses, status)
   end
 

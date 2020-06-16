@@ -1,13 +1,22 @@
 defmodule TdIe.Ingest.Search do
   @moduledoc """
-    Helper module to construct ingest search queries.
+  Helper module to construct ingest search queries.
   """
+
   alias TdIe.Accounts.User
   alias TdIe.Ingest.Query
-  alias TdIe.Ingests.Ingest
   alias TdIe.Permissions
   alias TdIe.Search
   alias TdIe.Search.Aggregations
+
+  @permissions_to_status %{
+    view_approval_pending_ingests: "pending_approval",
+    view_deprecated_ingests: "deprecated",
+    view_draft_ingests: "draft",
+    view_published_ingests: "published",
+    view_rejected_ingests: "rejected",
+    view_versioned_ingests: "versioned"
+  }
 
   def get_filter_values(%User{is_admin: true}, params) do
     filter_clause = params |> create_filters()
@@ -170,9 +179,9 @@ defmodule TdIe.Ingest.Search do
     domain_clause = %{term: %{domain_ids: resource_id}}
 
     status =
-      permissions
-      |> Enum.map(&Map.get(Ingest.permissions_to_status(), &1))
-      |> Enum.filter(&(!is_nil(&1)))
+      @permissions_to_status
+      |> Map.take(permissions)
+      |> Map.values()
 
     status_clause = %{terms: %{status: status}}
 

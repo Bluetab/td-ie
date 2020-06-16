@@ -36,7 +36,7 @@ defmodule TdIe.DataCase do
 
       parent = self()
 
-      case Process.whereis(TdIe.IngestLoader) do
+      case Process.whereis(TdIe.Cache.IngestLoader) do
         nil -> nil
         pid -> Sandbox.allow(TdIe.Repo, parent, pid)
       end

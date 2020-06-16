@@ -3,11 +3,12 @@ defmodule TdIeWeb.SearchController do
   Controller for search requests over elasticsearch
   """
   use TdIeWeb, :controller
-  import Canada, only: [can?: 2]
   use PhoenixSwagger
+
+  import Canada, only: [can?: 2]
+
   alias TdIe.Ingests.Ingest
   alias TdIe.Search.Indexer
-  alias TdIeWeb.ErrorView
 
   swagger_path :reindex_all do
     description("Reindex all ES indexes with DB content")
@@ -20,14 +21,9 @@ defmodule TdIeWeb.SearchController do
   def reindex_all(conn, _params) do
     user = conn.assigns[:current_user]
 
-    if can?(user, reindex_all(Ingest)) do
-      :ok = Indexer.reindex(:all)
+    with {:can, true} <- {:can, can?(user, reindex_all(Ingest))},
+         :ok <- Indexer.reindex(:all) do
       send_resp(conn, :ok, "")
-    else
-      conn
-      |> put_status(:forbidden)
-      |> put_view(ErrorView)
-      |> render("403.json")
     end
   end
 end

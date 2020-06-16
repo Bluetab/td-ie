@@ -3,21 +3,18 @@ defmodule TdIe.Ingests do
   The Ingests context.
   """
 
-  import Ecto.Query, warn: false
-  import Ecto.Changeset
+  import Ecto.Query
+
   alias Ecto.Multi
   alias TdCache.TaxonomyCache
-  alias TdDfLib.Validation
-  alias TdIe.IngestLoader
+  alias TdIe.Cache.IngestLoader
+  alias TdIe.Ingests.Audit
   alias TdIe.Ingests.Ingest
+  alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
   alias TdIe.Search.Indexer
   alias ValidationError
-
-  @changeset :changeset
-  @content :content
-  @content_schema :content_schema
 
   @doc """
   check ingest name availability
@@ -26,29 +23,30 @@ defmodule TdIe.Ingests do
 
   def check_ingest_name_availability(type, name, _exclude_ingest_id)
       when is_nil(name) or is_nil(type),
-      do: {:name_available}
+      do: :ok
 
   def check_ingest_name_availability(type, name, exclude_ingest_id) do
-    status = [Ingest.status().versioned, Ingest.status().deprecated]
+    status = ["versioned", "deprecated"]
 
-    count =
-      Ingest
-      |> join(:left, [i], _ in assoc(i, :versions))
-      |> where([i, v], i.type == ^type and v.status not in ^status)
-      |> include_name_where(name, exclude_ingest_id)
-      |> select([i, v], count(i.id))
-      |> Repo.one!()
-
-    if count == 0, do: {:name_available}, else: {:name_not_available}
+    Ingest
+    |> join(:left, [i], _ in assoc(i, :versions))
+    |> where([i, v], i.type == ^type and v.status not in ^status)
+    |> include_name_where(name, exclude_ingest_id)
+    |> select([i, v], count(i.id))
+    |> Repo.one!()
+    |> case do
+      0 -> :ok
+      _ -> {:error, :name_not_available}
+    end
   end
 
   defp include_name_where(query, name, nil) do
-    query |> where([_, v], v.name == ^name)
+    where(query, [_, v], v.name == ^name)
   end
 
   defp include_name_where(query, name, exclude_ingest_id) do
-    query
-    |> where(
+    where(
+      query,
       [i, v],
       i.id != ^exclude_ingest_id and v.name == ^name
     )
@@ -86,11 +84,9 @@ defmodule TdIe.Ingests do
   ingest are resticted to indicated id list
   """
   def count_published_ingests(type, ids) do
-    published = Ingest.status().published
-
     Ingest
     |> join(:left, [i], _ in assoc(i, :versions))
-    |> where([i, v], i.type == ^type and i.id in ^ids and v.status == ^published)
+    |> where([i, v], i.type == ^type and i.id in ^ids and v.status == "published")
     |> select([i, _v], count(i.id))
     |> Repo.one!()
   end
@@ -154,12 +150,10 @@ defmodule TdIe.Ingests do
 
   """
   def get_currently_published_version!(ingest_id) do
-    published = Ingest.status().published
-
     version =
       IngestVersion
       |> where([v], v.ingest_id == ^ingest_id)
-      |> where([v], v.status == ^published)
+      |> where([v], v.status == "published")
       |> preload(:ingest)
       |> Repo.one()
 
@@ -168,199 +162,6 @@ defmodule TdIe.Ingests do
       _ -> version
     end
   end
-
-  @doc """
-  Creates a ingest.
-
-  ## Examples
-
-      iex> create_ingest(%{field: value})
-      {:ok, %IngestVersion{}}
-
-      iex> create_ingest(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_ingest(attrs \\ %{}) do
-    result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> set_content_defaults
-      |> validate_new_ingest
-      |> validate_description
-      |> validate_ingest_content
-      |> insert_ingest
-
-    case result do
-      {:ok, ingest_version} ->
-        new_version = get_ingest_version!(ingest_version.id)
-        ingest_id = new_version.ingest_id
-        IngestLoader.refresh(ingest_id)
-        {:ok, new_version}
-
-      _ ->
-        result
-    end
-  end
-
-  @doc """
-  Creates a new ingest version.
-  """
-  def new_ingest_version(user, %IngestVersion{} = ingest_version) do
-    ingest = ingest_version.ingest
-
-    ingest =
-      ingest
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
-
-    draft_attrs = Map.from_struct(ingest_version)
-
-    draft_attrs =
-      draft_attrs
-      |> Map.put("ingest", ingest)
-      |> Map.put("last_change_by", user.id)
-      |> Map.put("last_change_at", DateTime.utc_now() |> DateTime.truncate(:second))
-      |> Map.put("status", Ingest.status().draft)
-      |> Map.put("version", ingest_version.version + 1)
-
-    result =
-      draft_attrs
-      |> attrs_keys_to_atoms
-      |> validate_new_ingest
-      |> version_ingest(ingest_version)
-
-    case result do
-      {:ok, %{current: new_version}} ->
-        ingest_id = new_version.ingest_id
-        IngestLoader.refresh(ingest_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  @doc """
-  Updates a ingest.
-
-  ## Examples
-
-      iex> update_ingest_version(ingest_version, %{field: new_value})
-      {:ok, %IngestVersion{}}
-
-      iex> update_ingest_version(ingest_version, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_ingest_version(%IngestVersion{} = ingest_version, attrs) do
-    result =
-      attrs
-      |> attrs_keys_to_atoms
-      |> raise_error_if_no_content_schema
-      |> add_content_if_not_exist
-      |> merge_content_with_ingest(ingest_version)
-      |> set_content_defaults
-      |> validate_ingest(ingest_version)
-      |> validate_ingest_content
-      |> validate_description
-      |> update_ingest
-
-    case result do
-      {:ok, _} ->
-        updated_version = get_ingest_version!(ingest_version.id)
-        ingest_id = updated_version.ingest_id
-        IngestLoader.refresh(ingest_id)
-        {:ok, updated_version}
-
-      _ ->
-        result
-    end
-  end
-
-  def update_ingest_version_status(
-        %IngestVersion{} = ingest_version,
-        attrs
-      ) do
-    result =
-      ingest_version
-      |> IngestVersion.update_status_changeset(attrs)
-      |> Repo.update()
-
-    case result do
-      {:ok, updated_version} ->
-        ingest_id = updated_version.ingest_id
-        IngestLoader.refresh(ingest_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  def publish_ingest_version(ingest_version) do
-    status_published = Ingest.status().published
-    attrs = %{status: status_published}
-
-    ingest_id = ingest_version.ingest.id
-
-    query =
-      from(
-        c in IngestVersion,
-        where: c.ingest_id == ^ingest_id and c.status == ^status_published
-      )
-
-    result =
-      Multi.new()
-      |> Multi.update_all(:versioned, query, set: [status: Ingest.status().versioned])
-      |> Multi.update(
-        :published,
-        IngestVersion.update_status_changeset(ingest_version, attrs)
-      )
-      |> Repo.transaction()
-
-    case result do
-      {:ok, %{published: %IngestVersion{ingest_id: ingest_id}}} ->
-        IngestLoader.refresh(ingest_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  def reject_ingest_version(%IngestVersion{} = ingest_version, attrs) do
-    result =
-      ingest_version
-      |> IngestVersion.reject_changeset(attrs)
-      |> Repo.update()
-
-    case result do
-      {:ok, updated_version} ->
-        ingest_id = updated_version.ingest_id
-        IngestLoader.refresh(ingest_id)
-        result
-
-      _ ->
-        result
-    end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking ingest changes.
-
-  ## Examples
-
-      iex> change_ingest(ingest)
-      %Ecto.Changeset{source: %Ingest{}}
-
-  """
-  def change_ingest(%Ingest{} = ingest) do
-    Ingest.changeset(ingest, %{})
-  end
-
-  alias TdIe.Ingests.IngestVersion
 
   @doc """
   Returns the list of ingest_versions.
@@ -501,14 +302,14 @@ defmodule TdIe.Ingests do
 
   ## Examples
 
-      iex> delete_ingest_version(ingest_version)
+      iex> delete_ingest_version(ingest_version, user)
       {:ok, %IngestVersion{}}
 
-      iex> delete_ingest_version(ingest_version)
+      iex> delete_ingest_version(ingest_version, user)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_ingest_version(%IngestVersion{} = ingest_version) do
+  def delete_ingest_version(%IngestVersion{} = ingest_version, %{id: user_id}) do
     if ingest_version.version == 1 do
       ingest = ingest_version.ingest
       ingest_id = ingest.id
@@ -516,6 +317,7 @@ defmodule TdIe.Ingests do
       Multi.new()
       |> Multi.delete(:ingest_version, ingest_version)
       |> Multi.delete(:ingest, ingest)
+      |> Multi.run(:audit, Audit, :ingest_deleted, [user_id])
       |> Repo.transaction()
       |> case do
         {:ok,
@@ -530,10 +332,8 @@ defmodule TdIe.Ingests do
     else
       Multi.new()
       |> Multi.delete(:ingest_version, ingest_version)
-      |> Multi.update(
-        :current,
-        IngestVersion.current_changeset(ingest_version)
-      )
+      |> Multi.update(:current, IngestVersion.current_changeset(ingest_version))
+      |> Multi.run(:audit, Audit, :ingest_deleted, [user_id])
       |> Repo.transaction()
       |> case do
         {:ok,
@@ -544,180 +344,6 @@ defmodule TdIe.Ingests do
           Indexer.delete(deleted_version)
           {:ok, current_version}
       end
-    end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking ingest_version changes.
-
-  ## Examples
-
-      iex> change_ingest_version(ingest_version)
-      %Ecto.Changeset{source: %IngestVersion{}}
-
-  """
-  def change_ingest_version(%IngestVersion{} = ingest_version) do
-    IngestVersion.changeset(ingest_version, %{})
-  end
-
-  defp map_keys_to_atoms(key_values) do
-    Map.new(
-      Enum.map(key_values, fn
-        {key, value} when is_binary(key) -> {String.to_existing_atom(key), value}
-        {key, value} when is_atom(key) -> {key, value}
-      end)
-    )
-  end
-
-  defp attrs_keys_to_atoms(key_values) do
-    map = map_keys_to_atoms(key_values)
-
-    case map.ingest do
-      %Ingest{} -> map
-      %{} = ingest -> Map.put(map, :ingest, map_keys_to_atoms(ingest))
-      _ -> map
-    end
-  end
-
-  defp raise_error_if_no_content_schema(attrs) do
-    if not Map.has_key?(attrs, @content_schema) do
-      raise "Content Schema is not defined for Ingest"
-    end
-
-    attrs
-  end
-
-  defp add_content_if_not_exist(attrs) do
-    if Map.has_key?(attrs, @content) do
-      attrs
-    else
-      Map.put(attrs, @content, %{})
-    end
-  end
-
-  defp validate_new_ingest(attrs) do
-    changeset = IngestVersion.create_changeset(%IngestVersion{}, attrs)
-    Map.put(attrs, @changeset, changeset)
-  end
-
-  defp validate_ingest(attrs, %IngestVersion{} = ingest_version) do
-    changeset = IngestVersion.update_changeset(ingest_version, attrs)
-    Map.put(attrs, @changeset, changeset)
-  end
-
-  defp merge_content_with_ingest(attrs, %IngestVersion{} = ingest_version) do
-    content = Map.get(attrs, @content)
-    ingest_content = Map.get(ingest_version, :content, %{})
-    new_content = Map.merge(ingest_content, content)
-    Map.put(attrs, @content, new_content)
-  end
-
-  defp set_content_defaults(attrs) do
-    content = Map.get(attrs, @content)
-    content_schema = Map.get(attrs, @content_schema)
-    new_content = set_default_values(content, content_schema)
-    Map.put(attrs, @content, new_content)
-  end
-
-  defp set_default_values(content, [tails | head]) do
-    content
-    |> set_default_value(tails)
-    |> set_default_values(head)
-  end
-
-  defp set_default_values(content, []), do: content
-
-  defp set_default_value(content, %{"name" => name, "default" => default}) do
-    case content[name] do
-      nil ->
-        content |> Map.put(name, default)
-
-      _ ->
-        content
-    end
-  end
-
-  defp set_default_value(content, %{}), do: content
-
-  defp validate_ingest_content(attrs) do
-    changeset = Map.get(attrs, @changeset)
-
-    if changeset.valid? do
-      do_validate_ingest_content(attrs)
-    else
-      attrs
-    end
-  end
-
-  defp do_validate_ingest_content(attrs) do
-    content = Map.get(attrs, @content)
-    content_schema = Map.get(attrs, @content_schema)
-    changeset = Validation.build_changeset(content, content_schema)
-
-    if changeset.valid? do
-      attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    else
-      attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    end
-  end
-
-  defp validate_description(attrs) do
-    if Map.has_key?(attrs, :in_progress) && !attrs.in_progress do
-      do_validate_description(attrs)
-    else
-      attrs
-    end
-  end
-
-  defp do_validate_description(attrs) do
-    if !attrs.description == %{} do
-      attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    else
-      attrs
-      |> Map.put(@changeset, put_change(attrs.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    end
-  end
-
-  defp update_ingest(attrs) do
-    changeset = Map.get(attrs, @changeset)
-
-    if changeset.valid? do
-      Repo.update(changeset)
-    else
-      {:error, changeset}
-    end
-  end
-
-  defp insert_ingest(attrs) do
-    changeset = Map.get(attrs, @changeset)
-
-    if changeset.valid? do
-      Repo.insert(changeset)
-    else
-      {:error, changeset}
-    end
-  end
-
-  defp version_ingest(attrs, ingest_version) do
-    changeset = Map.get(attrs, @changeset)
-
-    if changeset.valid? do
-      Multi.new()
-      |> Multi.update(
-        :not_current,
-        IngestVersion.not_anymore_current_changeset(ingest_version)
-      )
-      |> Multi.insert(:current, changeset)
-      |> Repo.transaction()
-    else
-      {:error, %{current: changeset}}
     end
   end
 
@@ -737,8 +363,6 @@ defmodule TdIe.Ingests do
     |> order_by(asc: :version)
     |> Repo.all()
   end
-
-  alias TdIe.Ingests.IngestExecution
 
   @doc """
   Returns the list of ingest_executions.
@@ -846,19 +470,6 @@ defmodule TdIe.Ingests do
       err ->
         err
     end
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking ingest_execution changes.
-
-  ## Examples
-
-      iex> change_ingest_execution(ingest_execution)
-      %Ecto.Changeset{source: %IngestExecution{}}
-
-  """
-  def change_ingest_execution(%IngestExecution{} = ingest_execution) do
-    IngestExecution.changeset(ingest_execution, %{})
   end
 
   def get_last_execution([]), do: %{}

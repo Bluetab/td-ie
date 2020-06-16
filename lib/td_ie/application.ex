@@ -19,7 +19,7 @@ defmodule TdIe.Application do
       # Elasticsearch worker
       TdIe.Search.Cluster,
       TdIe.Search.IndexWorker,
-      TdIe.IngestLoader,
+      TdIe.Cache.IngestLoader,
       TdIe.Cache.DomainEventConsumer
     ]
 

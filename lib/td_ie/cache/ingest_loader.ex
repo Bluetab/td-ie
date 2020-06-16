@@ -1,4 +1,4 @@
-defmodule TdIe.IngestLoader do
+defmodule TdIe.Cache.IngestLoader do
   @moduledoc """
   GenServer to load ingests into Redis
   """
@@ -24,7 +24,7 @@ defmodule TdIe.IngestLoader do
   end
 
   def delete(id) do
-    GenServer.call(TdIe.IngestLoader, {:delete, id})
+    GenServer.call(__MODULE__, {:delete, id})
   end
 
   def ping(timeout \\ 5000) do
