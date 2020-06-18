@@ -5,7 +5,6 @@ defmodule TdIe.Permissions.MockPermissionResolver do
   """
   use Agent
 
-  alias Jason, as: JSON
   alias TdCache.TaxonomyCache
 
   @role_permissions %{

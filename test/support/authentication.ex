@@ -19,9 +19,9 @@ defmodule TdIeWeb.Authentication do
   end
 
   def create_user_auth_conn(user) do
-    {:ok, jwt, full_claims} = Guardian.encode_and_sign(user, %{gids: []})
+    {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, %{gids: []})
     conn = ConnTest.build_conn() |> put_auth_headers(jwt)
-    {:ok, %{conn: conn, jwt: jwt, claims: full_claims}}
+    {:ok, %{conn: conn, jwt: jwt, user: user}}
   end
 
   def create_user(opts \\ []) do

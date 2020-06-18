@@ -47,8 +47,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     end
 
     @tag :admin_authenticated
-    test "excludes email and is_admin from last_change_user", %{conn: conn} do
-      ingest_version = insert(:ingest_version, ingest: build(:ingest))
+    test "excludes email and is_admin from last_change_user", %{conn: conn, user: user} do
+      ingest_version = insert(:ingest_version, last_change_by: user.id)
 
       assert %{"data" => data} =
                conn
@@ -56,7 +56,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                |> json_response(:ok)
 
       assert %{"last_change_user" => last_change_user} = data
-      assert Map.keys(last_change_user) == ["full_name", "id", "user_name"]
+
+      assert last_change_user == %{
+               "id" => user.id,
+               "full_name" => user.full_name,
+               "user_name" => user.user_name
+             }
     end
   end
 
@@ -72,8 +77,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   describe "POST /api/ingest_versions/search" do
     @tag :admin_authenticated
-    test "excludes email from last_change_by", %{conn: conn} do
-      insert(:ingest_version)
+    test "excludes email from last_change_by", %{conn: conn, user: user} do
+      insert(:ingest_version, last_change_by: user.id)
 
       assert %{"data" => data} =
                conn
@@ -81,7 +86,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                |> json_response(:ok)
 
       assert [%{"last_change_by" => last_change_by}] = data
-      assert Map.keys(last_change_by) == ["full_name", "id", "user_name"]
+
+      assert last_change_by == %{
+               "id" => user.id,
+               "full_name" => user.full_name,
+               "user_name" => user.user_name
+             }
     end
   end
 

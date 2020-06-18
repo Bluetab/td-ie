@@ -24,6 +24,8 @@ defmodule TdIe.Factory do
     %TdIe.Accounts.User{
       id: sequence(:user_id, &(&1 + 1_000_000)),
       user_name: sequence("user_name"),
+      full_name: sequence("full_name"),
+      email: sequence(:user_email, &"user#{&1}@example.com"),
       is_admin: false,
       jti: 0
     }
