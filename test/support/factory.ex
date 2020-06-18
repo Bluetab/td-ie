@@ -22,8 +22,8 @@ defmodule TdIe.Factory do
 
   def user_factory do
     %TdIe.Accounts.User{
-      id: 0,
-      user_name: "bufoncillo",
+      id: sequence(:user_id, &(&1 + 1_000_000)),
+      user_name: sequence("user_name"),
       is_admin: false,
       jti: 0
     }

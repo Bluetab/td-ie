@@ -3,12 +3,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdCache.TaxonomyCache
-  alias TdIe.Permissions.MockPermissionResolver
-  alias TdIeWeb.ApiServices.MockTdAuthService
 
   setup_all do
-    start_supervised(MockTdAuthService)
-    start_supervised(MockPermissionResolver)
     %{id: domain_id} = domain = build(:domain)
     on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
     TaxonomyCache.put_domain(domain)
