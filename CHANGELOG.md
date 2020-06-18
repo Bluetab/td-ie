@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-2637] Audit events are now published to a Redis stream
+- [TD-2687] Remove `email` and `is_admin` from embedded user data in ingest
+  responses
+
 ## [3.24.0] 2020-06-15
 
 ### Changed

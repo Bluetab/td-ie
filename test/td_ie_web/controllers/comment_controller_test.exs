@@ -2,12 +2,6 @@ defmodule TdIeWeb.CommentControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  setup_all do
-    start_supervised(TdIeWeb.ApiServices.MockTdAuthService)
-    start_supervised(TdIe.Permissions.MockPermissionResolver)
-    :ok
-  end
-
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end

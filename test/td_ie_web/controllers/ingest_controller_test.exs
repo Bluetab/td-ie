@@ -5,16 +5,13 @@ defmodule TdIeWeb.IngestControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  import TdIeWeb.Authentication, only: :functions
-  import TdIe.TaxonomyHelper, only: :functions
-
-  alias TdIe.Permissions.MockPermissionResolver
-  alias TdIeWeb.ApiServices.MockTdAuthService
+  alias TdCache.TaxonomyCache
 
   setup_all do
-    start_supervised(MockTdAuthService)
-    start_supervised(MockPermissionResolver)
-    :ok
+    %{id: domain_id} = domain = build(:domain)
+    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
+    TaxonomyCache.put_domain(domain)
+    [domain: domain]
   end
 
   defp to_rich_text(plain) do
@@ -25,45 +22,66 @@ defmodule TdIeWeb.IngestControllerTest do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
+  describe "GET /api/ingests/search" do
+    @tag :admin_authenticated
+    test "find ingests by id and status", %{conn: conn, domain: %{id: domain_id}} do
+      ids =
+        [{"one", "draft"}, {"two", "published"}, {"three", "published"}]
+        |> Enum.map(fn {name, status} ->
+          insert(:ingest_version, name: name, status: status, domain_id: domain_id)
+        end)
+        |> Enum.map(& &1.ingest_id)
+        |> Enum.join(",")
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_path(conn, :search), id: ids, status: "published")
+               |> json_response(:ok)
+
+      assert length(data) == 2
+    end
+  end
+
   describe "update ingest" do
     setup [:create_template]
 
     @tag :admin_authenticated
-    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      domain = domain_fixture()
+    test "renders ingest when data is valid", %{
+      conn: conn,
+      domain: domain,
+      swagger_schema: schema
+    } do
+      %{id: domain_id, name: domain_name} = domain
       user = build(:user)
-      ingest = insert(:ingest, domain_id: domain.id)
+      ingest = insert(:ingest, domain_id: domain_id)
       ingest_id = ingest.id
       insert(:ingest_version, ingest: ingest, last_change_by: user.id)
 
       update_attrs = %{
-        content: %{},
-        name: "The new name",
-        description: to_rich_text("The new description"),
-        in_progress: false
+        "content" => %{},
+        "name" => "The new name",
+        "description" => to_rich_text("The new description"),
+        "in_progress" => false
       }
 
-      conn =
-        put(
-          conn,
-          Routes.ingest_path(conn, :update, ingest),
-          ingest: update_attrs
-        )
+      assert %{"data" => data} =
+               conn
+               |> put(Routes.ingest_path(conn, :update, ingest), ingest: update_attrs)
+               |> validate_resp_schema(schema, "IngestResponse")
+               |> json_response(:ok)
 
-      validate_resp_schema(conn, schema, "IngestResponse")
-      assert %{"id" => ^ingest_id} = json_response(conn, 200)["data"]
+      assert %{"id" => ^ingest_id} = data
 
-      conn = recycle_and_put_headers(conn)
-      conn = get(conn, Routes.ingest_path(conn, :show, ingest_id))
-      validate_resp_schema(conn, schema, "IngestResponse")
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_path(conn, :show, ingest_id))
+               |> validate_resp_schema(schema, "IngestResponse")
+               |> json_response(:ok)
 
-      updated_ingest = json_response(conn, 200)["data"]
+      assert data["domain"]["id"] == domain_id
+      assert data["domain"]["name"] == domain_name
 
-      assert Map.get(domain, :id) == updated_ingest |> Map.get("domain") |> Map.get("id")
-      assert Map.get(domain, :name) == updated_ingest |> Map.get("domain") |> Map.get("name")
-
-      update_attrs
-      |> Enum.each(&assert updated_ingest |> Map.get(Atom.to_string(elem(&1, 0))) == elem(&1, 1))
+      Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
     end
 
     @tag :admin_authenticated
@@ -73,21 +91,19 @@ defmodule TdIeWeb.IngestControllerTest do
       ingest_id = ingest_version.ingest.id
 
       update_attrs = %{
-        content: %{},
-        name: nil,
-        description: to_rich_text("The new description"),
-        in_progress: false
+        "content" => %{},
+        "name" => nil,
+        "description" => to_rich_text("The new description"),
+        "in_progress" => false
       }
 
-      conn =
-        put(
-          conn,
-          Routes.ingest_path(conn, :update, ingest_id),
-          ingest: update_attrs
-        )
+      assert %{"errors" => errors} =
+               conn
+               |> put(Routes.ingest_path(conn, :update, ingest_id), ingest: update_attrs)
+               |> validate_resp_schema(schema, "IngestResponse")
+               |> json_response(:unprocessable_entity)
 
-      validate_resp_schema(conn, schema, "IngestResponse")
-      assert json_response(conn, 422)["errors"] != %{}
+      assert errors != %{}
     end
   end
 
@@ -106,8 +122,8 @@ defmodule TdIeWeb.IngestControllerTest do
       status_from = elem(transition, 0)
       status_to = elem(transition, 1)
 
-      # Why do I need to pass a value ???
-      @tag admin_authenticated: "xyz", status_from: status_from, status_to: status_to
+      @tag :admin_authenticated
+      @tag status_from: status_from, status_to: status_to
       test "update ingest status change from #{status_from} to #{status_to}", %{
         conn: conn,
         swagger_schema: schema,
@@ -121,25 +137,25 @@ defmodule TdIeWeb.IngestControllerTest do
         ingest = ingest_version.ingest
         ingest_id = ingest.id
 
-        update_attrs = %{
-          status: status_to
-        }
+        update_attrs = %{status: status_to}
 
-        conn =
-          patch(
-            conn,
-            Routes.ingest_ingest_path(conn, :update_status, ingest),
-            ingest: update_attrs
-          )
+        assert %{"data" => data} =
+                 conn
+                 |> patch(Routes.ingest_ingest_path(conn, :update_status, ingest),
+                   ingest: update_attrs
+                 )
+                 |> validate_resp_schema(schema, "IngestResponse")
+                 |> json_response(:ok)
 
-        validate_resp_schema(conn, schema, "IngestResponse")
-        assert %{"id" => ^ingest_id} = json_response(conn, 200)["data"]
+        assert %{"id" => ^ingest_id} = data
 
-        conn = recycle_and_put_headers(conn)
-        conn = get(conn, Routes.ingest_path(conn, :show, ingest_id))
-        validate_resp_schema(conn, schema, "IngestResponse")
+        assert %{"data" => data} =
+                 conn
+                 |> get(Routes.ingest_path(conn, :show, ingest_id))
+                 |> validate_resp_schema(schema, "IngestResponse")
+                 |> json_response(:ok)
 
-        assert json_response(conn, 200)["data"]["status"] == status_to
+        assert %{"status" => ^status_to} = data
       end
     end)
   end

@@ -14,9 +14,11 @@ defmodule TdIeWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+
+  import TdIeWeb.Authentication, only: :functions
+
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
-  import TdIeWeb.Authentication, only: :functions
 
   using do
     quote do
@@ -29,8 +31,6 @@ defmodule TdIeWeb.ConnCase do
       @endpoint TdIeWeb.Endpoint
     end
   end
-
-  @admin_user_name "app-admin"
 
   setup tags do
     :ok = Sandbox.checkout(TdIe.Repo)
@@ -54,11 +54,11 @@ defmodule TdIeWeb.ConnCase do
 
     cond do
       tags[:admin_authenticated] ->
-        user = create_user(@admin_user_name, is_admin: true)
+        user = create_user(is_admin: true)
         create_user_auth_conn(user)
 
       tags[:authenticated_user] ->
-        user = create_user(tags[:authenticated_user])
+        user = create_user(is_admin: false)
         create_user_auth_conn(user)
 
       true ->

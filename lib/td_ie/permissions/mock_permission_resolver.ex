@@ -5,7 +5,6 @@ defmodule TdIe.Permissions.MockPermissionResolver do
   """
   use Agent
 
-  alias Jason, as: JSON
   alias TdCache.TaxonomyCache
 
   @role_permissions %{
@@ -96,12 +95,6 @@ defmodule TdIe.Permissions.MockPermissionResolver do
 
   def get_acl_entries do
     Agent.get(:MockPermissions, & &1)
-  end
-
-  def register_token(resource) do
-    %{"sub" => sub, "jti" => jti} = resource |> Map.take(["sub", "jti"])
-    %{"id" => user_id} = sub |> JSON.decode!()
-    Agent.update(:MockSessions, &Map.put(&1, jti, user_id))
   end
 
   def get_acls_by_resource_type(session_id, resource_type) do

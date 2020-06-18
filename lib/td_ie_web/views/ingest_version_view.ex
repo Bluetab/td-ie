@@ -14,18 +14,19 @@ defmodule TdIeWeb.IngestVersionView do
   end
 
   def render("index.json", %{ingest_versions: ingest_versions}) do
-    %{
-      data:
-        render_many(
-          ingest_versions,
-          IngestVersionView,
-          "ingest_version.json"
-        )
-    }
+    %{data: render_many(ingest_versions, IngestVersionView, "ingest_version.json")}
   end
 
-  def render("show.json", %{ingest_version: ingest_version, hypermedia: hypermedia, links_hypermedia: links_hypermedia} = assigns) do
+  def render(
+        "show.json",
+        %{
+          ingest_version: ingest_version,
+          hypermedia: hypermedia,
+          links_hypermedia: links_hypermedia
+        } = assigns
+      ) do
     %{"data" => links} = render_many_hypermedia(links_hypermedia, LinkView, "embedded.json")
+
     render_one_hypermedia(
       ingest_version,
       hypermedia,
@@ -95,24 +96,23 @@ defmodule TdIeWeb.IngestVersionView do
   end
 
   def render("ingest_version.json", %{ingest_version: ingest_version} = assigns) do
-    {:ok, user} = UserCache.get(ingest_version.last_change_by)
-
-    %{
-      content: ingest_version.content,
-      current: ingest_version.current,
-      description: ingest_version.description,
-      domain: Map.get(ingest_version, :domain),
-      id: ingest_version.id,
-      in_progress: ingest_version.in_progress,
-      ingest_id: ingest_version.ingest.id,
-      last_change_at: ingest_version.last_change_at,
-      last_change_by: ingest_version.last_change_by,
-      last_change_user: user,
-      name: ingest_version.name,
-      status: ingest_version.status,
-      type: ingest_version.ingest.type,
-      version: ingest_version.version
-    }
+    ingest_version
+    |> Map.take([
+      :content,
+      :current,
+      :description,
+      :domain,
+      :id,
+      :in_progress,
+      :ingest_id,
+      :last_change_at,
+      :last_change_by,
+      :name,
+      :status,
+      :version
+    ])
+    |> Map.put(:type, type(ingest_version))
+    |> Map.put(:last_change_user, last_change_user(ingest_version))
     |> add_reject_reason(
       ingest_version.reject_reason,
       String.to_atom(ingest_version.status)
@@ -130,21 +130,37 @@ defmodule TdIeWeb.IngestVersionView do
   end
 
   def render("version.json", %{ingest_version: ingest_version}) do
-    %{
-      id: ingest_version["id"],
-      ingest_id: ingest_version["ingest_id"],
-      type: ingest_version["template"]["name"],
-      content: ingest_version["content"],
-      name: ingest_version["name"],
-      description: ingest_version["description"],
-      last_change_by: Map.get(ingest_version["last_change_by"], "full_name", ""),
-      last_change_at: ingest_version["last_change_at"],
-      domain: ingest_version["domain"],
-      status: ingest_version["status"],
-      current: ingest_version["current"],
-      version: ingest_version["version"]
-    }
+    last_change_by = Map.get(ingest_version["last_change_by"], "full_name", "")
+
+    ingest_version
+    |> Map.take([
+      "id",
+      "ingest_id",
+      "content",
+      "name",
+      "description",
+      "last_change_at",
+      "domain",
+      "status",
+      "current",
+      "version"
+    ])
+    |> Map.put("type", type(ingest_version))
+    |> Map.put("last_change_by", last_change_by)
   end
+
+  defp type(%{ingest: %{type: type}}), do: type
+  defp type(%{"template" => %{"name" => type}}), do: type
+  defp type(_), do: nil
+
+  defp last_change_user(%{last_change_by: user_id}) do
+    case UserCache.get(user_id) do
+      {:ok, %{} = user} -> Map.drop(user, [:email, :is_admin])
+      _ -> nil
+    end
+  end
+
+  defp last_change_user(_), do: nil
 
   defp add_reject_reason(ingest, reject_reason, :rejected) do
     Map.put(ingest, :reject_reason, reject_reason)

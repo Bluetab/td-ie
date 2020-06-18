@@ -11,27 +11,41 @@ defmodule TdIe.Factory do
   alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
 
+  def domain_factory do
+    %{
+      id: sequence(:domain_id, &(&1 + 1_000_000)),
+      name: "domain name",
+      parent_ids: [],
+      updated_at: DateTime.utc_now()
+    }
+  end
+
   def user_factory do
     %TdIe.Accounts.User{
-      id: 0,
-      user_name: "bufoncillo",
+      id: sequence(:user_id, &(&1 + 1_000_000)),
+      user_name: sequence("user_name"),
+      full_name: sequence("full_name"),
+      email: sequence(:user_email, &"user#{&1}@example.com"),
       is_admin: false,
       jti: 0
     }
   end
 
-  def ingest_factory do
+  def ingest_factory(attrs) do
     %Ingest{
       domain_id: 1,
       type: "some_type",
       last_change_by: 1,
       last_change_at: DateTime.utc_now()
     }
+    |> merge_attributes(attrs)
   end
 
-  def ingest_version_factory do
+  def ingest_version_factory(attrs) do
+    {ingest_attrs, attrs} = Map.split(attrs, [:domain_id])
+
     %IngestVersion{
-      ingest: build(:ingest),
+      ingest: build(:ingest, ingest_attrs),
       content: %{},
       name: "My ingest",
       description: %{"document" => "My ingest description"},
@@ -41,6 +55,7 @@ defmodule TdIe.Factory do
       version: 1,
       in_progress: false
     }
+    |> merge_attributes(attrs)
   end
 
   def ingest_execution_factory do

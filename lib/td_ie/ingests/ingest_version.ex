@@ -244,7 +244,7 @@ defmodule TdIe.Ingests.IngestVersion do
     defp get_user(user_id) do
       case UserCache.get(user_id) do
         {:ok, nil} -> %{}
-        {:ok, user} -> user
+        {:ok, %{} = user} -> Map.drop(user, [:email, :is_admin])
       end
     end
   end
