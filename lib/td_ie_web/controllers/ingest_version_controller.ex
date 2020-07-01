@@ -140,7 +140,7 @@ defmodule TdIeWeb.IngestVersionController do
 
     with {:can, true} <- {:can, can?(user, create_ingest(resource_domain))},
          :ok <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
-         {:ok, %IngestVersion{} = version} <- Workflow.create_ingest(creation_attrs) do
+         {:ok, %{ingest_version: version}} <- Workflow.create_ingest(creation_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", Routes.ingest_path(conn, :show, version.ingest))

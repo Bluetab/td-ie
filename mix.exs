@@ -1,5 +1,4 @@
 defmodule TdIe.Mixfile do
-  @moduledoc false
   use Mix.Project
 
   def project do
@@ -7,7 +6,7 @@ defmodule TdIe.Mixfile do
       app: :td_ie,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "3.24.0-local"
+          nil -> "4.0.0-local"
           v -> v
         end,
       elixir: "~> 1.10",
@@ -50,17 +49,17 @@ defmodule TdIe.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.4.0"},
-      {:plug_cowboy, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.0", override: true},
+      {:phoenix, "~> 1.5.0"},
+      {:plug_cowboy, "~> 2.1"},
+      {:phoenix_ecto, "~> 4.0"},
       {:ecto_sql, "~> 3.0"},
       {:jason, "~> 1.0"},
       {:postgrex, "~> 0.15.0"},
       {:gettext, "~> 0.11"},
       {:httpoison, "~> 1.0"},
-      {:credo, "~> 1.2", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:guardian, "~> 2.0"},
-      {:canada, "~> 2.0", override: true},
+      {:canada, "~> 2.0"},
       {:ex_machina, "~> 2.3", only: [:test]},
       {:phoenix_swagger, "~> 0.8.2"},
       {:ex_json_schema, "~> 0.7.3"},
@@ -69,9 +68,9 @@ defmodule TdIe.Mixfile do
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "3.24.3"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "3.25.0"},
-      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "3.6.1"}
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.0.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.0.0"},
+      {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
     ]
   end
 

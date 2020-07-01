@@ -55,7 +55,6 @@ defmodule TdIeWeb.Router do
 
     post("/ingests/add_execution", IngestExecutionController, :add_execution_by_name)
 
-    resources("/ingests/comments", CommentController, except: [:new, :edit, :update])
     get("/ingests/index/:status", IngestController, :index_status)
     get("/ingests/search", IngestController, :search)
     get("/ingests/domains/:domain_id", IngestController, :index_children_ingest)
