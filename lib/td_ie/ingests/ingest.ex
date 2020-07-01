@@ -1,7 +1,12 @@
 defmodule TdIe.Ingests.Ingest do
-  @moduledoc false
+  @moduledoc """
+  Ecto Schema module for Ingests.
+  """
+
   use Ecto.Schema
+
   import Ecto.Changeset
+
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion

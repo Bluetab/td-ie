@@ -46,18 +46,46 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:ok, %IngestVersion{} = object} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.version == version_attrs.version
-      assert object.in_progress == false
-      assert object.ingest.type == ingest_attrs.type
-      assert object.ingest.domain_id == ingest_attrs.domain_id
-      assert object.ingest.last_change_by == ingest_attrs.last_change_by
+      assert ingest_version.content == version_attrs.content
+      assert ingest_version.name == version_attrs.name
+      assert ingest_version.description == version_attrs.description
+      assert ingest_version.last_change_by == version_attrs.last_change_by
+      assert ingest_version.current == true
+      assert ingest_version.version == version_attrs.version
+      assert ingest_version.in_progress == false
+      assert ingest_version.ingest.type == ingest_attrs.type
+      assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
+      assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
+    end
+
+    test "publishes an audit event including domain_id", %{user: user} do
+      domain_id = 1
+
+      ingest_attrs = %{
+        type: "some_type",
+        domain_id: domain_id,
+        last_change_by: user.id,
+        last_change_at: DateTime.utc_now()
+      }
+
+      version_attrs = %{
+        ingest: ingest_attrs,
+        content: %{},
+        name: "some name",
+        description: to_rich_text("some description"),
+        last_change_by: user.id,
+        last_change_at: DateTime.utc_now(),
+        version: 1
+      }
+
+      creation_attrs = Map.put(version_attrs, :content_schema, [])
+
+      assert {:ok, %{audit: [event_id]} = res} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
+      assert %{payload: payload} = event
+      assert %{"ingest" => %{"domain_id" => ^domain_id}} = Jason.decode!(payload)
     end
 
     test "with invalid data returns error changeset" do
@@ -107,9 +135,9 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
-      assert object.content == content
+      assert %{content: ^content} = ingest_version
     end
 
     test "with invalid content: required", %{user: user} do
@@ -141,18 +169,18 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.in_progress == true
-      assert object.version == version_attrs.version
-      assert object.ingest.type == ingest_attrs.type
-      assert object.ingest.domain_id == ingest_attrs.domain_id
-      assert object.ingest.last_change_by == ingest_attrs.last_change_by
+      assert ingest_version.content == version_attrs.content
+      assert ingest_version.name == version_attrs.name
+      assert ingest_version.description == version_attrs.description
+      assert ingest_version.last_change_by == version_attrs.last_change_by
+      assert ingest_version.current == true
+      assert ingest_version.in_progress == true
+      assert ingest_version.version == version_attrs.version
+      assert ingest_version.ingest.type == ingest_attrs.type
+      assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
+      assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
     test "with content: default values", %{user: user} do
@@ -184,7 +212,7 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = ingest_version} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
       assert ingest_version.content["Field1"] == "Hello"
       assert ingest_version.content["Field2"] == "World"
@@ -218,18 +246,18 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       creation_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, %IngestVersion{} = object} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
-      assert object.content == version_attrs.content
-      assert object.name == version_attrs.name
-      assert object.description == version_attrs.description
-      assert object.last_change_by == version_attrs.last_change_by
-      assert object.current == true
-      assert object.in_progress == true
-      assert object.version == version_attrs.version
-      assert object.ingest.type == ingest_attrs.type
-      assert object.ingest.domain_id == ingest_attrs.domain_id
-      assert object.ingest.last_change_by == ingest_attrs.last_change_by
+      assert ingest_version.content == version_attrs.content
+      assert ingest_version.name == version_attrs.name
+      assert ingest_version.description == version_attrs.description
+      assert ingest_version.last_change_by == version_attrs.last_change_by
+      assert ingest_version.current == true
+      assert ingest_version.in_progress == true
+      assert ingest_version.version == version_attrs.version
+      assert ingest_version.ingest.type == ingest_attrs.type
+      assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
+      assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
     test "with no content", %{user: user} do
@@ -444,7 +472,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     test "publishes an event to the audit stream", %{user: user} do
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, %{audit: event_id} = res} = Workflow.new_ingest_version(ingest_version, user)
-      assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
+      assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
     end
   end
 
@@ -454,15 +482,11 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       %{id: user_id} = user = build(:user, id: 987)
 
-      assert {:ok, res} = Workflow.publish_ingest_version(ingest_version, user)
+      assert {:ok, %{published: published}} =
+               Workflow.publish_ingest_version(ingest_version, user)
 
-      assert %{
-               published: %{
-                 status: "published",
-                 last_change_by: ^user_id,
-                 last_change_at: last_change_at
-               }
-             } = res
+      assert %{status: "published", last_change_by: ^user_id, last_change_at: last_change_at} =
+               published
 
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
     end
@@ -477,17 +501,19 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert event_data = ["event", "publish", "id", "#{ingest_id}", "version_id", "#{id}"]
     end
 
-    test "publishes an event to the audit stream", %{user: user} do
+    test "publishes an event including domain_ids to the audit stream", %{user: user} do
       ingest_version = insert(:ingest_version, status: "draft")
 
       assert {:ok, %{audit: event_id} = res} =
                Workflow.publish_ingest_version(ingest_version, user)
 
-      assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
+      assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
+      assert %{payload: payload} = event
+      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
     end
   end
 
-  describe "reject/3" do
+  describe "reject_ingest_version/3" do
     test "rejects ingest", %{user: user} do
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
@@ -509,7 +535,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
   end
 
-  describe "submit_business_concept_version/2" do
+  describe "submit_ingest_version/2" do
     test "updates the ingest" do
       %{id: user_id} = user = build(:user)
       ingest_version = insert(:ingest_version)
@@ -518,6 +544,17 @@ defmodule TdIe.Ingests.WorkflowTest do
                Workflow.submit_ingest_version(ingest_version, user)
 
       assert %{status: "pending_approval", last_change_by: ^user_id} = ingest_version
+    end
+
+    test "publishes an event including domain_ids to the audit stream", %{user: user} do
+      ingest_version = insert(:ingest_version, status: "draft")
+
+      assert {:ok, %{audit: event_id} = res} =
+               Workflow.submit_ingest_version(ingest_version, user)
+
+      assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
+      assert %{payload: payload} = event
+      assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
     end
   end
 

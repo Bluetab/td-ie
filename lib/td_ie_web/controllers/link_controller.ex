@@ -6,15 +6,10 @@ defmodule TdIeWeb.IngestLinkController do
   import Canada, only: [can?: 2]
 
   alias TdIe.Ingests.Links
-  alias TdIeWeb.SwaggerDefinitions
 
   require Logger
 
   action_fallback(TdIeWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.comment_swagger_definitions()
-  end
 
   swagger_path :delete do
     description("Delete a Link")

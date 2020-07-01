@@ -23,9 +23,11 @@ defmodule TdIeWeb.ConnCase do
   using do
     quote do
       # Import conveniences for testing with connections
-      use Phoenix.ConnTest
-      alias TdIeWeb.Router.Helpers, as: Routes
+      import Plug.Conn
+      import Phoenix.ConnTest
       import TdIe.Factory
+
+      alias TdIeWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
       @endpoint TdIeWeb.Endpoint

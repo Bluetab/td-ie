@@ -39,14 +39,12 @@ defmodule TdIe.Ingests.Workflow do
     |> on_create()
   end
 
-  defp on_create({:ok, %{} = res}) do
-    with %{ingest_version: %{id: id, ingest_id: ingest_id}} <- res do
+  defp on_create(res) do
+    with {:ok, %{ingest_version: %{ingest_id: ingest_id}}} <- res do
       IngestLoader.refresh(ingest_id)
-      {:ok, Ingests.get_ingest_version!(id)}
+      res
     end
   end
-
-  defp on_create(result), do: result
 
   @doc """
   Creates a new ingest version.

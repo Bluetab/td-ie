@@ -7,6 +7,7 @@ defmodule TdIe.Ingests.Audit do
   import TdIe.Audit.AuditSupport, only: [publish: 5]
 
   alias Ecto.Changeset
+  alias TdCache.TaxonomyCache
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
 
@@ -61,7 +62,7 @@ defmodule TdIe.Ingests.Audit do
   def ingest_published(_repo, %{published: ingest_version}) do
     case ingest_version do
       %{ingest_id: id, last_change_by: user_id} ->
-        payload = Map.take(ingest_version, [:id, :ingest_id, :version])
+        payload = status_payload(ingest_version)
         publish("ingest_published", "ingest", id, user_id, payload)
     end
   end
@@ -69,7 +70,7 @@ defmodule TdIe.Ingests.Audit do
   def ingest_rejected(_repo, %{rejected: ingest_version}) do
     case ingest_version do
       %{ingest_id: id, last_change_by: user_id} ->
-        payload = Map.take(ingest_version, [:id, :ingest_id, :version])
+        payload = status_payload(ingest_version)
         publish("ingest_rejected", "ingest", id, user_id, payload)
     end
   end
@@ -82,11 +83,7 @@ defmodule TdIe.Ingests.Audit do
     end
   end
 
-  def ingest_deleted(
-        _repo,
-        %{ingest_version: ingest_version},
-        user_id
-      ) do
+  def ingest_deleted(_repo, %{ingest_version: ingest_version}, user_id) do
     case ingest_version do
       %{version: version, ingest_id: id} ->
         payload = %{version: version}
@@ -102,25 +99,41 @@ defmodule TdIe.Ingests.Audit do
 
   defp do_status_updated("pending_approval", ingest_version) do
     case ingest_version do
-      %{version: version, ingest_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{ingest_id: id, last_change_by: user_id} ->
+        payload = status_payload(ingest_version)
         publish("ingest_sent_for_approval", "ingest", id, user_id, payload)
     end
   end
 
   defp do_status_updated("deprecated", ingest_version) do
     case ingest_version do
-      %{version: version, ingest_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{ingest_id: id, last_change_by: user_id} ->
+        payload = status_payload(ingest_version)
         publish("ingest_deprecated", "ingest", id, user_id, payload)
     end
   end
 
   defp do_status_updated("draft", ingest_version) do
     case ingest_version do
-      %{version: version, ingest_id: id, last_change_by: user_id} ->
-        payload = %{version: version}
+      %{ingest_id: id, last_change_by: user_id} ->
+        payload = status_payload(ingest_version)
         publish("ingest_rejection_canceled", "ingest", id, user_id, payload)
     end
   end
+
+  defp status_payload(ingest_version) do
+    ingest_version
+    |> Map.take([:version, :id, :name])
+    |> Map.put(:domain_ids, get_domain_ids(ingest_version))
+  end
+
+  defp get_domain_ids(%{ingest: ingest}) do
+    get_domain_ids(ingest)
+  end
+
+  defp get_domain_ids(%{domain_id: domain_id}) do
+    TaxonomyCache.get_parent_ids(domain_id)
+  end
+
+  defp get_domain_ids(_), do: []
 end

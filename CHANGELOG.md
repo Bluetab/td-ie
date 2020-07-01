@@ -1,12 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [4.0.0] 2020-07-01
 
 ### Changed
 
+- [TD-2585] Include `domain_ids` in payload of audit events
 - [TD-2637] Audit events are now published to a Redis stream
 - [TD-2687] Remove `email` and `is_admin` from embedded user data in ingest
   responses
+
+### Removed
+
+- Unused route `/api/ingests/comments` and related modules (comments are
+  currently supported by td-bg)
 
 ## [3.24.0] 2020-06-15
 
