@@ -60,6 +60,15 @@ config :td_cache, :event_stream,
     [key: "domain:events", consumer: TdIe.Cache.DomainEventConsumer]
   ]
 
+config :td_ie, TdIe.Scheduler,
+  jobs: [
+    [
+      schedule: "@daily",
+      task: {TdIe.Search.IndexWorker, :reindex, []},
+      run_strategy: Quantum.RunStrategy.Local
+    ]
+  ]
+
 # Import Elasticsearch config
 import_config "elastic.exs"
 
