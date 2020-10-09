@@ -6,6 +6,7 @@ defmodule TdIeWeb.IngestVersionView do
   use TdIeWeb, :view
 
   alias TdCache.UserCache
+  alias TdDfLib.Format
   alias TdIeWeb.IngestVersionView
   alias TdIeWeb.LinkView
 
@@ -123,6 +124,7 @@ defmodule TdIeWeb.IngestVersionView do
     )
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
+    |> add_cached_content(assigns)
   end
 
   def render("versions.json", %{hypermedia: hypermedia}) do
@@ -174,7 +176,7 @@ defmodule TdIeWeb.IngestVersionView do
     Map.put(ingest, :mod_comments, mod_comments)
   end
 
-  def add_template(ingest, assigns) do
+  defp add_template(ingest, assigns) do
     case Map.get(assigns, :template, nil) do
       nil ->
         ingest
@@ -182,6 +184,21 @@ defmodule TdIeWeb.IngestVersionView do
       template ->
         template_view = Map.take(template, [:content, :label])
         Map.put(ingest, :template, template_view)
+    end
+  end
+
+  defp add_cached_content(ingest, assigns) do
+    case Map.get(assigns, :template) do
+      nil ->
+        ingest
+
+      template ->
+        content =
+          ingest
+          |> Map.get(:content)
+          |> Format.enrich_content_values(template)
+
+        Map.put(ingest, :content, content)
     end
   end
 end
