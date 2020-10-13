@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2485]:
+  - Enrich template fields from cache
+  - Mappings for system type of templates
+  
 ## [4.0.0] 2020-07-01
 
 ### Changed
