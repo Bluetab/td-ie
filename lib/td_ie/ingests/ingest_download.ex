@@ -25,9 +25,11 @@ defmodule TdIe.Ingest.Download do
   end
 
   defp template_ingests_to_csv(template, ingests, add_separation) do
-    content = template
+    content =
+      template
       |> Map.get(:content)
       |> Format.flatten_content_fields()
+
     content_fields = Enum.reduce(content, [], &(&2 ++ [Map.take(&1, ["name", "values", "type"])]))
     content_labels = Enum.reduce(content, [], &(&2 ++ [Map.get(&1, "label")]))
 
@@ -95,11 +97,26 @@ defmodule TdIe.Ingest.Download do
     |> Enum.join(", ")
   end
 
+  defp get_content_field(%{"type" => "system", "name" => name}, content) do
+    content
+    |> Map.get(name, [])
+    |> content_to_list()
+    |> Enum.map(&get_system_value/1)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(", ")
+  end
+
   defp get_content_field(%{"type" => "table"}, _content), do: ""
 
   defp get_content_field(%{"name" => name}, content) do
     Map.get(content, name, "")
   end
+
+  defp get_system_value(system) do
+    Map.get(system, "name")
+  end
+
+  defp content_to_list(nil), do: []
 
   defp content_to_list([""]), do: []
 
