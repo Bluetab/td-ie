@@ -21,6 +21,10 @@ defmodule TdIe.Search.IndexWorker do
     GenServer.call(__MODULE__, :ping, timeout)
   end
 
+  def reindex do
+    GenServer.cast(__MODULE__, {:reindex, :all})
+  end
+
   def reindex(:all) do
     GenServer.cast(__MODULE__, {:reindex, :all})
   end

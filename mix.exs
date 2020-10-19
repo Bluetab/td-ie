@@ -61,6 +61,7 @@ defmodule TdIe.Mixfile do
       {:guardian, "~> 2.0"},
       {:canada, "~> 2.0"},
       {:ex_machina, "~> 2.3", only: [:test]},
+      {:quantum, "~> 3.0"},
       {:phoenix_swagger, "~> 0.8.2"},
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
@@ -68,8 +69,8 @@ defmodule TdIe.Mixfile do
       {:elasticsearch,
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.0.0"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.0.0"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.6.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.6.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
     ]
   end
