@@ -74,7 +74,7 @@ defmodule TdIe.Search.Mappings do
 
   defp get_mappings(%{content: content}) do
     content
-    |> Format.flatten_content_fields
+    |> Format.flatten_content_fields()
     |> Enum.map(&field_mapping/1)
   end
 
@@ -94,7 +94,7 @@ defmodule TdIe.Search.Mappings do
     {name, mapping_type("enriched_text")}
   end
 
-  defp field_mapping(%{"name" => name, "type" => "system"}) do
+  defp field_mapping(%{"name" => name, "type" => type}) when type in ["domain", "system"] do
     {name,
      %{
        type: "nested",
