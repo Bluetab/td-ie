@@ -6,7 +6,7 @@ defmodule TdIe.Permissions do
   import Ecto.Query, warn: false
   alias TdIe.Accounts.User
 
-  @permission_resolver Application.get_env(:td_ie, :permission_resolver)
+  @permission_resolver Application.compile_env(:td_ie, :permission_resolver)
 
   def get_domain_permissions(%User{jti: jti}) do
     @permission_resolver.get_acls_by_resource_type(jti, "domain")

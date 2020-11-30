@@ -1,10 +1,6 @@
 defmodule TdIeWeb.Router do
   use TdIeWeb, :router
 
-  @endpoint_url "#{Application.get_env(:td_ie, TdIeWeb.Endpoint)[:url][:host]}:#{
-                  Application.get_env(:td_ie, TdIeWeb.Endpoint)[:url][:port]
-                }"
-
   pipeline :api do
     plug(TdIe.Auth.Pipeline.Unsecure)
     plug(TdIeWeb.Locale)
@@ -69,12 +65,11 @@ defmodule TdIeWeb.Router do
 
   def swagger_info do
     %{
-      schemes: ["http"],
+      schemes: ["http", "https"],
       info: %{
-        version: "1.0",
-        title: "TdIe"
+        version: Application.spec(:td_ie, :vsn),
+        title: "Truedat Ingest Engine Service"
       },
-      host: @endpoint_url,
       securityDefinitions: %{
         bearer: %{
           type: "apiKey",
