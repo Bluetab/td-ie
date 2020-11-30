@@ -20,7 +20,7 @@ defmodule TdIe.Search.Aggregations do
       {"current", %{terms: %{field: "current"}}},
       {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
-      {"execution_status", %{terms: %{field: "execution_status.raw", size: 50}} }
+      {"execution_status", %{terms: %{field: "execution_status.raw", size: 50}}}
     ]
 
     dynamic_keywords =
@@ -48,7 +48,7 @@ defmodule TdIe.Search.Aggregations do
     {field, %{terms: %{field: "content.#{field}.raw", size: 50}}}
   end
 
-  defp content_term(%{"name" => field, "type" => "system"}) do
+  defp content_term(%{"name" => field, "type" => type}) when type in ["domain", "system"] do
     {field,
      %{
        nested: %{path: "content.#{field}"},
