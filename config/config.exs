@@ -14,8 +14,8 @@ config :td_ie,
 
 # Configures the endpoint
 config :td_ie, TdIeWeb.Endpoint,
+  http: [port: 4014],
   url: [host: "localhost"],
-  secret_key_base: "/dcHCF/jz9hccq5nBQpPl02KfE9ch3y5XtglF/KqnY3IsHe98gylfgDzHLVDFaTy",
   render_errors: [view: TdIeWeb.ErrorView, accepts: ~w(json)]
 
 # Configures Elixir's Logger

@@ -2,21 +2,13 @@ defmodule TdIe.Application do
   @moduledoc false
 
   use Application
-  alias TdIeWeb.Endpoint
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  def start(_type, _args) do
-    import Supervisor.Spec
 
-    # Define workers and child supervisors to be supervised
+  alias TdIeWeb.Endpoint
+
+  def start(_type, _args) do
     children = [
-      # Start the Ecto repository
-      supervisor(TdIe.Repo, []),
-      # Start the endpoint when the application starts
-      supervisor(TdIeWeb.Endpoint, []),
-      # Start your own worker by calling: TdIe.Worker.start_link(arg1, arg2, arg3)
-      # worker(TdIe.Worker, [arg1, arg2, arg3]),
-      # Elasticsearch worker
+      TdIe.Repo,
+      TdIeWeb.Endpoint,
       TdIe.Search.Cluster,
       TdIe.Search.IndexWorker,
       TdIe.Cache.IngestLoader,
@@ -24,8 +16,6 @@ defmodule TdIe.Application do
       TdIe.Scheduler
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: TdIe.Supervisor]
     Supervisor.start_link(children, opts)
   end
