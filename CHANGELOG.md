@@ -1,8 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-3170] Build docker image which runs with non-root user
+
 ## [4.10.0] 2020-12-14
 
-- [TD-2486] Template type `domain`
+### Added
+
+- [TD-2486] Domain selector support (type `domain` in template)
 
 ## [4.9.0] 2020-11-30
 
@@ -17,7 +25,7 @@
 - [TD-2485]:
   - Enrich template fields from cache
   - Mappings for system type of templates
-  
+
 ## [4.0.0] 2020-07-01
 
 ### Changed
