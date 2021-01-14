@@ -8,6 +8,7 @@ defmodule TdIe.Ingests.Workflow do
   alias Ecto.Multi
   alias TdCache.EventStream.Publisher
   alias TdDfLib.Validation
+  alias TdIe.Auth.Claims
   alias TdIe.Cache.IngestLoader
   alias TdIe.Ingests
   alias TdIe.Ingests.Audit
@@ -49,7 +50,7 @@ defmodule TdIe.Ingests.Workflow do
   @doc """
   Creates a new ingest version.
   """
-  def new_ingest_version(%IngestVersion{} = ingest_version, %{id: user_id}) do
+  def new_ingest_version(%IngestVersion{} = ingest_version, %Claims{user_id: user_id}) do
     ingest = ingest_version.ingest
 
     ingest =
@@ -121,19 +122,19 @@ defmodule TdIe.Ingests.Workflow do
     end
   end
 
-  def deprecate_ingest_version(%IngestVersion{} = ingest_version, user) do
-    update_ingest_version_status(ingest_version, "deprecated", user)
+  def deprecate_ingest_version(%IngestVersion{} = ingest_version, %Claims{} = claims) do
+    update_ingest_version_status(ingest_version, "deprecated", claims)
   end
 
-  def submit_ingest_version(%IngestVersion{} = ingest_version, user) do
-    update_ingest_version_status(ingest_version, "pending_approval", user)
+  def submit_ingest_version(%IngestVersion{} = ingest_version, %Claims{} = claims) do
+    update_ingest_version_status(ingest_version, "pending_approval", claims)
   end
 
-  def undo_rejected_ingest_version(%IngestVersion{} = ingest_version, user) do
-    update_ingest_version_status(ingest_version, "draft", user)
+  def undo_rejected_ingest_version(%IngestVersion{} = ingest_version, %Claims{} = claims) do
+    update_ingest_version_status(ingest_version, "draft", claims)
   end
 
-  def publish_ingest_version(%{ingest_id: ingest_id} = ingest_version, %{id: user_id} = _user) do
+  def publish_ingest_version(%{ingest_id: ingest_id} = ingest_version, %Claims{user_id: user_id}) do
     query =
       IngestVersion
       |> where([v], v.ingest_id == ^ingest_id)
@@ -164,7 +165,7 @@ defmodule TdIe.Ingests.Workflow do
 
   def ingest_published(_repo, _changes), do: {:error, :invalid}
 
-  def reject_ingest_version(%IngestVersion{} = ingest_version, reason, %{id: user_id}) do
+  def reject_ingest_version(%IngestVersion{} = ingest_version, reason, %Claims{user_id: user_id}) do
     params = %{reject_reason: reason}
     changeset = IngestVersion.reject_changeset(ingest_version, params, user_id)
 
@@ -182,7 +183,9 @@ defmodule TdIe.Ingests.Workflow do
     end
   end
 
-  defp update_ingest_version_status(%IngestVersion{} = ingest_version, status, %{id: user_id}) do
+  defp update_ingest_version_status(%IngestVersion{} = ingest_version, status, %Claims{
+         user_id: user_id
+       }) do
     changeset = IngestVersion.status_changeset(ingest_version, status, user_id)
 
     Multi.new()

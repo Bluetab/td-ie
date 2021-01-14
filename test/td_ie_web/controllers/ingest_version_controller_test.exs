@@ -3,6 +3,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   alias TdCache.TaxonomyCache
+  alias TdCache.UserCache
 
   setup_all do
     %{id: domain_id} = domain = build(:domain)
@@ -12,7 +13,16 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     [domain: domain]
   end
 
-  setup %{conn: conn} do
+  setup %{conn: conn} = tags do
+    case tags[:claims] do
+      nil ->
+        :ok
+
+      %{user_id: user_id, user_name: user_name} ->
+        UserCache.put(%{id: user_id, user_name: user_name, full_name: "Full #{user_name}"})
+        on_exit(fn -> UserCache.delete(user_id) end)
+    end
+
     [conn: put_req_header(conn, "accept", "application/json")]
   end
 
@@ -47,8 +57,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     end
 
     @tag :admin_authenticated
-    test "excludes email and is_admin from last_change_user", %{conn: conn, user: user} do
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
+    test "excludes email and is_admin from last_change_user", %{
+      conn: conn,
+      claims: %{user_id: user_id, user_name: user_name}
+    } do
+      ingest_version = insert(:ingest_version, last_change_by: user_id)
 
       assert %{"data" => data} =
                conn
@@ -58,9 +71,9 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert %{"last_change_user" => last_change_user} = data
 
       assert last_change_user == %{
-               "id" => user.id,
-               "full_name" => user.full_name,
-               "user_name" => user.user_name
+               "id" => user_id,
+               "user_name" => user_name,
+               "full_name" => "Full " <> user_name
              }
     end
   end
@@ -77,8 +90,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   describe "POST /api/ingest_versions/search" do
     @tag :admin_authenticated
-    test "excludes email from last_change_by", %{conn: conn, user: user} do
-      insert(:ingest_version, last_change_by: user.id)
+    test "excludes email from last_change_by", %{
+      conn: conn,
+      claims: %{user_id: user_id, user_name: user_name}
+    } do
+      insert(:ingest_version, last_change_by: user_id)
 
       assert %{"data" => data} =
                conn
@@ -88,9 +104,9 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert [%{"last_change_by" => last_change_by}] = data
 
       assert last_change_by == %{
-               "id" => user.id,
-               "full_name" => user.full_name,
-               "user_name" => user.user_name
+               "id" => user_id,
+               "full_name" => "Full " <> user_name,
+               "user_name" => user_name
              }
     end
   end
@@ -235,12 +251,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           scope: "ie"
         })
 
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
 
-      ingest = insert(:ingest, type: template.name, last_change_by: user.id)
+      ingest = insert(:ingest, type: template.name, last_change_by: user_id)
 
       ingest_version =
-        insert(:ingest_version, ingest: ingest, last_change_by: user.id, status: "published")
+        insert(:ingest_version, ingest: ingest, last_change_by: user_id, status: "published")
 
       updated_content =
         template
@@ -265,8 +281,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "update ingest_version" do
     @tag :admin_authenticated
     test "renders ingest_version when data is valid", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
+      %{user_id: user_id} = build(:claims)
+      ingest_version = insert(:ingest_version, last_change_by: user_id)
       ingest_version_id = ingest_version.id
 
       update_attrs = %{
@@ -291,8 +307,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:ok)
 
-      update_attrs
-      |> Enum.each(&assert Map.get(data, elem(&1, 0)) == elem(&1, 1))
+      Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
     end
   end
 

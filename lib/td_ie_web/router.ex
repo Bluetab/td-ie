@@ -12,7 +12,7 @@ defmodule TdIeWeb.Router do
   end
 
   pipeline :api_authorized do
-    plug(TdIe.Auth.CurrentUser)
+    plug(TdIe.Auth.CurrentResource)
     plug(Guardian.Plug.LoadResource)
   end
 

@@ -103,7 +103,7 @@ defmodule TdIeWeb.IngestController do
   end
 
   def update(conn, %{"id" => id, "ingest" => ingest_params}) do
-    user = conn.assigns[:current_user]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     ingest_version = Ingests.get_current_version_by_ingest_id!(id)
 
@@ -113,7 +113,7 @@ defmodule TdIeWeb.IngestController do
 
     ingest_attrs =
       %{}
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
     update_params =
@@ -121,11 +121,11 @@ defmodule TdIeWeb.IngestController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
       |> Map.put("in_progress", ingest_version.in_progress)
 
-    with {:can, true} <- {:can, can?(user, update(ingest_version))},
+    with {:can, true} <- {:can, can?(claims, update(ingest_version))},
          :ok <- Ingests.check_ingest_name_availability(ingest_type, ingest_name, id),
          {:ok, %IngestVersion{} = ingest} <-
            Workflow.update_ingest_version(ingest_version, update_params) do
@@ -158,32 +158,32 @@ defmodule TdIeWeb.IngestController do
         "ingest_id" => id,
         "ingest" => %{"status" => new_status} = params
       }) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     ingest_version = Ingests.get_current_version_by_ingest_id!(id)
     status = ingest_version.status
 
     case {status, new_status} do
       {"draft", "pending_approval"} ->
-        send_for_approval(conn, user, ingest_version, params)
+        send_for_approval(conn, claims, ingest_version, params)
 
       {"pending_approval", "published"} ->
-        publish(conn, user, ingest_version, params)
+        publish(conn, claims, ingest_version, params)
 
       {"pending_approval", "rejected"} ->
-        reject(conn, user, ingest_version, params)
+        reject(conn, claims, ingest_version, params)
 
       {"rejected", "pending_approval"} ->
-        send_for_approval(conn, user, ingest_version, params)
+        send_for_approval(conn, claims, ingest_version, params)
 
       {"rejected", "draft"} ->
-        undo_rejection(conn, user, ingest_version, params)
+        undo_rejection(conn, claims, ingest_version, params)
 
       {"published", "deprecated"} ->
-        deprecate(conn, user, ingest_version, params)
+        deprecate(conn, claims, ingest_version, params)
 
       {"published", "draft"} ->
-        do_version(conn, user, ingest_version, params)
+        do_version(conn, claims, ingest_version, params)
 
       _ ->
         Logger.info("No status action for {#{status}, #{new_status}} combination")
@@ -192,48 +192,50 @@ defmodule TdIeWeb.IngestController do
     end
   end
 
-  defp send_for_approval(conn, user, ingest_version, _ingest_params) do
-    with {:can, true} <- {:can, can?(user, send_for_approval(ingest_version))},
-         {:ok, %{updated: ingest}} <- Workflow.submit_ingest_version(ingest_version, user) do
+  defp send_for_approval(conn, claims, ingest_version, _ingest_params) do
+    with {:can, true} <- {:can, can?(claims, send_for_approval(ingest_version))},
+         {:ok, %{updated: ingest}} <- Workflow.submit_ingest_version(ingest_version, claims) do
       render(conn, "show.json", ingest: ingest)
     end
   end
 
-  defp reject(conn, user, ingest_version, ingest_params) do
+  defp reject(conn, claims, ingest_version, ingest_params) do
     reason = Map.get(ingest_params, "reject_reason")
 
-    with {:can, true} <- {:can, can?(user, reject(ingest_version))},
-         {:ok, %{rejected: ingest}} <- Workflow.reject_ingest_version(ingest_version, reason, user) do
+    with {:can, true} <- {:can, can?(claims, reject(ingest_version))},
+         {:ok, %{rejected: ingest}} <-
+           Workflow.reject_ingest_version(ingest_version, reason, claims) do
       render(conn, "show.json", ingest: ingest)
     end
   end
 
-  defp undo_rejection(conn, user, ingest_version, _ingest_params) do
-    with {:can, true} <- {:can, can?(user, undo_rejection(ingest_version))},
-         {:ok, %{updated: ingest}} <- Workflow.undo_rejected_ingest_version(ingest_version, user) do
+  defp undo_rejection(conn, claims, ingest_version, _ingest_params) do
+    with {:can, true} <- {:can, can?(claims, undo_rejection(ingest_version))},
+         {:ok, %{updated: ingest}} <-
+           Workflow.undo_rejected_ingest_version(ingest_version, claims) do
       render(conn, "show.json", ingest: ingest)
     end
   end
 
-  defp publish(conn, user, ingest_version, _ingest_params) do
-    with {:can, true} <- {:can, can?(user, publish(ingest_version))},
+  defp publish(conn, claims, ingest_version, _ingest_params) do
+    with {:can, true} <- {:can, can?(claims, publish(ingest_version))},
          {:ok, %{published: %IngestVersion{} = ingest}} <-
-          Workflow.publish_ingest_version(ingest_version, user) do
+           Workflow.publish_ingest_version(ingest_version, claims) do
       render(conn, "show.json", ingest: ingest)
     end
   end
 
-  defp deprecate(conn, user, ingest_version, _ingest_params) do
-    with {:can, true} <- {:can, can?(user, deprecate(ingest_version))},
-         {:ok, %{updated: ingest}} <- Workflow.deprecate_ingest_version(ingest_version, user) do
+  defp deprecate(conn, claims, ingest_version, _ingest_params) do
+    with {:can, true} <- {:can, can?(claims, deprecate(ingest_version))},
+         {:ok, %{updated: ingest}} <- Workflow.deprecate_ingest_version(ingest_version, claims) do
       render(conn, "show.json", ingest: ingest)
     end
   end
 
-  defp do_version(conn, user, ingest_version, _ingest_params) do
-    with {:can, true} <- {:can, can?(user, version(ingest_version))},
+  defp do_version(conn, claims, ingest_version, _ingest_params) do
+    with {:can, true} <- {:can, can?(claims, version(ingest_version))},
          {:ok, %{current: %IngestVersion{} = new_version}} <-
-           Workflow.new_ingest_version(ingest_version, user) do
+           Workflow.new_ingest_version(ingest_version, claims) do
       conn
       |> put_status(:created)
       |> render("show.json", ingest: new_version)
@@ -253,18 +255,18 @@ defmodule TdIeWeb.IngestController do
   end
 
   def index_status(conn, status) do
-    user = conn.assigns[:current_user]
-    ingests = build_list(user, status)
+    claims = conn.assigns[:current_resource]
+    ingests = build_list(claims, status)
 
     render(conn, "index.json", ingests: ingests, hypermedia: hypermedia("ingest", conn, ingests))
   end
 
-  defp build_list(user, %{"status" => status}) do
+  defp build_list(claims, %{"status" => status}) do
     list_ingest = Ingests.list_all_ingest_with_status([status])
 
     case status do
       "draft" -> []
-      "pending_approval" -> filter_list(user, list_ingest)
+      "pending_approval" -> filter_list(claims, list_ingest)
       "rejected" -> []
       "published" -> []
       "versioned" -> []
@@ -272,9 +274,9 @@ defmodule TdIeWeb.IngestController do
     end
   end
 
-  defp filter_list(user, list_ingest) do
+  defp filter_list(claims, list_ingest) do
     Enum.reduce(list_ingest, [], fn ingest, acc ->
-      if can?(user, publish(ingest)) or can?(user, reject(ingest)) do
+      if can?(claims, publish(ingest)) or can?(claims, reject(ingest)) do
         acc ++ [ingest]
       else
         []

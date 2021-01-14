@@ -15,7 +15,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     Redix.del!(@stream)
     start_supervised(IngestLoader)
     start_supervised(IndexWorker)
-    [user: build(:user)]
+    [claims: build(:claims)]
   end
 
   setup do
@@ -24,13 +24,13 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "create_ingest/1" do
-    test "with valid data creates a ingest", %{user: user} do
+    test "with valid data creates a ingest", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -39,7 +39,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: %{},
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -60,13 +60,13 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "publishes an audit event including domain_id", %{user: user} do
+    test "publishes an audit event including domain_id", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -75,14 +75,14 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: %{},
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
 
       creation_attrs = Map.put(version_attrs, :content_schema, [])
 
-      assert {:ok, %{audit: [event_id]} = res} = Workflow.create_ingest(creation_attrs)
+      assert {:ok, %{audit: [event_id]}} = Workflow.create_ingest(creation_attrs)
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event
       assert %{"ingest" => %{"domain_id" => ^domain_id}} = Jason.decode!(payload)
@@ -105,7 +105,7 @@ defmodule TdIe.Ingests.WorkflowTest do
                Workflow.create_ingest(creation_attrs)
     end
 
-    test "with content", %{user: user} do
+    test "with content", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -119,7 +119,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -128,7 +128,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -140,7 +140,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert %{content: ^content} = ingest_version
     end
 
-    test "with invalid content: required", %{user: user} do
+    test "with invalid content: required", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -153,7 +153,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -162,7 +162,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -183,7 +183,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "with content: default values", %{user: user} do
+    test "with content: default values", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -196,7 +196,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -205,7 +205,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -218,7 +218,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.content["Field2"] == "World"
     end
 
-    test "with invalid content: invalid variable list", %{user: user} do
+    test "with invalid content: invalid variable list", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -230,7 +230,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -239,7 +239,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: content,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -260,7 +260,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "with no content", %{user: user} do
+    test "with no content", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -270,7 +270,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -278,7 +278,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         ingest: ingest_attrs,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -291,7 +291,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "with nil content", %{user: user} do
+    test "with nil content", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       content_schema = [
@@ -301,7 +301,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -310,7 +310,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: nil,
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -323,14 +323,13 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "with no content schema" do
-      user = build(:user)
+    test "with no content schema", %{claims: %{user_id: user_id}} do
       domain_id = 1
 
       ingest_attrs = %{
         type: "some_type",
         domain_id: domain_id,
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now()
       }
 
@@ -339,7 +338,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: %{},
         name: "some name",
         description: to_rich_text("some description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -351,7 +350,7 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "update_ingest_version/2" do
-    test "with valid data updates the ingest_version", %{user: user} do
+    test "with valid data updates the ingest_version", %{claims: %{user_id: user_id}} do
       ingest_version = insert(:ingest_version)
 
       ingest_attrs = %{
@@ -365,7 +364,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: %{},
         name: "updated name",
         description: to_rich_text("updated description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -389,7 +388,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert object.ingest.last_change_by == 1000
     end
 
-    test "with valid content data updates the ingest", %{user: user} do
+    test "with valid content data updates the ingest", %{claims: %{user_id: user_id}} do
       content_schema = [
         %{"name" => "Field1", "type" => "string", "required" => true},
         %{"name" => "Field2", "type" => "string", "required" => true}
@@ -400,7 +399,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         "Field2" => "Second field"
       }
 
-      ingest_version = insert(:ingest_version, last_change_by: user.id, content: content)
+      ingest_version = insert(:ingest_version, last_change_by: user_id, content: content)
 
       update_content = %{
         "Field1" => "New first field"
@@ -417,7 +416,7 @@ defmodule TdIe.Ingests.WorkflowTest do
         content: update_content,
         name: "updated name",
         description: to_rich_text("updated description"),
-        last_change_by: user.id,
+        last_change_by: user_id,
         last_change_at: DateTime.utc_now(),
         version: 1
       }
@@ -463,16 +462,18 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "new_ingest_version/2" do
-    test "creates a new version and sets current to false on previous version", %{user: user} do
+    test "creates a new version and sets current to false on previous version", %{
+      claims: claims
+    } do
       ingest_version = insert(:ingest_version, status: "published")
-      assert {:ok, res} = Workflow.new_ingest_version(ingest_version, user)
+      assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
       assert %{current: %{current: true}, previous: %{current: false}} = res
     end
 
-    test "publishes an event to the audit stream", %{user: user} do
+    test "publishes an event to the audit stream", %{claims: claims} do
       ingest_version = insert(:ingest_version, status: "published")
-      assert {:ok, %{audit: event_id} = res} = Workflow.new_ingest_version(ingest_version, user)
-      assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
+      assert {:ok, %{audit: event_id}} = Workflow.new_ingest_version(ingest_version, claims)
+      assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
     end
   end
 
@@ -480,10 +481,10 @@ defmodule TdIe.Ingests.WorkflowTest do
     test "changes the status and audit fields" do
       %{last_change_at: ts} = ingest_version = insert(:ingest_version, status: "draft")
 
-      %{id: user_id} = user = build(:user, id: 987)
+      %{user_id: user_id} = claims = build(:claims, user_id: 987)
 
       assert {:ok, %{published: published}} =
-               Workflow.publish_ingest_version(ingest_version, user)
+               Workflow.publish_ingest_version(ingest_version, claims)
 
       assert %{status: "published", last_change_by: ^user_id, last_change_at: last_change_at} =
                published
@@ -491,21 +492,20 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
     end
 
-    test "publishes an event to ingests:events", %{user: user} do
+    test "publishes an event to ingests:events", %{claims: claims} do
       %{ingest_id: ingest_id, id: id} = ingest_version = insert(:ingest_version)
-      assert {:ok, %{event: event_id}} = Workflow.publish_ingest_version(ingest_version, user)
+      assert {:ok, %{event: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
 
       assert {:ok, [[^event_id, event_data]]} =
                Stream.range(:redix, "ingests:events", event_id, event_id, transform: false)
 
-      assert event_data = ["event", "publish", "id", "#{ingest_id}", "version_id", "#{id}"]
+      assert event_data == ["event", "publish", "id", "#{ingest_id}", "version_id", "#{id}"]
     end
 
-    test "publishes an event including domain_ids to the audit stream", %{user: user} do
+    test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
       ingest_version = insert(:ingest_version, status: "draft")
 
-      assert {:ok, %{audit: event_id} = res} =
-               Workflow.publish_ingest_version(ingest_version, user)
+      assert {:ok, %{audit: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
 
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event
@@ -514,22 +514,22 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "reject_ingest_version/3" do
-    test "rejects ingest", %{user: user} do
+    test "rejects ingest", %{claims: claims} do
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
       assert {:ok, %{rejected: ingest_version}} =
-               Workflow.reject_ingest_version(ingest_version, reason, user)
+               Workflow.reject_ingest_version(ingest_version, reason, claims)
 
       assert %{status: "rejected", reject_reason: ^reason} = ingest_version
     end
 
-    test "publishes an event to the audit stream", %{user: user} do
+    test "publishes an event to the audit stream", %{claims: claims} do
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
-      assert {:ok, %{audit: event_id} = res} =
-               Workflow.reject_ingest_version(ingest_version, reason, user)
+      assert {:ok, %{audit: event_id}} =
+               Workflow.reject_ingest_version(ingest_version, reason, claims)
 
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
     end
@@ -537,20 +537,19 @@ defmodule TdIe.Ingests.WorkflowTest do
 
   describe "submit_ingest_version/2" do
     test "updates the ingest" do
-      %{id: user_id} = user = build(:user)
+      %{user_id: user_id} = claims = build(:claims)
       ingest_version = insert(:ingest_version)
 
       assert {:ok, %{updated: ingest_version}} =
-               Workflow.submit_ingest_version(ingest_version, user)
+               Workflow.submit_ingest_version(ingest_version, claims)
 
       assert %{status: "pending_approval", last_change_by: ^user_id} = ingest_version
     end
 
-    test "publishes an event including domain_ids to the audit stream", %{user: user} do
+    test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
       ingest_version = insert(:ingest_version, status: "draft")
 
-      assert {:ok, %{audit: event_id} = res} =
-               Workflow.submit_ingest_version(ingest_version, user)
+      assert {:ok, %{audit: event_id}} = Workflow.submit_ingest_version(ingest_version, claims)
 
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event

@@ -3,7 +3,7 @@ defmodule TdIe.Ingest.Search do
   Helper module to construct ingest search queries.
   """
 
-  alias TdIe.Accounts.User
+  alias TdIe.Auth.Claims
   alias TdIe.Ingest.Query
   alias TdIe.Permissions
   alias TdIe.Search
@@ -18,15 +18,15 @@ defmodule TdIe.Ingest.Search do
     view_versioned_ingests: "versioned"
   }
 
-  def get_filter_values(%User{is_admin: true}, params) do
-    filter_clause = params |> create_filters()
-    query = %{} |> create_query(filter_clause)
+  def get_filter_values(%Claims{is_admin: true}, params) do
+    filter_clause = create_filters(params)
+    query = create_query(%{}, filter_clause)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     Search.get_filters(search)
   end
 
-  def get_filter_values(%User{} = user, params) do
-    permissions = user |> Permissions.get_domain_permissions()
+  def get_filter_values(%Claims{} = claims, params) do
+    permissions = Permissions.get_domain_permissions(claims)
     get_filter_values(permissions, params)
   end
 
@@ -34,16 +34,16 @@ defmodule TdIe.Ingest.Search do
 
   def get_filter_values(permissions, params) do
     filter_clause = create_filters(params)
-    filter = permissions |> create_filter_clause(filter_clause)
-    query = %{} |> create_query(filter)
+    filter = create_filter_clause(permissions, filter_clause)
+    query = create_query(%{}, filter)
     search = %{query: query, aggs: Aggregations.aggregation_terms()}
     Search.get_filters(search)
   end
 
-  def search_ingest_versions(params, user, page \\ 0, size \\ 50)
+  def search_ingest_versions(params, claims, page \\ 0, size \\ 50)
 
   # Admin user search, no filters applied
-  def search_ingest_versions(params, %User{is_admin: true}, page, size) do
+  def search_ingest_versions(params, %Claims{is_admin: true}, page, size) do
     filter_clause = create_filters(params)
 
     query =
@@ -66,20 +66,20 @@ defmodule TdIe.Ingest.Search do
   end
 
   # Non-admin user search, filters applied
-  def search_ingest_versions(params, %User{} = user, page, size) do
-    permissions = user |> Permissions.get_domain_permissions()
+  def search_ingest_versions(params, %Claims{} = claims, page, size) do
+    permissions = Permissions.get_domain_permissions(claims)
     filter_ingest_versions(params, permissions, page, size)
   end
 
-  def list_ingest_versions(ingest_id, %User{is_admin: true}) do
+  def list_ingest_versions(ingest_id, %Claims{is_admin: true}) do
     query = %{ingest_id: ingest_id} |> create_query
 
     %{query: query}
     |> do_search
   end
 
-  def list_ingest_versions(ingest_id, %User{} = user) do
-    permissions = user |> Permissions.get_domain_permissions()
+  def list_ingest_versions(ingest_id, %Claims{} = claims) do
+    permissions = Permissions.get_domain_permissions(claims)
     predefined_query = %{ingest_id: ingest_id} |> create_query
     filter = permissions |> create_filter_clause([predefined_query])
     query = create_query(nil, filter)

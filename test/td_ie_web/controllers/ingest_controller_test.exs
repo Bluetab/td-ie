@@ -52,10 +52,10 @@ defmodule TdIeWeb.IngestControllerTest do
       swagger_schema: schema
     } do
       %{id: domain_id, name: domain_name} = domain
-      user = build(:user)
+      %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
       ingest_id = ingest.id
-      insert(:ingest_version, ingest: ingest, last_change_by: user.id)
+      insert(:ingest_version, ingest: ingest, last_change_by: user_id)
 
       update_attrs = %{
         "content" => %{},
@@ -86,8 +86,8 @@ defmodule TdIeWeb.IngestControllerTest do
 
     @tag :admin_authenticated
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      user = build(:user)
-      ingest_version = insert(:ingest_version, last_change_by: user.id)
+      %{user_id: user_id} = build(:claims)
+      ingest_version = insert(:ingest_version, last_change_by: user_id)
       ingest_id = ingest_version.ingest.id
 
       update_attrs = %{
@@ -130,9 +130,9 @@ defmodule TdIeWeb.IngestControllerTest do
         status_from: status_from,
         status_to: status_to
       } do
-        user = build(:user)
+        %{user_id: user_id} = build(:claims)
 
-        ingest_version = insert(:ingest_version, status: status_from, last_change_by: user.id)
+        ingest_version = insert(:ingest_version, status: status_from, last_change_by: user_id)
 
         ingest = ingest_version.ingest
         ingest_id = ingest.id
