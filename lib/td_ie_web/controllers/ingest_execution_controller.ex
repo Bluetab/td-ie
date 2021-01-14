@@ -50,12 +50,12 @@ defmodule TdIeWeb.IngestExecutionController do
   end
 
   def create(conn, %{"ingest_id" => ingest_id, "ingest_execution" => ingest_execution_params}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
     params = Map.put(ingest_execution_params, "ingest_id", ingest_id)
 
     with %Ingest{domain_id: domain_id} <- Ingests.get_ingest!(ingest_id),
          {:can, true} <-
-           {:can, can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
+           {:can, can?(claims, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
          {:ok, %IngestExecution{} = ingest_execution} <- Ingests.create_ingest_execution(params) do
       conn
       |> put_status(:created)
@@ -160,7 +160,7 @@ defmodule TdIeWeb.IngestExecutionController do
         "ingest_name" => ingest_name,
         "ingest_execution" => ingest_execution_params
       }) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     case Ingests.get_ingest_by_name(ingest_name) do
       [%{id: ingest_id}] ->
@@ -170,7 +170,7 @@ defmodule TdIeWeb.IngestExecutionController do
         with %Ingest{domain_id: domain_id} <- ingest,
              {:can, true} <-
                {:can,
-                can?(user, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
+                can?(claims, create_ingest(%{resource_type: "domain", resource_id: domain_id}))},
              {:ok, %IngestExecution{} = ingest_execution} <-
                Ingests.create_ingest_execution(params) do
           conn

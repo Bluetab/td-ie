@@ -5,11 +5,9 @@ defmodule TdIeWeb.Authentication do
   """
 
   import Plug.Conn
-  import TdIe.Factory
 
-  alias ExUnit.Callbacks
   alias Phoenix.ConnTest
-  alias TdCache.UserCache
+  alias TdIe.Auth.Claims
   alias TdIe.Auth.Guardian
 
   def put_auth_headers(conn, jwt) do
@@ -18,16 +16,26 @@ defmodule TdIeWeb.Authentication do
     |> put_req_header("authorization", "Bearer #{jwt}")
   end
 
-  def create_user_auth_conn(user) do
-    {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, %{gids: []})
-    conn = ConnTest.build_conn() |> put_auth_headers(jwt)
-    {:ok, %{conn: conn, jwt: jwt, user: user}}
+  def create_user_auth_conn(%{role: role} = claims) do
+    {:ok, jwt, full_claims} = Guardian.encode_and_sign(claims, %{role: role})
+    {:ok, claims} = Guardian.resource_from_claims(full_claims)
+
+    conn =
+      ConnTest.build_conn()
+      |> put_auth_headers(jwt)
+
+    {:ok, %{conn: conn, jwt: jwt, claims: claims}}
   end
 
-  def create_user(opts \\ []) do
-    %{id: user_id} = user = build(:user, opts)
-    UserCache.put(user)
-    Callbacks.on_exit(fn -> UserCache.delete(user_id) end)
-    user
+  def create_claims(user_name, opts \\ []) do
+    role = Keyword.get(opts, :role, "user")
+    is_admin = role === "admin"
+
+    %Claims{
+      user_id: Integer.mod(:binary.decode_unsigned(user_name), 100_000),
+      user_name: user_name,
+      role: role,
+      is_admin: is_admin
+    }
   end
 end

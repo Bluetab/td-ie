@@ -7,6 +7,7 @@ defmodule TdIe.Ingests do
 
   alias Ecto.Multi
   alias TdCache.TaxonomyCache
+  alias TdIe.Auth.Claims
   alias TdIe.Cache.IngestLoader
   alias TdIe.Ingests.Audit
   alias TdIe.Ingests.Ingest
@@ -302,14 +303,14 @@ defmodule TdIe.Ingests do
 
   ## Examples
 
-      iex> delete_ingest_version(ingest_version, user)
+      iex> delete_ingest_version(ingest_version, claims)
       {:ok, %IngestVersion{}}
 
-      iex> delete_ingest_version(ingest_version, user)
+      iex> delete_ingest_version(ingest_version, claims)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_ingest_version(%IngestVersion{} = ingest_version, %{id: user_id}) do
+  def delete_ingest_version(%IngestVersion{} = ingest_version, %Claims{user_id: user_id}) do
     if ingest_version.version == 1 do
       ingest = ingest_version.ingest
       ingest_id = ingest.id

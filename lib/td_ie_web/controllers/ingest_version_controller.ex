@@ -39,10 +39,10 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def index(conn, params) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     params
-    |> Search.search_ingest_versions(user)
+    |> Search.search_ingest_versions(claims)
     |> render_search_results(conn)
   end
 
@@ -57,13 +57,13 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def search(conn, params) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
     page = params |> Map.get("page", 0)
     size = params |> Map.get("size", 50)
 
     params
     |> Map.drop(["page", "size"])
-    |> Search.search_ingest_versions(user, page, size)
+    |> Search.search_ingest_versions(claims, page, size)
     |> render_search_results(conn)
   end
 
@@ -82,9 +82,9 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def csv(conn, params) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
-    %{results: ingest_versions} = Search.search_ingest_versions(params, user, 0, 10_000)
+    %{results: ingest_versions} = Search.search_ingest_versions(params, claims, 0, 10_000)
 
     conn
     |> put_resp_content_type("text/csv", "utf-8")
@@ -105,7 +105,7 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def create(conn, %{"ingest_version" => ingest_params}) do
-    user = conn.assigns[:current_user]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     # validate fields that if not present are throwing internal server errors in bc creation
     validate_required_ingest_fields(ingest_params)
@@ -125,7 +125,7 @@ defmodule TdIeWeb.IngestVersionController do
       %{}
       |> Map.put("domain_id", domain_id)
       |> Map.put("type", ingest_type)
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
     creation_attrs =
@@ -133,12 +133,12 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.put("last_change_by", conn.assigns.current_user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
       |> Map.put("status", "draft")
       |> Map.put("version", 1)
 
-    with {:can, true} <- {:can, can?(user, create_ingest(resource_domain))},
+    with {:can, true} <- {:can, can?(claims, create_ingest(resource_domain))},
          :ok <- Ingests.check_ingest_name_availability(ingest_type, ingest_name),
          {:ok, %{ingest_version: version}} <- Workflow.create_ingest(creation_attrs) do
       conn
@@ -177,11 +177,11 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def versions(conn, %{"ingest_version_id" => ingest_version_id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     ingest_version = Ingests.get_ingest_version!(ingest_version_id)
 
-    case Search.list_ingest_versions(ingest_version.ingest_id, user) do
+    case Search.list_ingest_versions(ingest_version.ingest_id, claims) do
       %{results: ingest_versions} ->
         render(conn, "versions.json",
           ingest_versions: ingest_versions,
@@ -206,10 +206,10 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def show(conn, %{"id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
     ingest_version = Ingests.get_ingest_version!(id)
 
-    with {:can, true} <- {:can, can?(user, view_ingest(ingest_version))} do
+    with {:can, true} <- {:can, can?(claims, view_ingest(ingest_version))} do
       template = get_template(ingest_version)
       ingest_version = Ingests.with_domain(ingest_version)
       links = Links.get_links(ingest_version)
@@ -256,11 +256,11 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def delete(conn, %{"id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
-         {:can, true} <- {:can, can?(user, delete(ingest_version))},
-         {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version, user) do
+         {:can, true} <- {:can, can?(claims, delete(ingest_version))},
+         {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version, claims) do
       send_resp(conn, :no_content, "")
     end
   end
@@ -279,12 +279,12 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def send_for_approval(conn, %{"ingest_version_id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, "draft", true} <- {:status, ingest_version.status, ingest_version.current},
-         {:can, true} <- {:can, can?(user, send_for_approval(ingest_version))},
-         {:ok, %{updated: updated}} <- Workflow.submit_ingest_version(ingest_version, user) do
+         {:can, true} <- {:can, can?(claims, send_for_approval(ingest_version))},
+         {:ok, %{updated: updated}} <- Workflow.submit_ingest_version(ingest_version, claims) do
       render(
         conn,
         "show.json",
@@ -311,14 +311,14 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def publish(conn, %{"ingest_version_id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, {"pending_approval", true}} <-
            {:status, {ingest_version.status, ingest_version.current}},
-         {:can, true} <- {:can, can?(user, publish(ingest_version))},
+         {:can, true} <- {:can, can?(claims, publish(ingest_version))},
          {:ok, %{published: %IngestVersion{} = ingest}} <-
-           Workflow.publish_ingest_version(ingest_version, user) do
+           Workflow.publish_ingest_version(ingest_version, claims) do
       render(
         conn,
         "show.json",
@@ -346,15 +346,15 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def reject(conn, %{"ingest_version_id" => id} = params) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
     reason = Map.get(params, "reject_reason")
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, "pending_approval", true} <-
            {:status, ingest_version.status, ingest_version.current},
-         {:can, true} <- {:can, can?(user, reject(ingest_version))},
+         {:can, true} <- {:can, can?(claims, reject(ingest_version))},
          {:ok, %{rejected: version}} <-
-           Workflow.reject_ingest_version(ingest_version, reason, user) do
+           Workflow.reject_ingest_version(ingest_version, reason, claims) do
       render(
         conn,
         "show.json",
@@ -381,12 +381,13 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def undo_rejection(conn, %{"ingest_version_id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, "rejected", true} <- {:status, ingest_version.status, ingest_version.current},
-         {:can, true} <- {:can, can?(user, undo_rejection(ingest_version))},
-         {:ok, %{updated: updated}} <- Workflow.undo_rejected_ingest_version(ingest_version, user) do
+         {:can, true} <- {:can, can?(claims, undo_rejection(ingest_version))},
+         {:ok, %{updated: updated}} <-
+           Workflow.undo_rejected_ingest_version(ingest_version, claims) do
       render(
         conn,
         "show.json",
@@ -413,13 +414,13 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def version(conn, %{"ingest_version_id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, "published", true} <- {:status, ingest_version.status, ingest_version.current},
-         {:can, true} <- {:can, can?(user, version(ingest_version))},
+         {:can, true} <- {:can, can?(claims, version(ingest_version))},
          {:ok, %{current: %IngestVersion{} = new_version}} <-
-           Workflow.new_ingest_version(ingest_version, user) do
+           Workflow.new_ingest_version(ingest_version, claims) do
       conn
       |> put_status(:created)
       |> render(
@@ -447,12 +448,12 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def deprecate(conn, %{"ingest_version_id" => id}) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
     with ingest_version <- Ingests.get_ingest_version!(id),
          {:status, "published", true} <- {:status, ingest_version.status, ingest_version.current},
-         {:can, true} <- {:can, can?(user, deprecate(ingest_version))},
-         {:ok, %{updated: updated}} <- Workflow.deprecate_ingest_version(ingest_version, user) do
+         {:can, true} <- {:can, can?(claims, deprecate(ingest_version))},
+         {:ok, %{updated: updated}} <- Workflow.deprecate_ingest_version(ingest_version, claims) do
       render(
         conn,
         "show.json",
@@ -479,7 +480,7 @@ defmodule TdIeWeb.IngestVersionController do
   end
 
   def update(conn, %{"id" => id, "ingest_version" => ingest_version_params}) do
-    user = conn.assigns[:current_user]
+    %{user_id: user_id} = claims = conn.assigns[:current_resource]
 
     ingest_version = Ingests.get_ingest_version!(id)
     ingest_name = Map.get(ingest_version_params, "name")
@@ -488,7 +489,7 @@ defmodule TdIeWeb.IngestVersionController do
 
     ingest_attrs =
       %{}
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
     update_params =
@@ -496,10 +497,10 @@ defmodule TdIeWeb.IngestVersionController do
       |> Map.put("ingest", ingest_attrs)
       |> Map.put("content_schema", content_schema)
       |> Map.update("content", %{}, & &1)
-      |> Map.put("last_change_by", user.id)
+      |> Map.put("last_change_by", user_id)
       |> Map.put("last_change_at", DateTime.utc_now())
 
-    with {:can, true} <- {:can, can?(user, update(ingest_version))},
+    with {:can, true} <- {:can, can?(claims, update(ingest_version))},
          :ok <-
            Ingests.check_ingest_name_availability(
              template.name,

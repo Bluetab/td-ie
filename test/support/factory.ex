@@ -19,15 +19,15 @@ defmodule TdIe.Factory do
     }
   end
 
-  def user_factory do
-    %TdIe.Accounts.User{
-      id: sequence(:user_id, &(&1 + 1_000_000)),
+  def claims_factory(attrs) do
+    %TdIe.Auth.Claims{
+      user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
-      full_name: sequence("full_name"),
-      email: sequence(:user_email, &"user#{&1}@example.com"),
-      is_admin: false,
-      jti: 0
+      role: "user",
+      jti: sequence("jti"),
+      is_admin: Map.get(attrs, :role) == "admin"
     }
+    |> merge_attributes(attrs)
   end
 
   def ingest_factory(attrs) do

@@ -19,9 +19,9 @@ defmodule TdIeWeb.SearchController do
   end
 
   def reindex_all(conn, _params) do
-    user = conn.assigns[:current_user]
+    claims = conn.assigns[:current_resource]
 
-    with {:can, true} <- {:can, can?(user, reindex_all(Ingest))},
+    with {:can, true} <- {:can, can?(claims, reindex_all(Ingest))},
          :ok <- Indexer.reindex(:all) do
       send_resp(conn, :ok, "")
     end

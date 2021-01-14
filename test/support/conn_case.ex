@@ -34,37 +34,39 @@ defmodule TdIeWeb.ConnCase do
     end
   end
 
+  @admin_user_name "app-admin"
+
   setup tags do
     :ok = Sandbox.checkout(TdIe.Repo)
 
     unless tags[:async] do
       Sandbox.mode(TdIe.Repo, {:shared, self()})
-
       parent = self()
-
-      Enum.each([TdIe.Cache.IngestLoader, TdIe.Search.IndexWorker], fn worker ->
-        case Process.whereis(worker) do
-          nil ->
-            nil
-
-          pid ->
-            on_exit(fn -> worker.ping(20_000) end)
-            Sandbox.allow(TdIe.Repo, parent, pid)
-        end
-      end)
+      allow(parent, [TdIe.Cache.IngestLoader, TdIe.Search.IndexWorker])
     end
 
     cond do
       tags[:admin_authenticated] ->
-        user = create_user(is_admin: true)
-        create_user_auth_conn(user)
+        @admin_user_name
+        |> create_claims(role: "admin")
+        |> create_user_auth_conn()
 
-      tags[:authenticated_user] ->
-        user = create_user(is_admin: false)
-        create_user_auth_conn(user)
+      user_name = tags[:authenticated_user] ->
+        user_name
+        |> create_claims(role: "admin")
+        |> create_user_auth_conn()
 
       true ->
         {:ok, conn: ConnTest.build_conn()}
     end
+  end
+
+  defp allow(parent, workers) do
+    Enum.each(workers, fn worker ->
+      case Process.whereis(worker) do
+        nil -> nil
+        pid -> Sandbox.allow(TdIe.Repo, parent, pid)
+      end
+    end)
   end
 end

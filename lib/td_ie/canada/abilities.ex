@@ -1,102 +1,102 @@
 defmodule TdIe.Canada.Abilities do
   @moduledoc false
   alias TdCache.Link
-  alias TdIe.Accounts.User
+  alias TdIe.Auth.Claims
   alias TdIe.Canada.IngestAbilities
   alias TdIe.Canada.LinkAbilities
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
 
-  defimpl Canada.Can, for: User do
+  defimpl Canada.Can, for: Claims do
     # administrator is superpowerful
-    def can?(%User{is_admin: true}, _action, Ingest) do
+    def can?(%Claims{is_admin: true}, _action, Ingest) do
       true
     end
 
-    def can?(%User{is_admin: true}, _action, %Ingest{}) do
+    def can?(%Claims{is_admin: true}, _action, %Ingest{}) do
       true
     end
 
-    def can?(%User{is_admin: true}, _action, %{resource_type: "domain"}) do
+    def can?(%Claims{is_admin: true}, _action, %{resource_type: "domain"}) do
       true
     end
 
-    def can?(%User{} = user, :create_ingest, %{resource_type: "domain"} = domain) do
-      IngestAbilities.can?(user, :create_ingest, domain)
+    def can?(%Claims{} = claims, :create_ingest, %{resource_type: "domain"} = domain) do
+      IngestAbilities.can?(claims, :create_ingest, domain)
     end
 
-    def can?(%User{} = user, :create, IngestVersion) do
-      IngestAbilities.can?(user, :create_ingest)
+    def can?(%Claims{} = claims, :create, IngestVersion) do
+      IngestAbilities.can?(claims, :create_ingest)
     end
 
-    def can?(%User{} = user, :create, %IngestVersion{} = _ingest_version) do
-      IngestAbilities.can?(user, :create_ingest)
+    def can?(%Claims{} = claims, :create, %IngestVersion{} = _ingest_version) do
+      IngestAbilities.can?(claims, :create_ingest)
     end
 
-    def can?(%User{} = user, :update, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :update, ingest_version)
+    def can?(%Claims{} = claims, :update, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :update, ingest_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :send_for_approval,
           %IngestVersion{} = ingest_version
         ) do
-      IngestAbilities.can?(user, :send_for_approval, ingest_version)
+      IngestAbilities.can?(claims, :send_for_approval, ingest_version)
     end
 
-    def can?(%User{} = user, :reject, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :reject, ingest_version)
+    def can?(%Claims{} = claims, :reject, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :reject, ingest_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :undo_rejection,
           %IngestVersion{} = ingest_version
         ) do
-      IngestAbilities.can?(user, :undo_rejection, ingest_version)
+      IngestAbilities.can?(claims, :undo_rejection, ingest_version)
     end
 
-    def can?(%User{} = user, :publish, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :publish, ingest_version)
+    def can?(%Claims{} = claims, :publish, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :publish, ingest_version)
     end
 
-    def can?(%User{} = user, :version, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :version, ingest_version)
+    def can?(%Claims{} = claims, :version, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :version, ingest_version)
     end
 
-    def can?(%User{} = user, :deprecate, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :deprecate, ingest_version)
+    def can?(%Claims{} = claims, :deprecate, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :deprecate, ingest_version)
     end
 
-    def can?(%User{} = user, :delete, %IngestVersion{} = ingest_version) do
-      IngestAbilities.can?(user, :delete, ingest_version)
+    def can?(%Claims{} = claims, :delete, %IngestVersion{} = ingest_version) do
+      IngestAbilities.can?(claims, :delete, ingest_version)
     end
 
     def can?(
-          %User{} = user,
+          %Claims{} = claims,
           :view_ingest,
           %IngestVersion{} = ingest_version
         ) do
-      IngestAbilities.can?(user, :view_ingest, ingest_version)
+      IngestAbilities.can?(claims, :view_ingest, ingest_version)
     end
 
-    def can?(%User{} = user, action, %Link{} = link) do
-      LinkAbilities.can?(user, action, link)
+    def can?(%Claims{} = claims, action, %Link{} = link) do
+      LinkAbilities.can?(claims, action, link)
     end
 
-    def can?(%User{} = user, :create_link, %{ingest: ingest}) do
-      LinkAbilities.can?(user, :create_link, ingest)
+    def can?(%Claims{} = claims, :create_link, %{ingest: ingest}) do
+      LinkAbilities.can?(claims, :create_link, ingest)
     end
 
-    def can?(%User{} = user, action, %{hint: :link} = resource) do
-      LinkAbilities.can?(user, action, resource)
+    def can?(%Claims{} = claims, action, %{hint: :link} = resource) do
+      LinkAbilities.can?(claims, action, resource)
     end
 
-    def can?(%User{is_admin: true}, _action, %{}) do
+    def can?(%Claims{is_admin: true}, _action, %{}) do
       true
     end
 
-    def can?(%User{}, _action, _domain), do: false
+    def can?(%Claims{}, _action, _domain), do: false
   end
 end

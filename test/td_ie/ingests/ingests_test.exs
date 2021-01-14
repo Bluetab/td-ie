@@ -9,7 +9,7 @@ defmodule TdIe.IngestsTests do
   alias TdIe.Repo
 
   setup_all do
-    [user: build(:user)]
+    [claims: build(:claims)]
   end
 
   describe "ingests" do
@@ -25,8 +25,8 @@ defmodule TdIe.IngestsTests do
     end
 
     test "get_current_version_by_ingest_id!/1 returns the ingest with given id" do
-      user = build(:user)
-      %{ingest_id: ingest_id} = ingest_version = insert(:ingest_version, last_change_by: user.id)
+      %{user_id: user_id} = build(:claims)
+      %{ingest_id: ingest_id} = ingest_version = insert(:ingest_version, last_change_by: user_id)
 
       object = Ingests.get_current_version_by_ingest_id!(ingest_id)
 
@@ -34,10 +34,10 @@ defmodule TdIe.IngestsTests do
     end
 
     test "get_currently_published_version!/1 returns the published ingest with given id", %{
-      user: user
+      claims: %{user_id: user_id}
     } do
       %{ingest: ingest} =
-        in_published = insert(:ingest_version, last_change_by: user.id, status: "published")
+        in_published = insert(:ingest_version, last_change_by: user_id, status: "published")
 
       insert(:ingest_version, ingest: ingest, status: "draft")
       in_current = Ingests.get_currently_published_version!(in_published.ingest.id)
@@ -45,9 +45,9 @@ defmodule TdIe.IngestsTests do
     end
 
     test "get_currently_published_version!/1 returns the last when there are no published", %{
-      user: user
+      claims: %{user_id: user_id}
     } do
-      inv_draft = insert(:ingest_version, last_change_by: user.id, status: "draft")
+      inv_draft = insert(:ingest_version, last_change_by: user_id, status: "draft")
       inv_current = Ingests.get_currently_published_version!(inv_draft.ingest.id)
       assert inv_current.id == inv_draft.id
     end
@@ -58,21 +58,21 @@ defmodule TdIe.IngestsTests do
 
       ingest_version = Ingests.get_current_version_by_ingest_id!(ingest_id)
 
-      assert !is_nil(ingest_version)
-      assert !is_nil(ingest_version.ingest)
+      refute is_nil(ingest_version)
+      refute is_nil(ingest_version.ingest)
     end
 
-    test "check_ingest_name_availability/2 check not available", %{user: user} do
+    test "check_ingest_name_availability/2 check not available", %{claims: %{user_id: user_id}} do
       name = random_name()
-      ingest_version = insert(:ingest_version, name: name, last_change_by: user.id)
+      ingest_version = insert(:ingest_version, name: name, last_change_by: user_id)
       type = ingest_version.ingest.type
 
       assert {:error, :name_not_available} = Ingests.check_ingest_name_availability(type, name)
     end
 
-    test "check_ingest_name_availability/2 check available", %{user: user} do
+    test "check_ingest_name_availability/2 check available", %{claims: %{user_id: user_id}} do
       name = random_name()
-      ingest_version = insert(:ingest_version, name: name, last_change_by: user.id)
+      ingest_version = insert(:ingest_version, name: name, last_change_by: user_id)
       exclude_ingest_id = ingest_version.ingest.id
       type = ingest_version.ingest.type
 
@@ -91,8 +91,8 @@ defmodule TdIe.IngestsTests do
                Ingests.check_ingest_name_availability(type, name, exclude_id)
     end
 
-    test "count_published_ingests/2 check count", %{user: user} do
-      ingest_version = insert(:ingest_version, last_change_by: user.id, status: "published")
+    test "count_published_ingests/2 check count", %{claims: %{user_id: user_id}} do
+      ingest_version = insert(:ingest_version, last_change_by: user_id, status: "published")
       type = ingest_version.ingest.type
       ids = [ingest_version.ingest.id]
       assert 1 == Ingests.count_published_ingests(type, ids)

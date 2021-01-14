@@ -94,7 +94,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
     } do
       insert(:ingest_version, name: "nombre sobrescrito")
 
-      assert %{"data" => data} =
+      assert %{"data" => _data} =
                conn
                |> post(Routes.ingest_execution_path(conn, :add_execution_by_name),
                  ingest_name: "nombre sobrescrito",
