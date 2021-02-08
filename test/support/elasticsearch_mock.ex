@@ -7,7 +7,6 @@ defmodule TdIe.ElasticsearchMock do
 
   alias Elasticsearch.Document
   alias HTTPoison.Response
-  alias Jason, as: JSON
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
 
@@ -274,7 +273,7 @@ defmodule TdIe.ElasticsearchMock do
         |> Enum.any?(fn field ->
           ingest
           |> Map.get(field)
-          |> JSON.encode!()
+          |> Jason.encode!()
           |> String.downcase()
           |> String.contains?(String.downcase(q))
         end)
@@ -307,8 +306,8 @@ defmodule TdIe.ElasticsearchMock do
     results =
       hits
       |> Enum.map(&%{_source: &1})
-      |> JSON.encode!()
-      |> JSON.decode!()
+      |> Jason.encode!()
+      |> Jason.decode!()
 
     body = %{
       "hits" => %{"hits" => results, "total" => Enum.count(results)},
