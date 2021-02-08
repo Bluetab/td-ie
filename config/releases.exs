@@ -25,3 +25,10 @@ config :td_ie, TdIe.Scheduler,
       run_strategy: Quantum.RunStrategy.Local
     ]
   ]
+
+with username when not is_nil(username) <- System.get_env("ES_USERNAME"),
+     password when not is_nil(password) <- System.get_env("ES_PASSWORD") do
+  config :td_ie, TdIe.Search.Cluster,
+    username: username,
+    password: password
+end
