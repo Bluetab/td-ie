@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3230] Taxonomy aggregations with enriched information
+
 ## [4.21.0] 2021-05-31
 
 ### Changed
