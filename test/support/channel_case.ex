@@ -29,10 +29,11 @@ defmodule TdIeWeb.ChannelCase do
 
   setup tags do
     :ok = Sandbox.checkout(TdIe.Repo)
+
     unless tags[:async] do
-     Sandbox.mode(TdIe.Repo, {:shared, self()})
+      Sandbox.mode(TdIe.Repo, {:shared, self()})
     end
+
     :ok
   end
-
 end

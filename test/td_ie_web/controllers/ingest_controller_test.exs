@@ -43,7 +43,7 @@ defmodule TdIeWeb.IngestControllerTest do
   end
 
   describe "update ingest" do
-    setup [:create_template]
+    setup :create_template
 
     @tag :admin_authenticated
     test "renders ingest when data is valid", %{
@@ -108,7 +108,7 @@ defmodule TdIeWeb.IngestControllerTest do
   end
 
   describe "update ingest status" do
-    setup [:create_template]
+    setup :create_template
 
     @transitions [
       {"draft", "pending_approval"},

@@ -20,7 +20,7 @@ defmodule TdIe.Search.Aggregations do
        %{
          nested: %{path: "domain_parents"},
          aggs: %{distinct_search: %{terms: %{field: "domain_parents.id", size: 50}}}
-       }},
+       }}
     ]
 
     dynamic_keywords =

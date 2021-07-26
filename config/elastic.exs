@@ -50,4 +50,4 @@ config :td_ie, TdIe.Search.Cluster,
       # Support create or replace
       bulk_action: "index"
     }
-}
+  }

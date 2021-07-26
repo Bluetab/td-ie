@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.25.0] 2021-07-26
+
+### Changed
+
+- Updated dependencies
+
 ## [4.24.0] 2021-07-13
 
 ### Added
@@ -159,7 +165,8 @@
 ### Changed
 
 - [TD-1721] Reindex automatically when a template changes
-  - Breaking change: New environment variable ES_URL replaces existing ES_HOST/ES_PORT
+  - Breaking change: New environment variable ES_URL replaces existing
+    ES_HOST/ES_PORT
 
 ### Fixed
 
@@ -182,7 +189,8 @@
 
 ### Fixed
 
-- [TD-2081] Event stream consumer did not respect redis_host and port config options
+- [TD-2081] Event stream consumer did not respect redis_host and port config
+  options
 
 ## [3.5.0] 2019-09-02
 
@@ -256,8 +264,10 @@
 
 ### Added
 
-- [TD-1571] Elixir's Logger config will check for EX_LOGGER_FORMAT variable to override format
-- [TD-1573] On IngestExecutions adds file_name and file_size and makes end_timestamp not required
+- [TD-1571] Elixir's Logger config will check for EX_LOGGER_FORMAT variable to
+  override format
+- [TD-1573] On IngestExecutions adds file_name and file_size and makes
+  end_timestamp not required
 
 ## [2.12.2] 2019-01-29
 
@@ -287,7 +297,8 @@
 
 ### Added
 
-- New post endpoint which recieves some params in order to narrow the retrieved filters
+- New post endpoint which recieves some params in order to narrow the retrieved
+  filters
 
 ## [0.0.2] 2018-12-03
 

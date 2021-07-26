@@ -40,8 +40,7 @@ defmodule TdIe.Audit.AuditSupport do
   end
 
   defp payload(%{ingest: %Changeset{changes: ingest_changes}} = changes, data) do
-    ingest_changes =
-      Map.drop(ingest_changes, [:last_change_by, :last_change_at])
+    ingest_changes = Map.drop(ingest_changes, [:last_change_by, :last_change_at])
 
     changes
     |> Map.delete(:ingest)

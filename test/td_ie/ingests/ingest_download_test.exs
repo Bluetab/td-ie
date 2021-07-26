@@ -57,11 +57,7 @@ defmodule TdIe.IngestDownloadTests do
       csv = Download.to_csv(ingests)
 
       assert csv ==
-               "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{
-                 template_name
-               };#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{
-                 inserted_at
-               };#{field_value}\r\n"
+               "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{template_name};#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{inserted_at};#{field_value}\r\n"
     end
   end
 end
