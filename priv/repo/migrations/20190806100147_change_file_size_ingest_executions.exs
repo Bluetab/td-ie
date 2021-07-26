@@ -3,7 +3,7 @@ defmodule TdIe.Repo.Migrations.ChangeFileSizeIngestExecutions do
 
   def change do
     alter table(:ingest_executions) do
-      modify :file_size, :bigint
+      modify(:file_size, :bigint)
     end
   end
 end

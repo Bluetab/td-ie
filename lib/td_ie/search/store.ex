@@ -14,7 +14,7 @@ defmodule TdIe.Search.Store do
     schema
     |> select([i], i)
     |> Repo.stream()
-    |> Repo.stream_preload(1000, [ingest: :executions])
+    |> Repo.stream_preload(1000, ingest: :executions)
   end
 
   def stream(schema, ids) do
@@ -22,7 +22,7 @@ defmodule TdIe.Search.Store do
     |> where([i], i.ingest_id in ^ids)
     |> select([i], i)
     |> Repo.stream()
-    |> Repo.stream_preload(1000, [ingest: :executions])
+    |> Repo.stream_preload(1000, ingest: :executions)
   end
 
   @impl true

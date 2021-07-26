@@ -270,7 +270,7 @@ defmodule TdIe.IngestsTests do
   end
 
   defp random_name do
-    id = :rand.uniform(100_000_000)
+    id = System.unique_integer([:positive])
     "Ingest #{id}"
   end
 end
