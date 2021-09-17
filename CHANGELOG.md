@@ -6,6 +6,11 @@
 
 - [TD-3971] Template mandatory dependent field
 
+### Fixed
+
+- [TD-4037] change the limit on the taxonomy in aggregations
+
+
 ## [4.27.0] 2021-09-07
 
 ### Changed
