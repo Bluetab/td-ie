@@ -251,18 +251,19 @@ defmodule TdIe.Ingests.Workflow do
     changeset = Map.get(attrs, :changeset)
 
     if changeset.valid? do
-      do_validate_ingest_content(attrs)
+      domain_id = changeset |> Changeset.get_field(:ingest) |> Map.get(:domain_id)
+      do_validate_ingest_content(attrs, domain_id)
     else
       attrs
     end
   end
 
-  defp do_validate_ingest_content(attrs) do
+  defp do_validate_ingest_content(attrs, domain_id) do
     import Ecto.Changeset, only: [put_change: 3]
 
     content = Map.get(attrs, :content)
     content_schema = Map.get(attrs, :content_schema)
-    changeset = Validation.build_changeset(content, content_schema)
+    changeset = Validation.build_changeset(content, content_schema, domain_id: domain_id)
 
     if changeset.valid? do
       attrs
