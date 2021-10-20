@@ -201,7 +201,7 @@ defmodule TdIe.Ingests.IngestVersion do
       content =
         iv
         |> Map.get(:content)
-        |> Format.search_values(template)
+        |> Format.search_values(template, domain_id: domain_id)
 
       iv
       |> Map.take([

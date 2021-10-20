@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4124] Dependent domain field in td_df_lib
+
 ## [4.28.0] 2021-09-20
 
 ### Added
