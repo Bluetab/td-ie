@@ -50,6 +50,7 @@ defmodule TdIe.Ingests.IngestVersion do
       :ingest,
       :in_progress
     ])
+    |> maybe_put_identifier(attrs)
     |> put_change(:status, "draft")
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
@@ -75,6 +76,7 @@ defmodule TdIe.Ingests.IngestVersion do
       :last_change_at,
       :in_progress
     ])
+    |> maybe_put_identifier(ingest_version)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
   end
@@ -129,6 +131,37 @@ defmodule TdIe.Ingests.IngestVersion do
       :mod_comments,
       :in_progress
     ])
+    |> maybe_put_identifier(ingest_version)
+  end
+
+  defp maybe_put_identifier(changeset, %IngestVersion{
+    content: current_content,
+    ingest: %{type: template_name}
+  }) do
+    maybe_put_identifier_aux(changeset, current_content, template_name)
+  end
+
+  defp maybe_put_identifier(changeset, %{ingest: %{type: template_name}} = _attrs) do
+    maybe_put_identifier_aux(changeset, %{}, template_name)
+  end
+
+  defp maybe_put_identifier(changeset, _) do
+    changeset
+  end
+
+  defp maybe_put_identifier_aux(
+         %{valid?: true, changes: %{content: content}} = changeset,
+         current_content,
+         template_name
+       ) do
+    TdDfLib.Format.maybe_put_identifier(current_content, content, template_name)
+    |> (fn content ->
+          put_change(changeset, :content, content)
+        end).()
+  end
+
+  defp maybe_put_identifier_aux(changeset, _, _) do
+    changeset
   end
 
   defp put_audit(%{changes: changes} = changeset, _user_id) when changes == %{}, do: changeset
