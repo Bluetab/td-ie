@@ -71,7 +71,7 @@ defmodule TdIe.Ingests.Workflow do
     result =
       draft_attrs
       |> attrs_keys_to_atoms()
-      |> validate_new_ingest()
+      |> validate_new_ingest(ingest_version)
       |> version_ingest(ingest_version)
 
     case result do
@@ -281,8 +281,8 @@ defmodule TdIe.Ingests.Workflow do
     Map.put(attrs, :changeset, changeset)
   end
 
-  defp validate_new_ingest(attrs) do
-    changeset = IngestVersion.create_changeset(%IngestVersion{}, attrs)
+  defp validate_new_ingest(attrs, old_ingest \\ %IngestVersion{}) do
+    changeset = IngestVersion.create_changeset(%IngestVersion{}, attrs, old_ingest)
     Map.put(attrs, :changeset, changeset)
   end
 
