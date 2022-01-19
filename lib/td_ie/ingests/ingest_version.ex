@@ -28,7 +28,11 @@ defmodule TdIe.Ingests.IngestVersion do
     timestamps(type: :utc_datetime_usec)
   end
 
-  def create_changeset(%IngestVersion{} = ingest_version, attrs) do
+  def create_changeset(
+        %IngestVersion{} = ingest_version,
+        attrs,
+        old_ingest_version \\ %IngestVersion{}
+      ) do
     ingest_version
     |> cast(attrs, [
       :content,
@@ -50,7 +54,7 @@ defmodule TdIe.Ingests.IngestVersion do
       :ingest,
       :in_progress
     ])
-    |> maybe_put_identifier(attrs)
+    |> maybe_put_identifier(attrs, old_ingest_version)
     |> put_change(:status, "draft")
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
@@ -134,29 +138,53 @@ defmodule TdIe.Ingests.IngestVersion do
     |> maybe_put_identifier(ingest_version)
   end
 
+  defp maybe_put_identifier(
+         changeset,
+         _attrs,
+         %IngestVersion{content: _old_content, ingest: %{type: _template_name}} = ingest_version
+       ) do
+    maybe_put_identifier(changeset, ingest_version)
+  end
+
+  defp maybe_put_identifier(
+         changeset,
+         %{ingest: %{type: _template_name}} = attrs,
+         _ingest_version
+       ) do
+    maybe_put_identifier(changeset, attrs)
+  end
+
+  defp maybe_put_identifier(
+         changeset,
+         _attrs,
+         _ingest_version
+       ) do
+    changeset
+  end
+
   defp maybe_put_identifier(changeset, %IngestVersion{
-    content: current_content,
-    ingest: %{type: template_name}
-  }) do
-    maybe_put_identifier_aux(changeset, current_content, template_name)
+         content: old_content,
+         ingest: %{type: template_name}
+       }) do
+    maybe_put_identifier_aux(changeset, old_content, template_name)
   end
 
   defp maybe_put_identifier(changeset, %{ingest: %{type: template_name}} = _attrs) do
     maybe_put_identifier_aux(changeset, %{}, template_name)
   end
 
-  defp maybe_put_identifier(changeset, _) do
+  defp maybe_put_identifier(changeset, _old_ingest_version_or_attrs) do
     changeset
   end
 
   defp maybe_put_identifier_aux(
-         %{valid?: true, changes: %{content: content}} = changeset,
-         current_content,
+         %{valid?: true, changes: %{content: changeset_content}} = changeset,
+         old_content,
          template_name
        ) do
-    TdDfLib.Format.maybe_put_identifier(current_content, content, template_name)
-    |> (fn content ->
-          put_change(changeset, :content, content)
+    TdDfLib.Format.maybe_put_identifier(changeset_content, old_content, template_name)
+    |> (fn new_content ->
+          put_change(changeset, :content, new_content)
         end).()
   end
 

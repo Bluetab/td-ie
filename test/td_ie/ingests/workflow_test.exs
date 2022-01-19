@@ -462,12 +462,61 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "new_ingest_version/2" do
+    setup do
+      identifier_name = "identifier"
+      with_identifier = %{
+        id: System.unique_integer([:positive]),
+        name: "Ingesta template with identifier field",
+        label: "ingesta_with_identifier",
+        scope: "ie",
+        content: [
+          %{
+            "fields" => [
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "label" => "Identifier",
+                "name" => identifier_name,
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "identifier"
+              },
+            ],
+            "name" => ""
+          }
+        ]
+      }
+      template_with_identifier = CacheHelpers.insert_template(with_identifier)
+      [template_with_identifier: template_with_identifier, identifier_name: identifier_name]
+    end
     test "creates a new version and sets current to false on previous version", %{
       claims: claims
     } do
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
       assert %{current: %{current: true}, previous: %{current: false}} = res
+    end
+
+    test "creates a new version and copies the identifier from the previous version one", %{
+      claims: claims,
+      template_with_identifier: template_with_identifier,
+      identifier_name: identifier_name
+    } do
+      existing_identifier = "00000000-0000-0000-0000-000000000000"
+      ingest = build(:ingest, %{type: template_with_identifier.name})
+      ingest_version =
+        insert(:ingest_version, %{status: "published", ingest: ingest, content: %{"identifier" => existing_identifier}})
+
+      assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
+      assert %{
+        current: %{
+          content: %{^identifier_name => ^existing_identifier}
+        },
+        previous: %{
+          content: %{^identifier_name => ^existing_identifier}
+        },
+      } = res
     end
 
     test "publishes an event to the audit stream", %{claims: claims} do

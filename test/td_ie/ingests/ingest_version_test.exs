@@ -136,7 +136,7 @@ defmodule TdIe.Ingests.IngestVersionTest do
   end
 
   describe "update_changeset/2" do
-    test "keeps an already present identifier", %{
+    test "keeps an already present identifier (i.e., editing)", %{
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
     } do
@@ -145,11 +145,31 @@ defmodule TdIe.Ingests.IngestVersionTest do
       ingest = build(:ingest, %{type: template_with_identifier.name})
 
       ingest_version =
-        build(:ingest_version, %{ingest: ingest, content: %{"identifier" => existing_identifier}})
+        build(:ingest_version, %{ingest: ingest, content: %{identifier_name => existing_identifier}})
 
       assert %Changeset{changes: changes} =
                IngestVersion.update_changeset(ingest_version, %{
                  content: %{"text" => "some update"}
+               })
+
+      assert %{content: new_content} = changes
+      assert %{^identifier_name => ^existing_identifier} = new_content
+    end
+
+    test "keeps an already present identifier (i.e., editing) if extraneous identifier attr is passed", %{
+      template_with_identifier: template_with_identifier,
+      identifier_name: identifier_name
+    } do
+      # Existing identifier previously put by the create changeset
+      existing_identifier = "00000000-0000-0000-0000-000000000000"
+      ingest = build(:ingest, %{type: template_with_identifier.name})
+
+      ingest_version =
+        build(:ingest_version, %{ingest: ingest, content: %{identifier_name => existing_identifier}})
+
+      assert %Changeset{changes: changes} =
+               IngestVersion.update_changeset(ingest_version, %{
+                 content: %{"text" => "some update", identifier_name => "11111111-1111-1111-1111-111111111111"}
                })
 
       assert %{content: new_content} = changes
