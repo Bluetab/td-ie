@@ -9,11 +9,11 @@ defmodule TdIe.Canada.LinkAbilities do
 
   require Logger
 
-  def can?(%Claims{is_admin: true}, :create_link, _resource), do: true
+  def can?(%Claims{role: "admin"}, :create_link, _resource), do: true
 
-  def can?(%Claims{is_admin: true}, _action, %Link{}), do: true
+  def can?(%Claims{role: "admin"}, _action, %Link{}), do: true
 
-  def can?(%Claims{is_admin: true}, _action, %{hint: :link}), do: true
+  def can?(%Claims{role: "admin"}, _action, %{hint: :link}), do: true
 
   def can?(%Claims{} = claims, :delete, %Link{source: "ingest:" <> ingest_id}) do
     case Ingests.get_ingest!(String.to_integer(ingest_id)) do

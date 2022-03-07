@@ -24,18 +24,34 @@ defmodule TdIeWeb.Authentication do
       ConnTest.build_conn()
       |> put_auth_headers(jwt)
 
-    {:ok, %{conn: conn, jwt: jwt, claims: claims}}
+    [conn: conn, jwt: jwt, claims: claims]
   end
 
-  def create_claims(user_name, opts \\ []) do
+  def create_claims(opts \\ []) do
     role = Keyword.get(opts, :role, "user")
-    is_admin = role === "admin"
+
+    user_name =
+      case Keyword.get(opts, :user_name) do
+        nil -> if role === "admin", do: "app-admin", else: "user"
+        name -> name
+      end
 
     %Claims{
       user_id: Integer.mod(:binary.decode_unsigned(user_name), 100_000),
       user_name: user_name,
-      role: role,
-      is_admin: is_admin
+      role: role
     }
+  end
+
+  def assign_permissions(context, nil), do: context
+
+  def assign_permissions(context, permissions) do
+    claims = Keyword.fetch!(context, :claims)
+    %{id: domain_id} = domain = Keyword.get(context, :domain, CacheHelpers.put_domain())
+    CacheHelpers.put_session_permissions(claims, domain_id, permissions)
+
+    context
+    |> Keyword.put_new(:domain, domain)
+    |> Keyword.put_new(:domain_id, domain_id)
   end
 end

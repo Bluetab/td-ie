@@ -1,30 +1,37 @@
 defmodule TdIe.Ingests.WorkflowTest do
   use TdIe.DataCase
 
-  alias TdCache.Redix
+  import Mox
+
   alias TdCache.Redix.Stream
-  alias TdIe.Cache.IngestLoader
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.Workflow
-  alias TdIe.Search.IndexWorker
 
   @stream TdCache.Audit.stream()
 
-  setup_all do
-    Redix.del!(@stream)
-    start_supervised(IngestLoader)
-    start_supervised(IndexWorker)
-    [claims: build(:claims)]
+  setup :set_mox_from_context
+  setup :verify_on_exit!
+
+  setup do
+    start_supervised(TdIe.Cache.IngestLoader)
+    start_supervised(TdIe.Search.Cluster)
+    start_supervised(TdIe.Search.IndexWorker)
+    :ok
   end
 
   setup do
-    on_exit(fn -> Redix.del!(@stream) end)
+    on_exit(fn -> TdCache.Redix.del!(@stream) end)
+    TdCache.Redix.del!(@stream)
     :ok
   end
 
   describe "create_ingest/1" do
-    test "with valid data creates a ingest", %{claims: %{user_id: user_id}} do
+    setup :put_user
+
+    test "with valid data creates a ingest", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
+
       domain_id = 1
 
       ingest_attrs = %{
@@ -60,7 +67,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "publishes an audit event including domain_id", %{claims: %{user_id: user_id}} do
+    test "publishes an audit event including domain_id", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       domain_id = 1
 
       ingest_attrs = %{
@@ -105,7 +113,8 @@ defmodule TdIe.Ingests.WorkflowTest do
                Workflow.create_ingest(creation_attrs)
     end
 
-    test "with content", %{claims: %{user_id: user_id}} do
+    test "with content", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       domain_id = 1
 
       content_schema = [
@@ -140,7 +149,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert %{content: ^content} = ingest_version
     end
 
-    test "with invalid content: required", %{claims: %{user_id: user_id}} do
+    test "with invalid content: required", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       domain_id = 1
 
       content_schema = [
@@ -183,7 +193,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "with content: default values", %{claims: %{user_id: user_id}} do
+    test "with content: default values", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       domain_id = 1
 
       content_schema = [
@@ -218,7 +229,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.content["Field2"] == "World"
     end
 
-    test "with invalid content: invalid variable list", %{claims: %{user_id: user_id}} do
+    test "with invalid content: invalid variable list", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       domain_id = 1
 
       content_schema = [
@@ -260,7 +272,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
     end
 
-    test "with no content", %{claims: %{user_id: user_id}} do
+    test "with no content", %{user_id: user_id} do
       domain_id = 1
 
       content_schema = [
@@ -291,7 +303,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "with nil content", %{claims: %{user_id: user_id}} do
+    test "with nil content", %{user_id: user_id} do
       domain_id = 1
 
       content_schema = [
@@ -323,7 +335,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert_expected_validation(changeset, "content", :required)
     end
 
-    test "with no content schema", %{claims: %{user_id: user_id}} do
+    test "with no content schema", %{user_id: user_id} do
       domain_id = 1
 
       ingest_attrs = %{
@@ -350,7 +362,10 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "update_ingest_version/2" do
-    test "with valid data updates the ingest_version", %{claims: %{user_id: user_id}} do
+    setup :put_user
+
+    test "with valid data updates the ingest_version", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
       ingest_version = insert(:ingest_version)
 
       ingest_attrs = %{
@@ -372,10 +387,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       update_attrs = Map.put(version_attrs, :content_schema, [])
 
       assert {:ok, %IngestVersion{} = object} =
-               Workflow.update_ingest_version(
-                 ingest_version,
-                 update_attrs
-               )
+               Workflow.update_ingest_version(ingest_version, update_attrs)
 
       assert object.name == version_attrs.name
       assert object.description == version_attrs.description
@@ -388,7 +400,9 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert object.ingest.last_change_by == 1000
     end
 
-    test "with valid content data updates the ingest", %{claims: %{user_id: user_id}} do
+    test "with valid content data updates the ingest", %{user_id: user_id} do
+      SearchHelpers.expect_bulk_index()
+
       content_schema = [
         %{"name" => "Field1", "type" => "string", "required" => true},
         %{"name" => "Field2", "type" => "string", "required" => true}
@@ -423,12 +437,7 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       update_attrs = Map.put(version_attrs, :content_schema, content_schema)
 
-      assert {:ok, ingest_version} =
-               Workflow.update_ingest_version(
-                 ingest_version,
-                 update_attrs
-               )
-
+      assert {:ok, ingest_version} = Workflow.update_ingest_version(ingest_version, update_attrs)
       assert %IngestVersion{} = ingest_version
       assert ingest_version.content["Field1"] == "New first field"
       assert ingest_version.content["Field2"] == "Second field"
@@ -462,8 +471,11 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "new_ingest_version/2" do
+    setup :claims
+
     setup do
       identifier_name = "identifier"
+
       with_identifier = %{
         id: System.unique_integer([:positive]),
         name: "Ingesta template with identifier field",
@@ -481,18 +493,21 @@ defmodule TdIe.Ingests.WorkflowTest do
                 "type" => "string",
                 "values" => nil,
                 "widget" => "identifier"
-              },
+              }
             ],
             "name" => ""
           }
         ]
       }
+
       template_with_identifier = CacheHelpers.insert_template(with_identifier)
       [template_with_identifier: template_with_identifier, identifier_name: identifier_name]
     end
+
     test "creates a new version and sets current to false on previous version", %{
       claims: claims
     } do
+      SearchHelpers.expect_bulk_index()
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
       assert %{current: %{current: true}, previous: %{current: false}} = res
@@ -503,23 +518,31 @@ defmodule TdIe.Ingests.WorkflowTest do
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
     } do
+      SearchHelpers.expect_bulk_index()
       existing_identifier = "00000000-0000-0000-0000-000000000000"
       ingest = build(:ingest, %{type: template_with_identifier.name})
+
       ingest_version =
-        insert(:ingest_version, %{status: "published", ingest: ingest, content: %{"identifier" => existing_identifier}})
+        insert(:ingest_version, %{
+          status: "published",
+          ingest: ingest,
+          content: %{"identifier" => existing_identifier}
+        })
 
       assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
+
       assert %{
-        current: %{
-          content: %{^identifier_name => ^existing_identifier}
-        },
-        previous: %{
-          content: %{^identifier_name => ^existing_identifier}
-        },
-      } = res
+               current: %{
+                 content: %{^identifier_name => ^existing_identifier}
+               },
+               previous: %{
+                 content: %{^identifier_name => ^existing_identifier}
+               }
+             } = res
     end
 
     test "publishes an event to the audit stream", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, %{audit: event_id}} = Workflow.new_ingest_version(ingest_version, claims)
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
@@ -527,7 +550,11 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "publish_ingest_version/2" do
+    setup :claims
+
     test "changes the status and audit fields" do
+      SearchHelpers.expect_bulk_index()
+
       %{last_change_at: ts} = ingest_version = insert(:ingest_version, status: "draft")
 
       %{user_id: user_id} = claims = build(:claims, user_id: 987)
@@ -542,6 +569,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
 
     test "publishes an event to ingests:events", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
       %{ingest_id: ingest_id, id: id} = ingest_version = insert(:ingest_version)
       assert {:ok, %{event: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
 
@@ -552,6 +580,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
 
     test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
       ingest_version = insert(:ingest_version, status: "draft")
 
       assert {:ok, %{audit: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
@@ -563,7 +592,11 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "reject_ingest_version/3" do
+    setup :claims
+
     test "rejects ingest", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
+
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
@@ -574,6 +607,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
 
     test "publishes an event to the audit stream", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
@@ -585,8 +619,10 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   describe "submit_ingest_version/2" do
-    test "updates the ingest" do
-      %{user_id: user_id} = claims = build(:claims)
+    setup :claims
+
+    test "updates the ingest", %{claims: %{user_id: user_id} = claims} do
+      SearchHelpers.expect_bulk_index()
       ingest_version = insert(:ingest_version)
 
       assert {:ok, %{updated: ingest_version}} =
@@ -596,6 +632,8 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
 
     test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
+      SearchHelpers.expect_bulk_index()
+
       ingest_version = insert(:ingest_version, status: "draft")
 
       assert {:ok, %{audit: event_id}} = Workflow.submit_ingest_version(ingest_version, claims)
@@ -624,5 +662,15 @@ defmodule TdIe.Ingests.WorkflowTest do
 
     assert current_validation == expected_validation
     changeset
+  end
+
+  defp claims(_) do
+    %{id: user_id} = CacheHelpers.put_user()
+    [claims: build(:claims, user_id: user_id)]
+  end
+
+  defp put_user(_) do
+    %{id: user_id} = user = build(:user)
+    [user: user, user_id: user_id]
   end
 end

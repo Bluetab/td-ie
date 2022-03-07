@@ -9,12 +9,12 @@ defmodule TdIe.Auth.Guardian do
     Jason.encode(%{id: user_id, user_name: user_name})
   end
 
-  def resource_from_claims(%{"role" => role, "sub" => sub} = claims) do
+  def resource_from_claims(%{"role" => role, "sub" => sub, "exp" => exp} = claims) do
     %{"id" => id, "user_name" => user_name} = Jason.decode!(sub)
 
     resource = %Claims{
       user_id: id,
-      is_admin: role == "admin",
+      exp: exp,
       role: role,
       user_name: user_name,
       jti: claims["jti"]

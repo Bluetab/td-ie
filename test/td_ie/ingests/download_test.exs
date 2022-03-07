@@ -1,12 +1,12 @@
-defmodule TdIe.IngestDownloadTests do
+defmodule TdIe.Ingests.DownloadTests do
   @moduledoc """
   Test the download of ingests in a csv format
   """
   use TdIe.DataCase
 
-  describe "ingest_download" do
-    alias TdIe.Ingest.Download
+  alias TdIe.Ingests.Download
 
+  describe "ingest_download" do
     test "to_csv/1 return cvs content to download" do
       template_name = "template_name"
       field_name = "field_name"

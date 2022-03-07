@@ -1,10 +1,10 @@
-defmodule TdIe.Search.AggregationsTest do
+defmodule TdIe.Ingests.Search.AggregationsTest do
   use TdIe.DataCase
 
-  alias TdIe.Search.Aggregations
+  alias TdIe.Ingests.Search.Aggregations
 
-  describe "aggregation_terms" do
-    test "aggregation_terms/0 returns aggregation terms of type user with size 50" do
+  describe "aggregations" do
+    test "aggregations/0 returns aggregation terms of type user with size 50" do
       template_content = [
         %{
           "name" => "group",
@@ -23,7 +23,7 @@ defmodule TdIe.Search.AggregationsTest do
         scope: "ie"
       })
 
-      aggs = Aggregations.aggregation_terms()
+      aggs = Aggregations.aggregations()
 
       %{field: field, size: size} =
         aggs

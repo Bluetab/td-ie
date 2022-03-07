@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-4491] Compatibility with new permissions model
+
 ## [4.36.0] 2022-01-24
 
 ### Added
@@ -24,7 +30,6 @@
 ### Fixed
 
 - [TD-4037] change the limit on the taxonomy in aggregations
-
 
 ## [4.27.0] 2021-09-07
 

@@ -1,13 +1,12 @@
-defmodule TdIe.Search.Aggregations do
+defmodule TdIe.Ingests.Search.Aggregations do
   @moduledoc """
   Aggregations for elasticsearch
   """
 
-  alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
-  def aggregation_terms do
+  def aggregations do
     static_keywords = [
       {"domain", %{terms: %{field: "domain.name.raw", size: 50}}},
       {"domain_id", %{terms: %{field: "domain.id"}}},
@@ -17,11 +16,12 @@ defmodule TdIe.Search.Aggregations do
       {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
       {"execution_status", %{terms: %{field: "execution_status.raw", size: 50}}},
+      # TODO: Refactor
       {"taxonomy",
        %{
          nested: %{path: "domain_parents"},
          aggs: %{
-           distinct_search: %{terms: %{field: "domain_parents.id", size: get_domains_count()}}
+           distinct_search: %{terms: %{field: "domain_parents.id", size: 500}}
          }
        }}
     ]
@@ -34,7 +34,7 @@ defmodule TdIe.Search.Aggregations do
     |> Enum.into(%{})
   end
 
-  def template_terms(%{content: content}) do
+  defp template_terms(%{content: content}) do
     content
     |> Format.flatten_content_fields()
     |> Enum.filter(&filter_content_term/1)
@@ -42,7 +42,7 @@ defmodule TdIe.Search.Aggregations do
     |> Enum.map(&content_term/1)
   end
 
-  defp filter_content_term(%{"type" => "list"}), do: true
+  defp filter_content_term(%{"type" => "domain"}), do: true
   defp filter_content_term(%{"type" => "system"}), do: true
   defp filter_content_term(%{"values" => values}) when is_map(values), do: true
   defp filter_content_term(_), do: false
@@ -51,7 +51,7 @@ defmodule TdIe.Search.Aggregations do
     {field, %{terms: %{field: "content.#{field}.raw", size: 50}}}
   end
 
-  defp content_term(%{"name" => field, "type" => type}) when type in ["domain", "system"] do
+  defp content_term(%{"name" => field, "type" => type}) when type in ["domain", "external_id"] do
     {field,
      %{
        nested: %{path: "content.#{field}"},
@@ -61,12 +61,5 @@ defmodule TdIe.Search.Aggregations do
 
   defp content_term(%{"name" => field}) do
     {field, %{terms: %{field: "content.#{field}.raw"}}}
-  end
-
-  defp get_domains_count do
-    case Enum.count(TaxonomyCache.get_domain_ids()) do
-      0 -> 10
-      count -> count
-    end
   end
 end

@@ -17,7 +17,7 @@ config :td_ie, TdIe.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 1
 
-config :td_ie, TdIe.Search.Cluster, api: TdIe.ElasticsearchMock
+config :td_ie, TdIe.Search.Cluster, api: ElasticsearchMock
 
 config :td_cache, :audit, stream: "audit:events:test"
 config :td_cache, redis_host: "redis", port: 6380

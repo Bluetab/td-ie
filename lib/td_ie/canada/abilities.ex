@@ -9,15 +9,15 @@ defmodule TdIe.Canada.Abilities do
 
   defimpl Canada.Can, for: Claims do
     # administrator is superpowerful
-    def can?(%Claims{is_admin: true}, _action, Ingest) do
+    def can?(%Claims{role: "admin"}, _action, Ingest) do
       true
     end
 
-    def can?(%Claims{is_admin: true}, _action, %Ingest{}) do
+    def can?(%Claims{role: "admin"}, _action, %Ingest{}) do
       true
     end
 
-    def can?(%Claims{is_admin: true}, _action, %{resource_type: "domain"}) do
+    def can?(%Claims{role: "admin"}, _action, %{resource_type: "domain"}) do
       true
     end
 
@@ -93,7 +93,7 @@ defmodule TdIe.Canada.Abilities do
       LinkAbilities.can?(claims, action, resource)
     end
 
-    def can?(%Claims{is_admin: true}, _action, %{}) do
+    def can?(%Claims{role: "admin"}, _action, %{}) do
       true
     end
 

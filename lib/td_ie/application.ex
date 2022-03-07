@@ -6,15 +6,13 @@ defmodule TdIe.Application do
   alias TdIeWeb.Endpoint
 
   def start(_type, _args) do
-    children = [
-      TdIe.Repo,
-      TdIeWeb.Endpoint,
-      TdIe.Search.Cluster,
-      TdIe.Search.IndexWorker,
-      TdIe.Cache.IngestLoader,
-      TdIe.Cache.DomainEventConsumer,
-      TdIe.Scheduler
-    ]
+    env = Application.get_env(:td_ie, :env)
+
+    children =
+      [
+        TdIe.Repo,
+        TdIeWeb.Endpoint
+      ] ++ workers(env)
 
     opts = [strategy: :one_for_one, name: TdIe.Supervisor]
     Supervisor.start_link(children, opts)
@@ -25,5 +23,17 @@ defmodule TdIe.Application do
   def config_change(changed, _new, removed) do
     Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp workers(:test), do: []
+
+  defp workers(_env) do
+    [
+      TdIe.Search.Cluster,
+      TdIe.Search.IndexWorker,
+      TdIe.Cache.IngestLoader,
+      TdIe.Cache.DomainEventConsumer,
+      TdIe.Scheduler
+    ]
   end
 end

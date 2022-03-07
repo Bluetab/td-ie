@@ -57,10 +57,8 @@ defmodule TdIe.Mixfile do
       {:postgrex, "~> 0.15.0"},
       {:gettext, "~> 0.11"},
       {:httpoison, "~> 1.0"},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:guardian, "~> 2.0"},
       {:canada, "~> 2.0"},
-      {:ex_machina, "~> 2.3", only: :test},
       {:quantum, "~> 3.0"},
       {:phoenix_swagger, "~> 0.8.3"},
       {:ex_json_schema, "~> 0.7.3"},
@@ -70,8 +68,12 @@ defmodule TdIe.Mixfile do
        git: "https://github.com/Bluetab/elasticsearch-elixir.git",
        branch: "feature/bulk-index-action"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.0.0"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.25.4"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.36.0"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.40.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "4.40.0"},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:ex_machina, "~> 2.3", only: :test},
+      {:assertions, "~> 0.19", only: :test},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 

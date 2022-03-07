@@ -15,14 +15,14 @@ defmodule TdIeWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
-  import TdIeWeb.Authentication, only: :functions
-
   alias Ecto.Adapters.SQL.Sandbox
   alias Phoenix.ConnTest
+  alias TdIeWeb.Authentication
 
   using do
     quote do
       # Import conveniences for testing with connections
+      import CacheHelpers, only: [put_session_permissions: 2, put_session_permissions: 3]
       import Plug.Conn
       import Phoenix.ConnTest
       import TdIe.Factory
@@ -34,8 +34,6 @@ defmodule TdIeWeb.ConnCase do
     end
   end
 
-  @admin_user_name "app-admin"
-
   setup tags do
     :ok = Sandbox.checkout(TdIe.Repo)
 
@@ -45,19 +43,15 @@ defmodule TdIeWeb.ConnCase do
       allow(parent, [TdIe.Cache.IngestLoader, TdIe.Search.IndexWorker])
     end
 
-    cond do
-      tags[:admin_authenticated] ->
-        @admin_user_name
-        |> create_claims(role: "admin")
-        |> create_user_auth_conn()
+    case tags[:authentication] do
+      nil ->
+        [conn: ConnTest.build_conn()]
 
-      user_name = tags[:authenticated_user] ->
-        user_name
-        |> create_claims(role: "admin")
-        |> create_user_auth_conn()
-
-      true ->
-        {:ok, conn: ConnTest.build_conn()}
+      auth_opts ->
+        auth_opts
+        |> Authentication.create_claims()
+        |> Authentication.create_user_auth_conn()
+        |> Authentication.assign_permissions(auth_opts[:permissions])
     end
   end
 
