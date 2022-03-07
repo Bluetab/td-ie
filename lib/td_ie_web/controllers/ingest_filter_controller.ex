@@ -6,7 +6,7 @@ defmodule TdIeWeb.IngestFilterController do
   use TdIeWeb, :controller
   use PhoenixSwagger
 
-  alias TdIe.Ingest.Search
+  alias TdIe.Ingests.Search
   alias TdIeWeb.SwaggerDefinitions
 
   action_fallback(TdIeWeb.FallbackController)

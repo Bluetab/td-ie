@@ -5,26 +5,27 @@ defmodule TdIeWeb.IngestControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdCache.TaxonomyCache
+  import Mox
 
-  setup_all do
-    %{id: domain_id} = domain = build(:domain)
-    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
-    TaxonomyCache.put_domain(domain)
-    [domain: domain]
+  setup :set_mox_from_context
+  setup :verify_on_exit!
+
+  setup do
+    start_supervised!(TdIe.Cache.IngestLoader)
+    start_supervised!(TdIe.Search.Cluster)
+    start_supervised!(TdIe.Search.IndexWorker)
+    :ok
   end
 
   defp to_rich_text(plain) do
     %{"document" => plain}
   end
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
-  end
-
   describe "GET /api/ingests/search" do
-    @tag :admin_authenticated
-    test "find ingests by id and status", %{conn: conn, domain: %{id: domain_id}} do
+    @tag authentication: [role: "admin"]
+    test "find ingests by id and status", %{conn: conn} do
+      %{id: domain_id} = CacheHelpers.put_domain()
+
       ids =
         [{"one", "draft"}, {"two", "published"}, {"three", "published"}]
         |> Enum.map(fn {name, status} ->
@@ -45,13 +46,10 @@ defmodule TdIeWeb.IngestControllerTest do
   describe "update ingest" do
     setup :create_template
 
-    @tag :admin_authenticated
-    test "renders ingest when data is valid", %{
-      conn: conn,
-      domain: domain,
-      swagger_schema: schema
-    } do
-      %{id: domain_id, name: domain_name} = domain
+    @tag authentication: [role: "admin"]
+    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
+      SearchHelpers.expect_bulk_index()
+      %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
       %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
       ingest_id = ingest.id
@@ -84,9 +82,9 @@ defmodule TdIeWeb.IngestControllerTest do
       Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
-      %{user_id: user_id} = build(:claims)
+      %{id: user_id} = CacheHelpers.put_user()
       ingest_version = insert(:ingest_version, last_change_by: user_id)
       ingest_id = ingest_version.ingest.id
 
@@ -122,7 +120,7 @@ defmodule TdIeWeb.IngestControllerTest do
       status_from = elem(transition, 0)
       status_to = elem(transition, 1)
 
-      @tag :admin_authenticated
+      @tag authentication: [role: "admin"]
       @tag status_from: status_from, status_to: status_to
       test "update ingest status change from #{status_from} to #{status_to}", %{
         conn: conn,
@@ -130,7 +128,8 @@ defmodule TdIeWeb.IngestControllerTest do
         status_from: status_from,
         status_to: status_to
       } do
-        %{user_id: user_id} = build(:claims)
+        SearchHelpers.expect_bulk_index()
+        %{id: user_id} = CacheHelpers.put_user()
 
         ingest_version = insert(:ingest_version, status: status_from, last_change_by: user_id)
 

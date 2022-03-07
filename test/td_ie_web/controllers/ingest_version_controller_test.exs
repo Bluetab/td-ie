@@ -2,35 +2,28 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
-  alias TdCache.TaxonomyCache
-  alias TdCache.UserCache
+  import Mox
 
-  setup_all do
-    %{id: domain_id} = domain = build(:domain)
-    on_exit(fn -> TaxonomyCache.delete_domain(domain_id) end)
-    TaxonomyCache.put_domain(domain)
-    Templates.create_template()
-    [domain: domain]
+  setup :set_mox_from_context
+  setup :verify_on_exit!
+
+  setup do
+    start_supervised!(TdIe.Cache.IngestLoader)
+    start_supervised!(TdIe.Search.Cluster)
+    start_supervised!(TdIe.Search.IndexWorker)
+    :ok
   end
 
-  setup %{conn: conn} = tags do
-    case tags[:claims] do
-      nil ->
-        :ok
-
-      %{user_id: user_id, user_name: user_name} ->
-        UserCache.put(%{id: user_id, user_name: user_name, full_name: "Full #{user_name}"})
-        on_exit(fn -> UserCache.delete(user_id) end)
-    end
-
-    [conn: put_req_header(conn, "accept", "application/json")]
+  setup do
+    Templates.create_template()
+    :ok
   end
 
   describe "GET /api/ingest_versions/:id" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "shows the specified ingest_version including it's name, description, domain and content",
-         %{conn: conn, domain: domain} do
-      %{id: domain_id, name: domain_name} = domain
+         %{conn: conn} do
+      %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       %{name: name, description: description, ingest_id: ingest_id, content: content} =
         ingest_version =
@@ -56,11 +49,16 @@ defmodule TdIeWeb.IngestVersionControllerTest do
              } = data
     end
 
-    @tag :admin_authenticated
-    test "excludes email and is_admin from last_change_user", %{
-      conn: conn,
-      claims: %{user_id: user_id, user_name: user_name}
-    } do
+    @tag authentication: [role: "admin"]
+    test "excludes email from last_change_user", %{conn: conn} do
+      %{
+        id: user_id,
+        external_id: external_id,
+        user_name: user_name,
+        full_name: full_name,
+        email: _
+      } = CacheHelpers.put_user()
+
       ingest_version = insert(:ingest_version, last_change_by: user_id)
 
       assert %{"data" => data} =
@@ -72,15 +70,24 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert last_change_user == %{
                "id" => user_id,
+               "external_id" => external_id,
                "user_name" => user_name,
-               "full_name" => "Full " <> user_name
+               "full_name" => full_name
              }
     end
   end
 
   describe "GET /api/ingest_versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all ingest_versions", %{conn: conn} do
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+          assert sort == ["_score", "name.raw"]
+          assert query == %{bool: %{filter: %{match_all: %{}}}}
+          SearchHelpers.hits_response([])
+      end)
+
       assert %{"data" => []} =
                conn
                |> get(Routes.ingest_version_path(conn, :index))
@@ -89,12 +96,25 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   describe "POST /api/ingest_versions/search" do
-    @tag :admin_authenticated
-    test "excludes email from last_change_by", %{
-      conn: conn,
-      claims: %{user_id: user_id, user_name: user_name}
-    } do
-      insert(:ingest_version, last_change_by: user_id)
+    @tag authentication: [role: "admin"]
+    test "excludes email from last_change_by", %{conn: conn} do
+      %{
+        id: user_id,
+        full_name: full_name,
+        external_id: external_id,
+        user_name: user_name,
+        email: _
+      } = CacheHelpers.put_user()
+
+      ingest_version = insert(:ingest_version, last_change_by: user_id)
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+          assert sort == ["_score", "name.raw"]
+          assert query == %{bool: %{filter: %{match_all: %{}}}}
+          SearchHelpers.hits_response([ingest_version])
+      end)
 
       assert %{"data" => data} =
                conn
@@ -105,20 +125,18 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert last_change_by == %{
                "id" => user_id,
-               "full_name" => "Full " <> user_name,
+               "external_id" => external_id,
+               "full_name" => full_name,
                "user_name" => user_name
              }
     end
   end
 
   describe "create ingest" do
-    @tag :admin_authenticated
-    test "renders ingest when data is valid", %{
-      conn: conn,
-      domain: domain,
-      swagger_schema: schema
-    } do
-      %{id: domain_id, name: domain_name} = domain
+    @tag authentication: [role: "admin"]
+    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
+      SearchHelpers.expect_bulk_index()
+      %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       creation_attrs = %{
         "content" => %{},
@@ -153,13 +171,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert data["domain"]["name"] == domain_name
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{
       conn: conn,
-      domain: domain,
       swagger_schema: schema
     } do
-      %{id: domain_id} = domain
+      %{id: domain_id} = CacheHelpers.put_domain()
 
       Templates.create_template(%{
         id: 0,
@@ -189,37 +206,49 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   describe "index_by_name" do
-    @tag :admin_authenticated
-    test "find ingest by name", %{conn: conn, domain: domain} do
-      %{id: domain_id} = domain
+    @tag authentication: [role: "admin"]
+    test "find ingest by name", %{conn: conn} do
+      %{id: domain_id} = CacheHelpers.put_domain()
 
-      Enum.each(
-        [{"one", "draft"}, {"two", "published"}, {"two", "published"}],
-        fn {name, status} ->
-          insert(:ingest_version, name: name, status: status, domain_id: domain_id)
-        end
-      )
+      %{id: id} =
+        one = insert(:ingest_version, name: "one", status: "draft", domain_id: domain_id)
 
-      assert %{"data" => data} =
-               conn
-               |> get(Routes.ingest_version_path(conn, :index), %{query: "two"})
-               |> json_response(:ok)
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+          assert sort == ["_score", "name.raw"]
+          assert %{bool: %{must: %{simple_query_string: %{query: "one*"}}}} = query
 
-      assert length(data) == 2
+          SearchHelpers.hits_response([one])
+      end)
 
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_version_path(conn, :index), %{query: "one"})
                |> json_response(:ok)
 
-      assert length(data) == 1
+      assert [%{"id" => ^id}] = data
     end
   end
 
   describe "versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists ingest_versions", %{conn: conn} do
-      %{name: name} = ingest_version = insert(:ingest_version)
+      %{name: name, ingest_id: ingest_id} = ingest_version = insert(:ingest_version)
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+          assert sort == ["_score", "name.raw"]
+
+          assert query == %{
+                   bool: %{
+                     filter: %{term: %{"ingest_id" => ingest_id}}
+                   }
+                 }
+
+          SearchHelpers.hits_response([ingest_version])
+      end)
 
       assert %{"data" => data} =
                conn
@@ -233,8 +262,10 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   describe "create new versions" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "create new version with modified template", %{conn: conn} do
+      SearchHelpers.expect_bulk_index()
+
       template_content = [
         %{
           "name" => "group",
@@ -279,8 +310,10 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   describe "update ingest_version" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders ingest_version when data is valid", %{conn: conn, swagger_schema: schema} do
+      SearchHelpers.expect_bulk_index()
+
       %{user_id: user_id} = build(:claims)
       ingest_version = insert(:ingest_version, last_change_by: user_id)
       ingest_version_id = ingest_version.id

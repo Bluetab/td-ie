@@ -289,7 +289,7 @@ defmodule TdIe.Ingests.IngestVersion do
 
     defp fetch_parent_ids(nil), do: []
 
-    defp fetch_parent_ids(domain_id), do: TaxonomyCache.get_parent_ids(domain_id)
+    defp fetch_parent_ids(domain_id), do: TaxonomyCache.reaching_domain_ids(domain_id)
 
     defp get_domain(id) do
       case TaxonomyCache.get_domain(id) do
@@ -305,7 +305,7 @@ defmodule TdIe.Ingests.IngestVersion do
     defp get_user(user_id) do
       case UserCache.get(user_id) do
         {:ok, nil} -> %{}
-        {:ok, %{} = user} -> Map.drop(user, [:email, :is_admin])
+        {:ok, %{} = user} -> Map.delete(user, :email)
       end
     end
   end

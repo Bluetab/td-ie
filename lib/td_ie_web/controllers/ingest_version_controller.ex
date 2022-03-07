@@ -10,11 +10,11 @@ defmodule TdIeWeb.IngestVersionController do
   import Canada, only: [can?: 2]
 
   alias TdCache.TemplateCache
-  alias TdIe.Ingest.Download
-  alias TdIe.Ingest.Search
   alias TdIe.Ingests
+  alias TdIe.Ingests.Download
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.Links
+  alias TdIe.Ingests.Search
   alias TdIe.Ingests.Workflow
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport

@@ -12,10 +12,20 @@ defmodule TdIe.Factory do
 
   def domain_factory do
     %{
-      id: sequence(:domain_id, &(&1 + 1_000_000)),
-      name: "domain name",
-      parent_ids: [],
+      id: System.unique_integer([:positive]),
+      external_id: sequence("domain_external_id"),
+      name: sequence("domain_name"),
       updated_at: DateTime.utc_now()
+    }
+  end
+
+  def user_factory do
+    %{
+      id: System.unique_integer([:positive]),
+      user_name: sequence("user_name"),
+      full_name: sequence("full_name"),
+      external_id: sequence("user_external_id"),
+      email: sequence("email") <> "@example.com"
     }
   end
 
@@ -24,8 +34,7 @@ defmodule TdIe.Factory do
       user_id: sequence(:user_id, & &1),
       user_name: sequence("user_name"),
       role: "user",
-      jti: sequence("jti"),
-      is_admin: Map.get(attrs, :role) == "admin"
+      jti: sequence("jti")
     }
     |> merge_attributes(attrs)
   end

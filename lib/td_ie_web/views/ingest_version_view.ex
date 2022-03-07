@@ -157,7 +157,7 @@ defmodule TdIeWeb.IngestVersionView do
 
   defp last_change_user(%{last_change_by: user_id}) do
     case UserCache.get(user_id) do
-      {:ok, %{} = user} -> Map.drop(user, [:email, :is_admin])
+      {:ok, %{} = user} -> Map.delete(user, :email)
       _ -> nil
     end
   end

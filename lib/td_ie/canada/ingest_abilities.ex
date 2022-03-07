@@ -13,10 +13,10 @@ defmodule TdIe.Canada.IngestAbilities do
     "versioned" => :view_versioned_ingests
   }
 
-  def can?(%Claims{is_admin: true}, :create_ingest), do: true
+  def can?(%Claims{role: "admin"}, :create_ingest), do: true
 
   def can?(%Claims{} = claims, :create_ingest) do
-    Permissions.has_any_permission_on_resource_type?(claims, [:create_ingest], :domain)
+    Permissions.authorized?(claims, :create_ingest)
   end
 
   def can?(%Claims{} = claims, :create_ingest, %{resource_id: domain_id}) do
@@ -63,7 +63,7 @@ defmodule TdIe.Canada.IngestAbilities do
       authorized?(claims, :delete_ingest, ingest_version)
   end
 
-  def can?(%Claims{is_admin: true}, :view_ingest, %IngestVersion{}), do: true
+  def can?(%Claims{role: "admin"}, :view_ingest, %IngestVersion{}), do: true
 
   def can?(%Claims{} = claims, :view_ingest, %IngestVersion{status: status} = ingest_version) do
     permission = Map.get(@status_to_permissions, status)
@@ -72,10 +72,13 @@ defmodule TdIe.Canada.IngestAbilities do
 
   def can?(%Claims{}, _action, _ingest_version), do: false
 
-  defp authorized?(%Claims{is_admin: true}, _permission, _), do: true
+  defp authorized?(%Claims{role: "admin"}, _permission, _), do: true
 
   defp authorized?(%Claims{} = claims, permission, %IngestVersion{ingest: ingest}) do
-    domain_id = ingest.domain_id
+    authorized?(claims, permission, ingest)
+  end
+
+  defp authorized?(%Claims{} = claims, permission, %{domain_id: domain_id}) do
     Permissions.authorized?(claims, permission, domain_id)
   end
 end

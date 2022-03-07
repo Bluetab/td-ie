@@ -11,7 +11,6 @@ defmodule TdIe.Search do
   @index "ingests"
 
   def search(query) do
-    Logger.debug(fn -> "Query: #{inspect(query)}" end)
     response = Elasticsearch.post(Cluster, "/#{@index}/_search", query)
 
     case response do

@@ -1,4 +1,4 @@
-defmodule TdIe.Ingest.Download do
+defmodule TdIe.Ingests.Download do
   @moduledoc """
   Helper module to download ingests.
   """

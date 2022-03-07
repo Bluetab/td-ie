@@ -5,6 +5,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   use TdIeWeb.ConnCase
   use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
+  import Mox
+
   @create_attrs %{
     end_timestamp: ~N[2010-04-17 14:00:00.000000],
     start_timestamp: ~N[2010-04-17 14:00:00.000000],
@@ -25,12 +27,18 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   }
   @invalid_attrs %{end_timestamp: nil, start_timestamp: nil, status: nil, ingest_id: nil}
 
-  setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+  setup :set_mox_from_context
+  setup :verify_on_exit!
+
+  setup do
+    start_supervised!(TdIe.Cache.IngestLoader)
+    start_supervised!(TdIe.Search.IndexWorker)
+    start_supervised!(TdIe.Search.Cluster)
+    :ok
   end
 
   describe "index" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "lists all ingest_executions", %{conn: conn, swagger_schema: schema} do
       %{id: ingest_id} = insert(:ingest)
       conn = get(conn, Routes.ingest_ingest_execution_path(conn, :index, ingest_id))
@@ -40,8 +48,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   end
 
   describe "create ingest_execution" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
+      SearchHelpers.expect_bulk_index()
+
       %{ingest_id: ingest_id} = insert(:ingest_version)
 
       assert %{"data" => %{"id" => id}} =
@@ -71,7 +81,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
              }
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
       %{id: ingest_id} = insert(:ingest)
 
@@ -87,11 +97,13 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   end
 
   describe "create ingest_execution_by_name" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders ingest_execution_by_name when data is valid", %{
       conn: conn,
       swagger_schema: schema
     } do
+      SearchHelpers.expect_bulk_index()
+
       insert(:ingest_version, name: "nombre sobrescrito")
 
       assert %{"data" => _data} =
@@ -104,7 +116,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                |> json_response(:created)
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
       insert(:ingest_version, name: "nombre sobrescrito")
 
@@ -119,7 +131,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       assert errors != %{}
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is valid, but name invalid", %{conn: conn} do
       insert(:ingest_version, name: "nombre sobrescrito")
 
@@ -136,8 +148,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   end
 
   describe "update ingest_execution" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
+      SearchHelpers.expect_bulk_index()
+
       %{ingest_id: ingest_id} = insert(:ingest_version)
       %{id: id} = ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
@@ -171,7 +185,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
              }
     end
 
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{conn: conn} do
       %{id: ingest_id} = ingest_execution = insert(:ingest_execution)
 
@@ -188,8 +202,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   end
 
   describe "delete ingest_execution" do
-    @tag :admin_authenticated
+    @tag authentication: [role: "admin"]
     test "deletes chosen ingest_execution", %{conn: conn} do
+      SearchHelpers.expect_bulk_index()
+
       %{ingest_id: ingest_id} = insert(:ingest_version)
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
