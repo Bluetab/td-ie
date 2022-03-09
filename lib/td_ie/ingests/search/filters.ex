@@ -3,7 +3,8 @@ defmodule TdIe.Ingests.Search.Filters do
   Functions for composing search query filters.
   """
 
-  import TdIe.Search.Query, only: [term: 2]
+  alias TdCache.TaxonomyCache
+  alias TdIe.Search.Query
 
   def build_filters(filters, aggs \\ %{}) do
     Enum.map(filters, &build_filter(&1, aggs))
@@ -40,5 +41,14 @@ defmodule TdIe.Ingests.Search.Filters do
 
   defp build_nested_query(%{terms: %{field: field}}, values) do
     term(field, values)
+  end
+
+  defp term("domain_ids", values) do
+    values = TaxonomyCache.reachable_domain_ids(values)
+    Query.term("domain_ids", values)
+  end
+
+  defp term(field, values) do
+    Query.term(field, values)
   end
 end

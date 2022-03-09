@@ -32,7 +32,6 @@ defmodule TdIe.Application do
       TdIe.Search.Cluster,
       TdIe.Search.IndexWorker,
       TdIe.Cache.IngestLoader,
-      TdIe.Cache.DomainEventConsumer,
       TdIe.Scheduler
     ]
   end

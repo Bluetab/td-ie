@@ -55,7 +55,6 @@ config :td_cache, :event_stream,
   consumer_group: "ie",
   streams: [
     [key: "template:events", consumer: TdIe.Search.IndexWorker],
-    [key: "domain:events", consumer: TdIe.Cache.DomainEventConsumer]
   ]
 
 config :td_ie, TdIe.Scheduler,

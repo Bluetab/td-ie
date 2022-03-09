@@ -16,14 +16,7 @@ defmodule TdIe.Ingests.Search.Aggregations do
       {"in_progress", %{terms: %{field: "in_progress"}}},
       {"template", %{terms: %{field: "template.label.raw", size: 50}}},
       {"execution_status", %{terms: %{field: "execution_status.raw", size: 50}}},
-      # TODO: Refactor
-      {"taxonomy",
-       %{
-         nested: %{path: "domain_parents"},
-         aggs: %{
-           distinct_search: %{terms: %{field: "domain_parents.id", size: 500}}
-         }
-       }}
+      {"taxonomy", %{terms: %{field: "domain_ids", size: 500}}}
     ]
 
     dynamic_keywords =

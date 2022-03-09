@@ -254,9 +254,8 @@ defmodule TdIe.Ingests.IngestVersion do
       %{type: type, domain_id: domain_id, executions: executions} = ingest
 
       template = TemplateCache.get_by_name!(type) || %{content: []}
-      domain = Ingests.get_domain(domain_id) || %{}
-      domain_ids = fetch_parent_ids(domain_id)
-      domain_parents = Enum.map(domain_ids, &get_domain/1)
+      domain = get_domain(domain_id)
+      domain_ids = List.wrap(domain_id)
       last_execution = Ingests.get_last_execution(executions)
 
       content =
@@ -280,23 +279,20 @@ defmodule TdIe.Ingests.IngestVersion do
       |> Map.put(:description, RichText.to_plain_text(iv.description))
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
       |> Map.put(:domain_ids, domain_ids)
-      |> Map.put(:domain_parents, domain_parents)
       |> Map.put(:last_change_by, get_last_change_by(iv))
       |> Map.put(:template, Map.take(template, [:name, :label]))
       |> Map.put(:execution_status, Map.get(last_execution, :status))
       |> Map.put(:last_execution, Map.get(last_execution, :execution))
     end
 
-    defp fetch_parent_ids(nil), do: []
-
-    defp fetch_parent_ids(domain_id), do: TaxonomyCache.reaching_domain_ids(domain_id)
-
-    defp get_domain(id) do
+    defp get_domain(id) when is_integer(id) do
       case TaxonomyCache.get_domain(id) do
         %{} = domain -> Map.take(domain, [:id, :external_id, :name])
         nil -> %{id: id}
       end
     end
+
+    defp get_domain(_id), do: %{}
 
     defp get_last_change_by(%IngestVersion{last_change_by: last_change_by}) do
       get_user(last_change_by)

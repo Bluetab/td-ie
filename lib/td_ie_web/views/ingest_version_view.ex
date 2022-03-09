@@ -82,7 +82,6 @@ defmodule TdIeWeb.IngestVersionView do
       "last_change_at",
       "inserted_at",
       "updated_at",
-      "domain_parents",
       "in_progress",
       "execution_status",
       "last_execution"
