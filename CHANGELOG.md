@@ -4,6 +4,7 @@
 
 ### Changed
 
+- [TD-4461] Avoid reindexing when a domain is modified
 - [TD-4491] Compatibility with new permissions model
 
 ## [4.36.0] 2022-01-24

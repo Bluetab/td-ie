@@ -44,8 +44,12 @@ defmodule TdIe.Search do
   defp filter_values({"taxonomy", %{"buckets" => buckets}}) do
     domains =
       buckets
-      |> Enum.map(& &1["key"])
-      |> Enum.map(&TaxonomyCache.get_domain/1)
+      |> Enum.flat_map(fn %{"key" => domain_id} ->
+        TdCache.TaxonomyCache.reaching_domain_ids(domain_id)
+      end)
+      |> Enum.uniq()
+      |> Enum.map(&get_domain/1)
+      |> Enum.reject(&is_nil/1)
 
     {"taxonomy", domains}
   end
@@ -59,4 +63,7 @@ defmodule TdIe.Search do
   end
 
   defp filter_values({name, %{"doc_count" => 0}}), do: {name, []}
+
+  defp get_domain(id) when is_integer(id), do: TaxonomyCache.get_domain(id)
+  defp get_domain(_), do: nil
 end
