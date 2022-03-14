@@ -22,7 +22,6 @@ config :td_ie, TdIe.Repo,
   username: "postgres",
   password: "postgres",
   database: "td_ie_dev",
-  hostname: "postgres",
-  pool_size: 10
+  hostname: "postgres"
 
 config :td_cache, redis_host: "redis"
