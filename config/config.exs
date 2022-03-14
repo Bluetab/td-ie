@@ -44,7 +44,7 @@ config :td_ie, TdIe.Auth.Guardian,
   ttl: {1, :hours},
   secret_key: "SuperSecretTruedat"
 
-config :td_ie, TdIe.Repo, pool_size: 10
+config :td_ie, TdIe.Repo, pool_size: 4
 
 config :td_cache, :audit,
   service: "td_ie",
