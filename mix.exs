@@ -6,7 +6,7 @@ defmodule TdIe.Mixfile do
       app: :td_ie,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "4.40.0-local"
+          nil -> "4.45.0-local"
           v -> v
         end,
       elixir: "~> 1.11",
@@ -52,9 +52,9 @@ defmodule TdIe.Mixfile do
       {:phoenix, "~> 1.5.0"},
       {:plug_cowboy, "~> 2.1"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.0"},
+      {:ecto_sql, "~> 3.8"},
       {:jason, "~> 1.0"},
-      {:postgrex, "~> 0.15.0"},
+      {:postgrex, "~> 0.16.3"},
       {:gettext, "~> 0.11"},
       {:httpoison, "~> 1.0"},
       {:guardian, "~> 2.0"},

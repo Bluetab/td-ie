@@ -31,8 +31,7 @@ defmodule TdIeWeb.IngestControllerTest do
         |> Enum.map(fn {name, status} ->
           insert(:ingest_version, name: name, status: status, domain_id: domain_id)
         end)
-        |> Enum.map(& &1.ingest_id)
-        |> Enum.join(",")
+        |> Enum.map_join(",", & &1.ingest_id)
 
       assert %{"data" => data} =
                conn
