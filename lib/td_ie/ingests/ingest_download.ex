@@ -93,8 +93,7 @@ defmodule TdIe.Ingests.Download do
     |> Enum.map(fn map_value ->
       Enum.find(values, fn %{"value" => value} -> value == map_value end)
     end)
-    |> Enum.map(&Map.get(&1, "text", ""))
-    |> Enum.join(", ")
+    |> Enum.map_join(", ", &Map.get(&1, "text", ""))
   end
 
   defp get_content_field(%{"type" => type, "name" => name}, content)
