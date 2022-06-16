@@ -4,6 +4,8 @@ defmodule TdIe.Ingests.IngestVersionTest do
   alias Ecto.Changeset
   alias TdIe.Ingests.IngestVersion
 
+  @unsafe "javascript:alert(document)"
+
   setup do
     identifier_name = "identifier"
 
@@ -200,6 +202,17 @@ defmodule TdIe.Ingests.IngestVersionTest do
 
       assert %{content: new_content} = changes
       assert %{^identifier_name => _identifier} = new_content
+    end
+
+    test "validates the safety of description and content" do
+      ingest_version = insert(:ingest_version)
+      params = %{"description" => %{"doc" => @unsafe}, "content" => %{"foo" => [@unsafe]}}
+
+      assert %{valid?: false, errors: errors} =
+               IngestVersion.update_changeset(ingest_version, params)
+
+      assert errors[:content] == {"invalid content", []}
+      assert errors[:description] == {"invalid content", []}
     end
   end
 end

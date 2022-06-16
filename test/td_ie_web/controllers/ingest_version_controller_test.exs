@@ -15,22 +15,21 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   end
 
   setup do
-    Templates.create_template()
-    :ok
+    [template: CacheHelpers.insert_template(name: "some_type", scope: "ie")]
   end
 
   describe "GET /api/ingest_versions/:id" do
     @tag authentication: [role: "admin"]
     test "shows the specified ingest_version including it's name, description, domain and content",
-         %{conn: conn} do
+         %{conn: conn, template: %{name: type}} do
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       %{name: name, description: description, ingest_id: ingest_id, content: content} =
         ingest_version =
         insert(
           :ingest_version,
-          ingest: build(:ingest, domain_id: domain_id),
-          content: %{"foo" => "bar"},
+          ingest: build(:ingest, domain_id: domain_id, type: type),
+          content: %{"list" => "two"},
           name: "Ingest Name",
           description: to_rich_text("The awesome ingest")
         )
@@ -315,8 +314,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       SearchHelpers.expect_bulk_index()
 
       %{user_id: user_id} = build(:claims)
-      ingest_version = insert(:ingest_version, last_change_by: user_id)
-      ingest_version_id = ingest_version.id
+      %{id: id} = insert(:ingest_version, last_change_by: user_id)
 
       update_attrs = %{
         "content" => %{},
@@ -325,10 +323,10 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         "in_progress" => false
       }
 
-      assert %{"data" => %{"id" => ^ingest_version_id}} =
+      assert %{"data" => %{"id" => ^id}} =
                conn
                |> put(
-                 Routes.ingest_version_path(conn, :update, ingest_version),
+                 Routes.ingest_version_path(conn, :update, id),
                  ingest_version: update_attrs
                )
                |> validate_resp_schema(schema, "IngestVersionResponse")
@@ -336,7 +334,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert %{"data" => data} =
                conn
-               |> get(Routes.ingest_version_path(conn, :show, ingest_version_id))
+               |> get(Routes.ingest_version_path(conn, :show, id))
                |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:ok)
 

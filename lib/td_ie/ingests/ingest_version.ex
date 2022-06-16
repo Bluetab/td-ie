@@ -5,6 +5,7 @@ defmodule TdIe.Ingests.IngestVersion do
 
   import Ecto.Changeset
 
+  alias TdDfLib.Validation
   alias TdIe.Ingests
   alias TdIe.Ingests.Ingest
   alias TdIe.Ingests.IngestVersion
@@ -58,6 +59,8 @@ defmodule TdIe.Ingests.IngestVersion do
     |> put_change(:status, "draft")
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
+    |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   def update_changeset(%IngestVersion{} = ingest_version, attrs) do
@@ -83,12 +86,14 @@ defmodule TdIe.Ingests.IngestVersion do
     |> maybe_put_identifier(ingest_version)
     |> validate_length(:name, max: 255)
     |> validate_length(:mod_comments, max: 500)
+    |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   def status_changeset(%IngestVersion{} = ingest_version, status, user_id) do
     ingest_version
     |> cast(%{status: status}, [:status])
-    |> validate_required([:status])
+    |> validate_required(:status)
     |> validate_inclusion(:status, @valid_status)
     |> put_audit(user_id)
   end
@@ -136,6 +141,8 @@ defmodule TdIe.Ingests.IngestVersion do
       :in_progress
     ])
     |> maybe_put_identifier(ingest_version)
+    |> validate_change(:description, &Validation.validate_safe/2)
+    |> validate_change(:content, &Validation.validate_safe/2)
   end
 
   defp maybe_put_identifier(
