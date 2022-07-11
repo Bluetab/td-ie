@@ -3,7 +3,7 @@
 #
 # This configuration file is loaded before any dependency and
 # is restricted to this project.
-use Mix.Config
+import Config
 
 # Environment
 config :td_ie, :env, Mix.env()
@@ -38,7 +38,6 @@ config :td_ie, :phoenix_swagger,
   }
 
 config :td_ie, TdIe.Auth.Guardian,
-  # optional
   allowed_algos: ["HS512"],
   issuer: "tdauth",
   ttl: {1, :hours},

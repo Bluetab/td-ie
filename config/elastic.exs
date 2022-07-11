@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :td_ie, TdIe.Search.Cluster,
   # The URL where Elasticsearch is hosted on your system
