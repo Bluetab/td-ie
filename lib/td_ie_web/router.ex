@@ -2,18 +2,13 @@ defmodule TdIeWeb.Router do
   use TdIeWeb, :router
 
   pipeline :api do
-    plug(TdIe.Auth.Pipeline.Unsecure)
-    plug(TdIeWeb.Locale)
-    plug(:accepts, ["json"])
+    plug TdIe.Auth.Pipeline.Unsecure
+    plug TdIeWeb.Locale
+    plug :accepts, ["json"]
   end
 
-  pipeline :api_secure do
-    plug(TdIe.Auth.Pipeline.Secure)
-  end
-
-  pipeline :api_authorized do
-    plug(TdIe.Auth.CurrentResource)
-    plug(Guardian.Plug.LoadResource)
+  pipeline :api_auth do
+    plug TdIe.Auth.Pipeline.Secure
   end
 
   scope "/api/swagger" do
@@ -21,13 +16,13 @@ defmodule TdIeWeb.Router do
   end
 
   scope "/api", TdIeWeb do
-    pipe_through(:api)
+    pipe_through :api
     get("/ping", PingController, :ping)
     post("/echo", EchoController, :echo)
   end
 
   scope "/api", TdIeWeb do
-    pipe_through([:api, :api_secure, :api_authorized])
+    pipe_through [:api, :api_auth]
 
     post("/ingest_versions/csv", IngestVersionController, :csv)
     put("/ingest_versions/:id", IngestVersionController, :update)

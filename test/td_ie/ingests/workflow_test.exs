@@ -21,8 +21,8 @@ defmodule TdIe.Ingests.WorkflowTest do
   end
 
   setup do
-    on_exit(fn -> TdCache.Redix.del!(@stream) end)
     TdCache.Redix.del!(@stream)
+    on_exit(fn -> TdCache.Redix.del!(@stream) end)
     :ok
   end
 
