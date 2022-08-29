@@ -15,7 +15,6 @@ defmodule TdIe.Ingests do
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
   alias TdIe.Search.Indexer
-  alias ValidationError
 
   @doc """
   check ingest name availability

@@ -44,7 +44,11 @@ defmodule TdIe.Ingests.Search.Aggregations do
     {field, %{terms: %{field: "content.#{field}.raw", size: 50}}}
   end
 
-  defp content_term(%{"name" => field, "type" => type}) when type in ["domain", "external_id"] do
+  defp content_term(%{"name" => field, "type" => "domain"}) do
+    {field, %{terms: %{field: "content.#{field}", size: 50}, meta: %{type: "domain"}}}
+  end
+
+  defp content_term(%{"name" => field, "type" => "system"}) do
     {field,
      %{
        nested: %{path: "content.#{field}"},

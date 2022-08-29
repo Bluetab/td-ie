@@ -62,6 +62,11 @@ config :td_ie, TdIe.Scheduler,
       schedule: "@daily",
       task: {TdIe.Search.IndexWorker, :reindex, []},
       run_strategy: Quantum.RunStrategy.Local
+    ],
+    [
+      schedule: "@reboot",
+      task: {TdIe.Jobs.UpdateDomainFields, :run, []},
+      run_strategy: Quantum.RunStrategy.Local
     ]
   ]
 
