@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-5091] Dynamic `domain` fields are now integer ids instead of embedded
+  documents
+
 ## [4.48.0] 2022-07-26
 
 ### Fixed

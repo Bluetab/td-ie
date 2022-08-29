@@ -20,15 +20,6 @@ config :td_cache,
 
 config :td_cache, :event_stream, consumer_id: System.fetch_env!("HOSTNAME")
 
-config :td_ie, TdIe.Scheduler,
-  jobs: [
-    [
-      schedule: "@daily",
-      task: {TdIe.Search.IndexWorker, :reindex, []},
-      run_strategy: Quantum.RunStrategy.Local
-    ]
-  ]
-
 with username when not is_nil(username) <- System.get_env("ES_USERNAME"),
      password when not is_nil(password) <- System.get_env("ES_PASSWORD") do
   config :td_ie, TdIe.Search.Cluster,
