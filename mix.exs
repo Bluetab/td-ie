@@ -74,7 +74,8 @@ defmodule TdIe.Mixfile do
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.3", only: :test},
       {:assertions, "~> 0.19", only: :test},
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+      {:sobelow, "~> 0.11", only: [:dev, :test]}
     ]
   end
 
