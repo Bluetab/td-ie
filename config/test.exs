@@ -7,6 +7,9 @@ config :td_ie, TdIeWeb.Endpoint, server: false
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+# Track all Plug compile-time dependencies
+config :phoenix, :plug_init_mode, :runtime
+
 # Configure your database
 config :td_ie, TdIe.Repo,
   adapter: Ecto.Adapters.Postgres,

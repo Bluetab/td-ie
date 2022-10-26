@@ -22,6 +22,7 @@ config :td_ie, TdIe.Repo,
   username: "postgres",
   password: "postgres",
   database: "td_ie_dev",
-  hostname: "postgres"
+  hostname: "postgres",
+  stacktrace: true
 
 config :td_cache, redis_host: "redis"
