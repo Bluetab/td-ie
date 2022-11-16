@@ -81,7 +81,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
     test "lists all ingest_versions", %{conn: conn} do
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
           assert query == %{bool: %{filter: %{match_all: %{}}}}
           SearchHelpers.hits_response([])
@@ -109,7 +110,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
           assert query == %{bool: %{filter: %{match_all: %{}}}}
           SearchHelpers.hits_response([ingest_version])
@@ -214,7 +216,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
           assert %{bool: %{must: %{simple_query_string: %{query: "one*"}}}} = query
 
@@ -237,7 +240,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, [] ->
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
 
           assert query == %{
