@@ -12,12 +12,16 @@ defmodule SearchHelpers do
   }
 
   def aggs_response(aggs \\ @aggs, total \\ 100) do
-    {:ok, %{"aggregations" => aggs, "hits" => %{"hits" => [], "total" => total}}}
+    {:ok,
+     %{
+       "aggregations" => aggs,
+       "hits" => %{"hits" => [], "total" => %{"relation" => "eq", "value" => total}}
+     }}
   end
 
   def hits_response(hits, total \\ 100) do
     hits = Enum.map(hits, &encode/1)
-    {:ok, %{"hits" => %{"hits" => hits, "total" => total}}}
+    {:ok, %{"hits" => %{"hits" => hits, "total" => %{"relation" => "eq", "value" => total}}}}
   end
 
   defp encode(%TdIe.Ingests.IngestVersion{id: id} = ingest_version) do
