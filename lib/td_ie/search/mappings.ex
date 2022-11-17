@@ -56,7 +56,7 @@ defmodule TdIe.Search.Mappings do
       }
     }
 
-    %{mappings: %{_doc: %{properties: mapping_type}}, settings: settings}
+    %{mappings: %{properties: mapping_type}, settings: settings}
   end
 
   def get_dynamic_mappings do
