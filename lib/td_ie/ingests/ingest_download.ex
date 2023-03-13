@@ -3,6 +3,7 @@ defmodule TdIe.Ingests.Download do
   Helper module to download ingests.
   """
 
+  alias TdCache.HierarchyCache
   alias TdCache.TemplateCache
   alias TdDfLib.Format
 
@@ -104,6 +105,25 @@ defmodule TdIe.Ingests.Download do
     |> Enum.map(&Map.get(&1, "name"))
     |> Enum.reject(&is_nil/1)
     |> Enum.join(", ")
+  end
+
+  defp get_content_field(
+         %{"type" => "hierarchy", "name" => name, "values" => %{"hierarchy" => hierarchy_id}},
+         content
+       ) do
+    {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
+
+    content
+    |> Map.get(name, [])
+    |> content_to_list()
+    |> Enum.map(
+      &Enum.find(nodes, fn %{"node_id" => node_id} ->
+        [_hierarchy_id, content_node_id] = String.split(&1, "_")
+        node_id === String.to_integer(content_node_id)
+      end)
+    )
+    |> Enum.reject(&is_nil/1)
+    |> Enum.map_join(", ", fn %{"name" => name} -> name end)
   end
 
   defp get_content_field(%{"type" => "table"}, _content), do: ""

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-3806] Hierarchy template cache implementation 
+
 ## [4.56.0] 2022-11-28
 
 ### Added
