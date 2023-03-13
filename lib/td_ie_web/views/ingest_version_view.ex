@@ -195,7 +195,7 @@ defmodule TdIeWeb.IngestVersionView do
         content =
           ingest
           |> Map.get(:content)
-          |> Format.enrich_content_values(template)
+          |> Format.enrich_content_values(template, [:system, :hierarchy])
 
         Map.put(ingest, :content, content)
     end
