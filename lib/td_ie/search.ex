@@ -55,7 +55,11 @@ defmodule TdIe.Search do
       |> Enum.map(&get_domain/1)
       |> Enum.reject(&is_nil/1)
 
-    {"taxonomy", domains}
+    {"taxonomy",
+     %{
+       type: :domain,
+       values: domains
+     }}
   end
 
   defp filter_values({name, %{"meta" => %{"type" => "domain"}, "buckets" => buckets}}) do
@@ -64,7 +68,11 @@ defmodule TdIe.Search do
       |> Enum.map(fn %{"key" => domain_id} -> get_domain(domain_id) end)
       |> Enum.reject(&is_nil/1)
 
-    {name, domains}
+    {name,
+     %{
+       type: :domain,
+       values: domains
+     }}
   end
 
   defp filter_values({name, %{"meta" => %{"type" => "hierarchy"}, "buckets" => buckets}}) do
@@ -73,18 +81,22 @@ defmodule TdIe.Search do
       |> Enum.map(fn %{"key" => key} -> get_hierarchy(key) end)
       |> Enum.reject(&is_nil/1)
 
-    {name, node_names}
+    {name,
+     %{
+       type: :hierarchy,
+       values: node_names
+     }}
   end
 
   defp filter_values({name, %{"buckets" => buckets}}) do
-    {name, buckets |> Enum.map(& &1["key"])}
+    {name, %{values: Enum.map(buckets, & &1["key"])}}
   end
 
   defp filter_values({name, %{"distinct_search" => distinct_search}}) do
     filter_values({name, distinct_search})
   end
 
-  defp filter_values({name, %{"doc_count" => 0}}), do: {name, []}
+  defp filter_values({name, %{"doc_count" => 0}}), do: {name, %{values: []}}
 
   defp get_domain(""), do: nil
   defp get_domain(id) when is_integer(id) or is_binary(id), do: TaxonomyCache.get_domain(id)

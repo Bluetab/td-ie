@@ -29,7 +29,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => ["bar", "baz"]}
+      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
     end
 
     @tag authentication: [user_name: "not_an_admin", permissions: ["view_published_ingests"]]
@@ -58,7 +58,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => ["bar", "baz"]}
+      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
     end
 
     @tag authentication: [user_name: "not_an_admin"]
@@ -75,7 +75,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => ["bar", "baz"]}
+      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
     end
   end
 end
