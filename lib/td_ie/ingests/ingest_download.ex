@@ -108,10 +108,18 @@ defmodule TdIe.Ingests.Download do
   end
 
   defp get_content_field(
-         %{"type" => "hierarchy", "name" => name, "values" => %{"hierarchy" => hierarchy_id}},
+         %{
+           "type" => "hierarchy",
+           "name" => name,
+           "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
+         },
          content
        ) do
-    {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
+    nodes =
+      case HierarchyCache.get(hierarchy_id, :nodes) do
+        {:ok, nil} -> []
+        {:ok, nodes} -> nodes
+      end
 
     content
     |> Map.get(name, [])
