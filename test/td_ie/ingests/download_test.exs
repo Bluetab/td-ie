@@ -11,6 +11,8 @@ defmodule TdIe.Ingests.DownloadTests do
       template_name = "template_name"
       field_name = "field_name"
       field_label = "field_label"
+      hierarchy_name = "hierarchy_field_name"
+      hierarchy_label = "hierarchy_label"
 
       Templates.create_template(%{
         id: 0,
@@ -25,6 +27,13 @@ defmodule TdIe.Ingests.DownloadTests do
                 "name" => field_name,
                 "type" => "list",
                 "label" => field_label
+              },
+              %{
+                "name" => "hierarchy_field_name",
+                "label" => "hierarchy_label",
+                "type" => "hierarchy",
+                "cardinality" => "?",
+                "values" => %{"hierarchy" => %{"id" => 1}}
               }
             ]
           }
@@ -35,6 +44,7 @@ defmodule TdIe.Ingests.DownloadTests do
       ingest_description = "ingest_description"
       domain_name = "domain_name"
       field_value = "field_value"
+      hierarchy_value = ["23_4"]
       ingest_status = "draft"
       inserted_at = "2018-05-05"
 
@@ -47,7 +57,8 @@ defmodule TdIe.Ingests.DownloadTests do
             "name" => domain_name
           },
           "content" => %{
-            field_name => field_value
+            field_name => field_value,
+            hierarchy_name => hierarchy_value
           },
           "status" => ingest_status,
           "inserted_at" => inserted_at
@@ -57,7 +68,7 @@ defmodule TdIe.Ingests.DownloadTests do
       csv = Download.to_csv(ingests)
 
       assert csv ==
-               "template;name;domain;status;description;inserted_at;#{field_label}\r\n#{template_name};#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{inserted_at};#{field_value}\r\n"
+               "template;name;domain;status;description;inserted_at;#{field_label};#{hierarchy_label}\r\n#{template_name};#{ingest_name};#{domain_name};#{ingest_status};#{ingest_description};#{inserted_at};#{field_value};\r\n"
     end
   end
 end
