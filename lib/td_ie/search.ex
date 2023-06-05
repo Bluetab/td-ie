@@ -78,7 +78,7 @@ defmodule TdIe.Search do
   defp filter_values({name, %{"meta" => %{"type" => "hierarchy"}, "buckets" => buckets}}) do
     node_names =
       buckets
-      |> Enum.map(fn %{"key" => key} -> get_hierarchy(key) end)
+      |> Enum.map(fn %{"key" => key} -> get_hierarchy_node(key) end)
       |> Enum.reject(&is_nil/1)
 
     {name,
@@ -105,25 +105,13 @@ defmodule TdIe.Search do
   defp get_total(value) when is_integer(value), do: value
   defp get_total(%{"relation" => "eq", "value" => value}) when is_integer(value), do: value
 
-  defp get_hierarchy(""), do: nil
+  defp get_hierarchy_node(key) when is_binary(key) do
+    case HierarchyCache.get_node!(key) do
+      %{"name" => name} ->
+        %{id: key, name: name}
 
-  defp get_hierarchy(key) when is_binary(key) do
-    [hierarchy_id, node_id] = String.split(key, "_")
-
-    case HierarchyCache.get(hierarchy_id) do
-      {:ok, %{nodes: nodes}} ->
-        case Enum.find(nodes, &(Map.get(&1, "node_id") === String.to_integer(node_id))) do
-          nil ->
-            nil
-
-          %{"name" => name} ->
-            %{id: key, name: name}
-        end
-
-      _ ->
+      nil ->
         nil
     end
   end
-
-  defp get_hierarchy(_), do: nil
 end
