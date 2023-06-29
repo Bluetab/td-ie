@@ -131,6 +131,42 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                "user_name" => user_name
              }
     end
+
+    @tag authentication: [role: "admin"]
+    test "excludes email from last_change_by with must params", %{conn: conn} do
+      %{
+        id: user_id,
+        full_name: full_name,
+        external_id: external_id,
+        user_name: user_name,
+        email: _
+      } = CacheHelpers.put_user()
+
+      ingest_version = insert(:ingest_version, last_change_by: user_id)
+
+      ElasticsearchMock
+      |> expect(:request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
+          assert sort == ["_score", "name.raw"]
+          assert query == %{bool: %{must: %{match_all: %{}}}}
+          SearchHelpers.hits_response([ingest_version])
+      end)
+
+      assert %{"data" => data} =
+               conn
+               |> post(Routes.ingest_version_path(conn, :search), %{"must" => %{}})
+               |> json_response(:ok)
+
+      assert [%{"last_change_by" => last_change_by}] = data
+
+      assert last_change_by == %{
+               "id" => user_id,
+               "external_id" => external_id,
+               "full_name" => full_name,
+               "user_name" => user_name
+             }
+    end
   end
 
   describe "create ingest" do

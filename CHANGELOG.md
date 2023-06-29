@@ -11,6 +11,7 @@
 ### Added
 
 - [TD-3916] Update td-df-lib version
+- [TD-5787] Add multi_match param in elastic query for Boost option
 
 ### Changed
 
