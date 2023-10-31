@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.17.0] 2023-10-31
+
+### Added
+
+- [TD-6103] Allow empty option for domain type filter
+
 ## [5.13.1] 2023-09-14
 
 ### Fixed
@@ -8,19 +14,19 @@
 
 ## [5.13.0] 2023-09-05
 
-## Changed
+### Changed
 
 - [TD-5913] Update td-df-lib to fix depends validation
 
 ## [5.10.0] 2023-07-06
 
-## Changed
+### Changed
 
 - [TD-5912] `.gitlab-ci.yml` adaptations for develop and main branches
 
 ## [5.9.0] 2023-06-20
 
-## Added
+### Added
 
 - [TD-5770] Add database TSL configuration
 
