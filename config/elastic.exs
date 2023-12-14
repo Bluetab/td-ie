@@ -1,6 +1,6 @@
 import Config
 
-config :td_ie, TdIe.Search.Cluster,
+config :td_core, TdCore.Search.Cluster,
   # The URL where Elasticsearch is hosted on your system
   # override this in prod.exs
   url: "http://elastic:9200",
@@ -10,8 +10,18 @@ config :td_ie, TdIe.Search.Cluster,
   # here. It must implement the Elasticsearch.API behaviour.
   api: Elasticsearch.API.HTTP,
 
+  # Aggregations default
+  aggregations: %{
+    "user" => 50,
+    "domain" => 50,
+    "system" => 50
+  },
+
   # Customize the library used for JSON encoding/decoding.
   json_library: Jason,
+  aliases: %{
+    ingests: "ingests"
+  },
 
   # You should configure each index which you maintain in Elasticsearch here.
   # This configuration will be read by the `mix elasticsearch.build` task,
@@ -21,6 +31,9 @@ config :td_ie, TdIe.Search.Cluster,
     # built with a timestamp included in the name, like "posts-5902341238".
     # It will then be aliased to "posts" for easy querying.
     ingests: %{
+      ## Template scope for consumer events in redis
+      template_scope: :ie,
+
       # This file describes the mappings and settings for your index. It will
       # be posted as-is to Elasticsearch when you create your index, and
       # therefore allows all the settings you could post directly.

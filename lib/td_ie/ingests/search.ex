@@ -3,16 +3,22 @@ defmodule TdIe.Ingests.Search do
   Helper module to construct ingest search queries.
   """
 
+  alias TdCore.Search
+  alias TdCore.Search.ElasticDocumentProtocol
+  alias TdCore.Search.Permissions
   alias TdIe.Auth.Claims
-  alias TdIe.Ingests.Search.Aggregations
+  alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.Search.Query
-  alias TdIe.Permissions
-  alias TdIe.Search
+  alias TdIe.Permissions, as: TdIePermissions
+
+  @index :ingests
 
   def get_filter_values(%Claims{} = claims, params) do
     query = build_query(claims, params)
-    search = %{query: query, aggs: Aggregations.aggregations(), size: 0}
-    Search.get_filters(search)
+    aggs = ElasticDocumentProtocol.aggregations(%IngestVersion{})
+    search = %{query: query, aggs: aggs, size: 0}
+    {:ok, response} = Search.get_filters(search, @index)
+    response
   end
 
   def list_ingest_versions(ingest_id, claims) do
@@ -31,15 +37,17 @@ defmodule TdIe.Ingests.Search do
   end
 
   defp build_query(%Claims{} = claims, params) do
-    claims
-    |> Permissions.get_search_permissions()
+    permissions = TdIePermissions.get_default_permissions()
+
+    permissions
+    |> Permissions.get_search_permissions(claims)
     |> Query.build_filters()
     |> Query.build_query(params)
   end
 
   defp do_search(search) do
-    case Search.search(search) do
-      %{results: results, total: total} ->
+    case Search.search(search, @index) do
+      {:ok, %{results: results, total: total}} ->
         %{results: Enum.map(results, &Map.get(&1, "_source", %{})), total: total}
     end
   end
