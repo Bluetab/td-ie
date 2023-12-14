@@ -40,7 +40,7 @@ defmodule TdIe.DataCase do
         pid -> Sandbox.allow(TdIe.Repo, parent, pid)
       end
 
-      case Process.whereis(TdIe.Search.IndexWorker) do
+      case Process.whereis(TdCore.Search.IndexWorker) do
         nil -> nil
         pid -> Sandbox.allow(TdIe.Repo, parent, pid)
       end

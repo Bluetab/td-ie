@@ -7,6 +7,9 @@ import Config
 
 # Environment
 config :td_ie, :env, Mix.env()
+config :td_cluster, :env, Mix.env()
+config :td_cluster, groups: [:ie]
+config :td_core, :env, Mix.env()
 
 # General application configuration
 config :td_ie,
@@ -23,7 +26,8 @@ config :td_ie, TdIeWeb.Endpoint,
 # (without the 'end of line' character)
 # EX_LOGGER_FORMAT='$date $time [$level] $message'
 config :logger, :console,
-  format: (System.get_env("EX_LOGGER_FORMAT") || "$time $metadata[$level] $message") <> "\n",
+  format:
+    (System.get_env("EX_LOGGER_FORMAT") || "$date\T$time\Z [$level] $metadata$message") <> "\n",
   level: :info,
   metadata: [:pid, :module],
   utc_log: true
@@ -53,14 +57,14 @@ config :td_cache, :event_stream,
   consumer_id: "default",
   consumer_group: "ie",
   streams: [
-    [key: "template:events", consumer: TdIe.Search.IndexWorker]
+    [key: "template:events", consumer: TdCore.Search.IndexWorker]
   ]
 
 config :td_ie, TdIe.Scheduler,
   jobs: [
     [
       schedule: "@daily",
-      task: {TdIe.Search.IndexWorker, :reindex, []},
+      task: {TdCore.Search.IndexWorker, :reindex, [:ingests, :all]},
       run_strategy: Quantum.RunStrategy.Local
     ],
     [

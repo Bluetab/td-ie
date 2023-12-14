@@ -1,7 +1,14 @@
 defmodule TdIe.Ingests.Search.AggregationsTest do
   use TdIe.DataCase
 
-  alias TdIe.Ingests.Search.Aggregations
+  alias TdCore.Search.ElasticDocumentProtocol
+  alias TdIe.Ingests.IngestVersion
+
+  setup_all do
+    start_supervised!(TdCore.Search.Cluster)
+
+    :ok
+  end
 
   describe "aggregations" do
     test "aggregations/0 returns aggregation terms of type user with size 50" do
@@ -23,7 +30,7 @@ defmodule TdIe.Ingests.Search.AggregationsTest do
         scope: "ie"
       })
 
-      aggs = Aggregations.aggregations()
+      aggs = ElasticDocumentProtocol.aggregations(%IngestVersion{})
 
       %{field: field, size: size} =
         aggs

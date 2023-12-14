@@ -40,7 +40,7 @@ defmodule TdIeWeb.ConnCase do
     unless tags[:async] do
       Sandbox.mode(TdIe.Repo, {:shared, self()})
       parent = self()
-      allow(parent, [TdIe.Cache.IngestLoader, TdIe.Search.IndexWorker])
+      allow(parent, [TdIe.Cache.IngestLoader, TdCore.Search.IndexWorker])
     end
 
     case tags[:authentication] do
