@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.20.0] 2023-12-19
+
+### Changed
+
+- [TD-6234] Use td-core-lib for elastic search and reindex
+
 ## [5.18.0] 2023-11-13
 
 ### Changed

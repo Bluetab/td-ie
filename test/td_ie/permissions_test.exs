@@ -1,12 +1,15 @@
 defmodule TdIe.PermissionsTest do
   use TdIeWeb.ConnCase
 
-  alias TdIe.Permissions
+  alias TdCore.Search.Permissions
+  alias TdIe.Permissions, as: TdIePermissions
+
+  @permissions TdIePermissions.get_default_permissions()
 
   describe "Permissions.get_search_permissions/1" do
     @tag authentication: [role: "admin"]
     test "returns a map with values :all for admin role", %{claims: claims} do
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "view_approval_pending_ingests" => :all,
                "view_deprecated_ingests" => :all,
                "view_draft_ingests" => :all,
@@ -18,7 +21,7 @@ defmodule TdIe.PermissionsTest do
 
     @tag authentication: [user_name: "not_an_admin"]
     test "returns a map with :none values for regular users", %{claims: claims} do
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "view_approval_pending_ingests" => :none,
                "view_deprecated_ingests" => :none,
                "view_draft_ingests" => :none,
@@ -32,7 +35,7 @@ defmodule TdIe.PermissionsTest do
     test "includes :all values for default permissions", %{claims: claims} do
       CacheHelpers.put_default_permissions(["view_published_ingests", "foo"])
 
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "view_approval_pending_ingests" => :none,
                "view_deprecated_ingests" => :none,
                "view_draft_ingests" => :none,
@@ -57,7 +60,7 @@ defmodule TdIe.PermissionsTest do
         "view_deprecated_ingests" => [id3]
       })
 
-      assert Permissions.get_search_permissions(claims) == %{
+      assert Permissions.get_search_permissions(@permissions, claims) == %{
                "view_approval_pending_ingests" => :none,
                "view_deprecated_ingests" => [id3],
                "view_draft_ingests" => :none,

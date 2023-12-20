@@ -7,13 +7,16 @@ defmodule TdIeWeb.IngestControllerTest do
 
   import Mox
 
+  alias TdCore.Search.MockIndexWorker
+
   setup :set_mox_from_context
   setup :verify_on_exit!
 
   setup do
     start_supervised!(TdIe.Cache.IngestLoader)
-    start_supervised!(TdIe.Search.Cluster)
-    start_supervised!(TdIe.Search.IndexWorker)
+    start_supervised!(TdCore.Search.Cluster)
+    start_supervised!(TdCore.Search.IndexWorker)
+
     :ok
   end
 
@@ -47,7 +50,6 @@ defmodule TdIeWeb.IngestControllerTest do
 
     @tag authentication: [role: "admin"]
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      SearchHelpers.expect_bulk_index()
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
       %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
@@ -79,6 +81,7 @@ defmodule TdIeWeb.IngestControllerTest do
       assert data["domain"]["name"] == domain_name
 
       Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
+      assert [{:reindex, :ingests, [_]}] = MockIndexWorker.calls()
     end
 
     @tag authentication: [role: "admin"]
@@ -127,7 +130,6 @@ defmodule TdIeWeb.IngestControllerTest do
         status_from: status_from,
         status_to: status_to
       } do
-        SearchHelpers.expect_bulk_index()
         %{id: user_id} = CacheHelpers.put_user()
 
         ingest_version = insert(:ingest_version, status: status_from, last_change_by: user_id)
@@ -154,6 +156,7 @@ defmodule TdIeWeb.IngestControllerTest do
                  |> json_response(:ok)
 
         assert %{"status" => ^status_to} = data
+        assert [{:reindex, :ingests, [_]}] = MockIndexWorker.calls()
       end
     end)
   end

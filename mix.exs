@@ -6,10 +6,10 @@ defmodule TdIe.Mixfile do
       app: :td_ie,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "5.18.0-local"
+          nil -> "5.20.0-local"
           v -> v
         end,
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
@@ -31,7 +31,7 @@ defmodule TdIe.Mixfile do
   def application do
     [
       mod: {TdIe.Application, []},
-      extra_applications: [:logger, :runtime_tools, :td_cache]
+      extra_applications: [:logger, :runtime_tools, :td_cache, :td_core]
     ]
   end
 
@@ -64,12 +64,11 @@ defmodule TdIe.Mixfile do
       {:ex_json_schema, "~> 0.7.3"},
       {:json_diff, "~> 0.1.0"},
       {:csv, "~> 2.4"},
-      {:elasticsearch,
-       git: "https://github.com/Bluetab/elasticsearch-elixir.git",
-       branch: "feature/bulk-index-action"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "5.14.0"},
-      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "5.18.0"},
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "5.20.0"},
+      {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "5.20.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.54.0"},
+      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.17.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "5.20.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ex_machina, "~> 2.3", only: :test},
