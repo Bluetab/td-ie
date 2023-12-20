@@ -10,7 +10,8 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   setup :verify_on_exit!
 
   setup do
-    start_supervised!(TdIe.Search.Cluster)
+    start_supervised!(TdCore.Search.Cluster)
+
     :ok
   end
 
@@ -19,7 +20,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
     test "lists all filters (admin user)", %{conn: conn} do
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [] ->
+        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
           assert query == %{bool: %{filter: %{match_all: %{}}}}
           SearchHelpers.aggs_response()
       end)
@@ -29,14 +30,14 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
+      assert %{"foo" => %{"values" => ["bar", "baz"]}} = data
     end
 
     @tag authentication: [user_name: "not_an_admin", permissions: ["view_published_ingests"]]
     test "lists all filters (regular user)", %{conn: conn, domain_id: domain_id} do
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [] ->
+        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
           assert query == %{
                    bool: %{
                      filter: %{
@@ -58,14 +59,14 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
+      assert %{"foo" => %{"values" => ["bar", "baz"]}} = data
     end
 
     @tag authentication: [user_name: "not_an_admin"]
     test "lists all filters (user with no permissions)", %{conn: conn} do
       ElasticsearchMock
       |> expect(:request, fn
-        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [] ->
+        _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
           assert query == %{bool: %{filter: %{match_none: %{}}}}
           SearchHelpers.aggs_response()
       end)
@@ -75,7 +76,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
                |> get(Routes.ingest_filter_path(conn, :index))
                |> json_response(:ok)
 
-      assert data == %{"foo" => %{"values" => ["bar", "baz"]}}
+      assert %{"foo" => %{"values" => ["bar", "baz"]}} = data
     end
   end
 end

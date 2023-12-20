@@ -3,6 +3,7 @@ defmodule TdIe.Application do
 
   use Application
 
+  alias TdCore.Search.IndexWorker
   alias TdIeWeb.Endpoint
 
   @impl true
@@ -29,10 +30,10 @@ defmodule TdIe.Application do
 
   defp workers(_env) do
     [
-      TdIe.Search.Cluster,
-      TdIe.Search.IndexWorker,
+      # Cluster
+      TdCore.Search.Cluster,
       TdIe.Cache.IngestLoader,
       TdIe.Scheduler
-    ]
+    ] ++ IndexWorker.get_index_workers()
   end
 end

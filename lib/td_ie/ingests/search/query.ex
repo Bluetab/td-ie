@@ -3,10 +3,12 @@ defmodule TdIe.Ingests.Search.Query do
   Support for building business concept search queries.
   """
 
-  import TdIe.Search.Query,
-    only: [term: 2, must: 2, must_not: 2, should: 2, bool_query: 1]
+  import TdCore.Search.Query,
+    only: [term_or_terms: 2, must: 2, must_not: 2, should: 2, bool_query: 1]
 
-  alias TdIe.Ingests.Search.Aggregations
+  alias TdCore.Search.ElasticDocumentProtocol
+  alias TdIe.Ingests.IngestVersion
+
   alias TdIe.Ingests.Search.Filters
 
   @match_all %{match_all: %{}}
@@ -51,8 +53,8 @@ defmodule TdIe.Ingests.Search.Query do
 
       {domain_ids, statuses} ->
         [
-          term("status", statuses),
-          term("domain_ids", domain_ids)
+          term_or_terms("status", statuses),
+          term_or_terms("domain_ids", domain_ids)
         ]
     end
   end
@@ -67,20 +69,20 @@ defmodule TdIe.Ingests.Search.Query do
     end)
     |> Enum.reduce(%{}, fn
       {:all, statuses}, acc ->
-        should(acc, term("status", statuses))
+        should(acc, term_or_terms("status", statuses))
 
       {:none, _statuses}, acc when map_size(acc) > 0 ->
         # We can avoid a must_not clause if any other status clause exists
         acc
 
       {:none, statuses}, acc ->
-        must_not(acc, term("status", statuses))
+        must_not(acc, term_or_terms("status", statuses))
 
       {domain_ids, statuses}, acc ->
         bool = %{
           filter: [
-            term("status", statuses),
-            term("domain_ids", domain_ids)
+            term_or_terms("status", statuses),
+            term_or_terms("domain_ids", domain_ids)
           ]
         }
 
@@ -150,7 +152,7 @@ defmodule TdIe.Ingests.Search.Query do
   end
 
   defp merge_filters(filters, user_filters) do
-    aggs = Aggregations.aggregations()
+    aggs = ElasticDocumentProtocol.aggregations(%IngestVersion{})
 
     case Enum.uniq(filters ++ Filters.build_filters(user_filters, aggs)) do
       [_, _ | _] = filters -> Enum.reject(filters, &(&1 == %{match_all: %{}}))
