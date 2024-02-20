@@ -4,12 +4,6 @@ defmodule TdIe.Ingests.Search.AggregationsTest do
   alias TdCore.Search.ElasticDocumentProtocol
   alias TdIe.Ingests.IngestVersion
 
-  setup_all do
-    start_supervised!(TdCore.Search.Cluster)
-
-    :ok
-  end
-
   describe "aggregations" do
     test "aggregations/0 returns aggregation terms of type user with size 50" do
       template_content = [
