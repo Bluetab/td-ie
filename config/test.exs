@@ -24,10 +24,3 @@ config :td_core, TdCore.Search.Cluster, api: ElasticsearchMock
 
 config :td_cache, :audit, stream: "audit:events:test"
 config :td_cache, redis_host: "redis", port: 6380
-
-config :td_core, TdCore.Search.Cluster,
-  aggregations: %{
-    "domain" => 50,
-    "user" => 50,
-    "system" => 50
-  }
