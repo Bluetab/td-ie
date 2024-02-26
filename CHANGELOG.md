@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.2.0] 2024-02-26
+
+### Added
+
+- [TD-6243] Support for deleting Elasticsearch indexes
+
+### Fixed
+
+- [TD-6425] Ensure SSL if configured for release migration
+
 ## [5.20.0] 2023-12-19
 
 ### Changed

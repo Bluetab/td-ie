@@ -9,12 +9,6 @@ defmodule TdIeWeb.IngestFilterControllerTest do
 
   setup :verify_on_exit!
 
-  setup do
-    start_supervised!(TdCore.Search.Cluster)
-
-    :ok
-  end
-
   describe "index" do
     @tag authentication: [role: "admin"]
     test "lists all filters (admin user)", %{conn: conn} do
