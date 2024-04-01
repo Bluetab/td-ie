@@ -14,7 +14,8 @@ config :td_core, TdCore.Search.Cluster,
   aggregations: %{
     "user" => 50,
     "domain" => 50,
-    "system" => 50
+    "system" => 50,
+    "default" => 50
   },
 
   # Customize the library used for JSON encoding/decoding.
