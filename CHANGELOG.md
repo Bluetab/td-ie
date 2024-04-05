@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+
 ### Fixed
 
 - [TD-6401] Fixed Content aggregations have a maximum of 10 values
