@@ -5,6 +5,7 @@
 ### Added
 
 - [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
+- [TD-6527] Add LICENSE file
 
 ### Fixed
 
