@@ -9,6 +9,11 @@
 
 ### Fixed
 
+- [TD-6424] Fixed switch on fields aren't translated when uploading and
+  downloading
+
+### Fixed
+
 - [TD-6401] Fixed Content aggregations have a maximum of 10 values
 
 ## [6.3.0] 2024-03-18
