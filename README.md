@@ -18,6 +18,10 @@ Now you can visit [`localhost:4014`](http://localhost:4014) from your browser.
 
 Ready to run in production? Please [check our deployment guides](http://www.phoenixframework.org/docs/deployment).
 
+### Elastic bulk page size configuration
+- BULK_PAGE_SIZE_INGESTS: default 1000
+
+
 ## Learn more
 
   * Official website: http://www.phoenixframework.org/

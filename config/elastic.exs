@@ -14,7 +14,8 @@ config :td_core, TdCore.Search.Cluster,
   aggregations: %{
     "user" => 50,
     "domain" => 50,
-    "system" => 50
+    "system" => 50,
+    "default" => 50
   },
 
   # Customize the library used for JSON encoding/decoding.
@@ -54,7 +55,7 @@ config :td_core, TdCore.Search.Cluster,
       # When indexing data using the `mix elasticsearch.build` task,
       # control the data ingestion rate by raising or lowering the number
       # of items to send in each bulk request.
-      bulk_page_size: 1000,
+      bulk_page_size: System.get_env("BULK_PAGE_SIZE_INGESTS", "1000") |> String.to_integer(),
 
       # Likewise, wait a given period between posting pages to give
       # Elasticsearch time to catch up.
