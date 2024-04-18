@@ -69,7 +69,7 @@ defmodule TdIe.Mixfile do
       {:td_df_lib, git: "https://github.com/Bluetab/td-df-lib.git", tag: "6.5.0"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "4.54.0"},
       {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.19.0"},
-      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "6.5.0"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "6.5.2"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:assertions, "~> 0.19", only: :test},
