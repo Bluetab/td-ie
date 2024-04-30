@@ -1,11 +1,27 @@
 # Changelog
 
+## [6.5.0] 2024-04-30
+
+### Added
+
+- [TD-6535] Update Td-core for Elasticsearch reindex improvements and fix index deletion by name
+- [TD-6492] Update td-df-lib to enrich hierarchy path
+
+### Fixed
+
+- [TD-5495] Foreing keys columns should match original ID columns in all tables
+
 ## [6.4.0] 2024-04-09
 
 ### Added
 
 - [TD-6507] Add Elastic bulk page size for enviroment vars and update core lib
 - [TD-6527] Add LICENSE file
+
+### Fixed
+
+- [TD-6424] Fixed switch on fields aren't translated when uploading and
+  downloading
 
 ### Fixed
 
