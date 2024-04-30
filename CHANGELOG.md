@@ -6,6 +6,10 @@
 
 - [TD-6535] Update Td-core for Elasticsearch reindex improvements and fix index deletion by name
 
+### Fixed
+
+- [TD-5495] Foreing keys columns should match original ID columns in all tables
+
 ## [6.4.0] 2024-04-09
 
 ### Added
