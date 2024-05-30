@@ -21,6 +21,8 @@ Ready to run in production? Please [check our deployment guides](http://www.phoe
 ### Elastic bulk page size configuration
 - BULK_PAGE_SIZE_INGESTS: default 1000
 
+### Elastic aggregations
+- The aggregation variables are defined as follows:  AGG_<AGGREGATION_NAME>_SIZE
 
 ## Learn more
 

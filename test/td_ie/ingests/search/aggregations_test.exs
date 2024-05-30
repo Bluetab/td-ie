@@ -4,8 +4,10 @@ defmodule TdIe.Ingests.Search.AggregationsTest do
   alias TdCore.Search.ElasticDocumentProtocol
   alias TdIe.Ingests.IngestVersion
 
+  @default_page 500
+
   describe "aggregations" do
-    test "aggregations/0 returns aggregation terms of type user with size 50" do
+    test "aggregations/0 returns aggregation terms of type user with size #{@default_page}" do
       template_content = [
         %{
           "name" => "group",
@@ -32,7 +34,7 @@ defmodule TdIe.Ingests.Search.AggregationsTest do
         |> Map.get(:terms)
         |> Map.take([:field, :size])
 
-      assert size == 50
+      assert size == @default_page
       assert field == "content.userfield.raw"
     end
   end
