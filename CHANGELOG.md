@@ -4,7 +4,9 @@
 
 ### Changed
 
-- [TD-6561] Standardise aggregations limits 
+- [TD-6561] 
+  - Standardise aggregations limits
+  - Use keyword list for elastic search configuration
 
 ## [6.5.0] 2024-04-30
 
