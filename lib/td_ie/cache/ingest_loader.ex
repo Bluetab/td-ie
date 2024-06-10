@@ -6,8 +6,8 @@ defmodule TdIe.Cache.IngestLoader do
   use GenServer
 
   alias TdCache.IngestCache
-  alias TdCore.Search.IndexWorker
   alias TdIe.Ingests
+  alias TdIe.Search.Indexer
 
   require Logger
 
@@ -43,7 +43,7 @@ defmodule TdIe.Cache.IngestLoader do
   @impl true
   def handle_call({:refresh, ids}, _from, state) do
     load_ingests(ids)
-    IndexWorker.reindex(:ingests, ids)
+    Indexer.reindex(ids)
     {:reply, :ok, state}
   end
 
