@@ -7,7 +7,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
 
   import Mox
 
-  alias TdCore.Search.IndexWorkerMock
+  alias TdCore.Search.IndexWorker
 
   @create_attrs %{
     end_timestamp: ~N[2010-04-17 14:00:00.000000],
@@ -50,7 +50,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "create ingest_execution" do
     @tag authentication: [role: "admin"]
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
 
       assert %{"data" => %{"id" => id}} =
@@ -79,8 +79,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "records" => 10
              }
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -104,7 +104,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       conn: conn,
       swagger_schema: schema
     } do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       insert(:ingest_version, name: "nombre sobrescrito")
 
       assert %{"data" => _data} =
@@ -116,8 +116,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                |> validate_resp_schema(schema, "IngestExecutionByNameResponse")
                |> json_response(:created)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -154,7 +154,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "update ingest_execution" do
     @tag authentication: [role: "admin"]
     test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
       %{id: id} = ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
@@ -187,8 +187,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "records" => 11
              }
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -210,7 +210,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "delete ingest_execution" do
     @tag authentication: [role: "admin"]
     test "deletes chosen ingest_execution", %{conn: conn} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
@@ -224,8 +224,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
         get(conn, Routes.ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
       end)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
   end
 end

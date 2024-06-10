@@ -6,7 +6,8 @@
 
 - [TD-6561] 
   - Standardise aggregations limits
-  - Use keyword list for elastic search configuration
+  - Use keyword list for elastic search configurationç
+- [TD-6402] IndexWorker improvement
 
 ## [6.5.0] 2024-04-30
 

@@ -7,7 +7,7 @@ defmodule TdIeWeb.IngestControllerTest do
 
   import Mox
 
-  alias TdCore.Search.IndexWorkerMock
+  alias TdCore.Search.IndexWorker
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -47,7 +47,7 @@ defmodule TdIeWeb.IngestControllerTest do
 
     @tag authentication: [role: "admin"]
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
       %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
@@ -79,8 +79,8 @@ defmodule TdIeWeb.IngestControllerTest do
       assert data["domain"]["name"] == domain_name
 
       Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -129,7 +129,7 @@ defmodule TdIeWeb.IngestControllerTest do
         status_from: status_from,
         status_to: status_to
       } do
-        IndexWorkerMock.clear()
+        IndexWorker.clear()
         %{id: user_id} = CacheHelpers.put_user()
 
         ingest_version = insert(:ingest_version, status: status_from, last_change_by: user_id)
@@ -156,8 +156,8 @@ defmodule TdIeWeb.IngestControllerTest do
                  |> json_response(:ok)
 
         assert %{"status" => ^status_to} = data
-        assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-        IndexWorkerMock.clear()
+        assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+        IndexWorker.clear()
       end
     end)
   end
