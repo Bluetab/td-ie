@@ -2,12 +2,13 @@
 
 ## [Unreleased]
 
-### Changed
+### Fixed
 
-- [TD-6561] 
+- [TD-6561]
   - Standardise aggregations limits
   - Use keyword list for elastic search configurationç
 - [TD-6402] IndexWorker improvement
+- [TD-6440] Update td-df-lib
 
 ## [6.5.0] 2024-04-30
 
