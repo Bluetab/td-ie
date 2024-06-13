@@ -7,8 +7,8 @@ defmodule TdIeWeb.SearchController do
 
   import Canada, only: [can?: 2]
 
-  alias TdCore.Search.IndexWorker
   alias TdIe.Ingests.Ingest
+  alias TdIe.Search.Indexer
 
   swagger_path :reindex_all do
     description("Reindex all ES indexes with DB content")
@@ -22,7 +22,7 @@ defmodule TdIeWeb.SearchController do
     claims = conn.assigns[:current_resource]
 
     with {:can, true} <- {:can, can?(claims, reindex_all(Ingest))},
-         :ok <- IndexWorker.reindex(:ingests, :all) do
+         :ok <- Indexer.reindex(:all) do
       send_resp(conn, :ok, "")
     end
   end

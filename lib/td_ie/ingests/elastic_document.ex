@@ -5,6 +5,7 @@ defmodule TdIe.Ingests.ElasticDocument do
   """
 
   alias Elasticsearch.Document
+  alias TdCore.Search.Cluster
   alias TdCore.Search.ElasticDocument
   alias TdCore.Search.ElasticDocumentProtocol
   alias TdIe.Ingests
@@ -137,15 +138,24 @@ defmodule TdIe.Ingests.ElasticDocument do
 
     def aggregations(_) do
       %{
-        "domain" => %{terms: %{field: "domain.name.raw", size: 50}},
-        "domain_id" => %{terms: %{field: "domain.id"}},
-        "ingest_id" => %{terms: %{field: "ingest_id"}},
-        "status" => %{terms: %{field: "status"}},
-        "current" => %{terms: %{field: "current"}},
-        "in_progress" => %{terms: %{field: "in_progress"}},
-        "template" => %{terms: %{field: "template.label.raw", size: 50}},
-        "execution_status" => %{terms: %{field: "execution_status.raw", size: 50}},
-        "taxonomy" => %{terms: %{field: "domain_ids", size: 500}}
+        "domain" => %{terms: %{field: "domain.name.raw", size: Cluster.get_size_field("domain")}},
+        "domain_id" => %{terms: %{field: "domain.id", size: Cluster.get_size_field("domain_id")}},
+        "ingest_id" => %{terms: %{field: "ingest_id", size: Cluster.get_size_field("ingest_id")}},
+        "status" => %{terms: %{field: "status", size: Cluster.get_size_field("status")}},
+        "current" => %{terms: %{field: "current", size: Cluster.get_size_field("current")}},
+        "in_progress" => %{
+          terms: %{field: "in_progress", size: Cluster.get_size_field("in_progress")}
+        },
+        "template" => %{
+          terms: %{field: "template.label.raw", size: Cluster.get_size_field("template")}
+        },
+        "execution_status" => %{
+          terms: %{
+            field: "execution_status.raw",
+            size: Cluster.get_size_field("execution_status")
+          }
+        },
+        "taxonomy" => %{terms: %{field: "domain_ids", size: Cluster.get_size_field("taxonomy")}}
       }
       |> merge_dynamic_fields("ie", "content")
     end

@@ -4,7 +4,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   import Mox
 
-  alias TdCore.Search.IndexWorkerMock
+  alias TdCore.Search.IndexWorker
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -172,7 +172,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "create ingest" do
     @tag authentication: [role: "admin"]
     test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       creation_attrs = %{
@@ -206,8 +206,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -305,7 +305,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "create new versions" do
     @tag authentication: [role: "admin"]
     test "create new version with modified template", %{conn: conn} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
 
       template_content = [
         %{
@@ -348,15 +348,15 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                )
                |> json_response(:created)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
   end
 
   describe "update ingest_version" do
     @tag authentication: [role: "admin"]
     test "renders ingest_version when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorkerMock.clear()
+      IndexWorker.clear()
       %{user_id: user_id} = build(:claims)
       %{id: id} = insert(:ingest_version, last_change_by: user_id)
 
@@ -383,8 +383,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                |> json_response(:ok)
 
       Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
-      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
+      IndexWorker.clear()
     end
   end
 

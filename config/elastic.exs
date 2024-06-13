@@ -11,27 +11,22 @@ config :td_core, TdCore.Search.Cluster,
   api: Elasticsearch.API.HTTP,
 
   # Aggregations default
-  aggregations: %{
-    "user" => 50,
-    "domain" => 50,
-    "system" => 50,
-    "default" => 50
-  },
 
   # Customize the library used for JSON encoding/decoding.
   json_library: Jason,
   aliases: %{
     ingests: "ingests"
-  },
+  }
 
+config :td_core, TdCore.Search.Cluster,
   # You should configure each index which you maintain in Elasticsearch here.
   # This configuration will be read by the `mix elasticsearch.build` task,
   # described below.
-  indexes: %{
+  indexes: [
     # This is the base name of the Elasticsearch index. Each index will be
     # built with a timestamp included in the name, like "posts-5902341238".
     # It will then be aliased to "posts" for easy querying.
-    ingests: %{
+    ingests: [
       ## Template scope for consumer events in redis
       template_scope: :ie,
 
@@ -52,16 +47,11 @@ config :td_core, TdCore.Search.Cluster,
       # Elasticsearch.Document protocol.
       sources: [TdIe.Ingests.IngestVersion],
 
-      # When indexing data using the `mix elasticsearch.build` task,
-      # control the data ingestion rate by raising or lowering the number
-      # of items to send in each bulk request.
-      bulk_page_size: System.get_env("BULK_PAGE_SIZE_INGESTS", "1000") |> String.to_integer(),
-
       # Likewise, wait a given period between posting pages to give
       # Elasticsearch time to catch up.
       bulk_wait_interval: 0,
 
       # Support create or replace
       bulk_action: "index"
-    }
-  }
+    ]
+  ]

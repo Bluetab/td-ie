@@ -7,7 +7,6 @@ defmodule TdIe.Ingests do
 
   alias Ecto.Multi
   alias TdCache.TaxonomyCache
-  alias TdCore.Search.IndexWorker
   alias TdIe.Auth.Claims
   alias TdIe.Cache.IngestLoader
   alias TdIe.Ingests.Audit
@@ -15,6 +14,7 @@ defmodule TdIe.Ingests do
   alias TdIe.Ingests.IngestExecution
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Repo
+  alias TdIe.Search.Indexer
 
   @doc """
   check ingest name availability
@@ -326,7 +326,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = version
          }} ->
           IngestLoader.delete(ingest_id)
-          IndexWorker.delete(:ingests, ingest_version)
+          Indexer.delete(ingest_version.id)
           {:ok, version}
       end
     else
@@ -341,7 +341,7 @@ defmodule TdIe.Ingests do
            ingest_version: %IngestVersion{} = deleted_version,
            current: %IngestVersion{} = current_version
          }} ->
-          IndexWorker.delete(:ingests, deleted_version)
+          Indexer.delete(deleted_version.id)
           {:ok, current_version}
       end
     end
