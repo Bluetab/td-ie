@@ -52,10 +52,11 @@ defmodule TdIeWeb.IngestControllerTest do
       %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
       ingest_id = ingest.id
-      insert(:ingest_version, ingest: ingest, last_change_by: user_id)
+      content = %{"foo" => %{"value" => "bar", "origin" => "user"}}
+      insert(:ingest_version, ingest: ingest, last_change_by: user_id, content: content)
 
       update_attrs = %{
-        "content" => %{},
+        "content" => %{"foo" => %{"value" => "updated_bar", "origin" => "user"}},
         "name" => "The new name",
         "description" => to_rich_text("The new description"),
         "in_progress" => false
@@ -78,7 +79,13 @@ defmodule TdIeWeb.IngestControllerTest do
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
 
-      Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
+      assert data["name"] == update_attrs["name"]
+      assert data["content"] == %{"foo" => "updated_bar"}
+      assert data["dynamic_content"] == update_attrs["content"]
+      assert data["description"] == update_attrs["description"]
+      assert data["in_progress"] == update_attrs["in_progress"]
+
+      # Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
       assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
       IndexWorker.clear()
     end

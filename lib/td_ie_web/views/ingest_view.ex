@@ -3,6 +3,7 @@ defmodule TdIeWeb.IngestView do
   use TdIeWeb, :view
 
   alias Ecto
+  alias TdDfLib.Content
   alias TdIeWeb.IngestView
 
   def render("index.json", %{hypermedia: hypermedia}) do
@@ -45,6 +46,7 @@ defmodule TdIeWeb.IngestView do
       ingest_version.mod_comments,
       ingest_version.version
     )
+    |> Content.legacy_content_support(:content)
   end
 
   def render("search.json", %{ingests: ingest_versions}) do

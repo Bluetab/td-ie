@@ -20,7 +20,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   describe "GET /api/ingest_versions/:id" do
     @tag authentication: [role: "admin"]
-    test "shows the specified ingest_version including it's name, description, domain and content",
+    test "shows the specified ingest_version including name, description, domain and content",
          %{conn: conn, template: %{name: type}} do
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
@@ -29,7 +29,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         insert(
           :ingest_version,
           ingest: build(:ingest, domain_id: domain_id, type: type),
-          content: %{"list" => "two"},
+          content: %{"list" => %{"value" => "two", "origin" => "user"}},
           name: "Ingest Name",
           description: to_rich_text("The awesome ingest")
         )
@@ -43,7 +43,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                "name" => ^name,
                "description" => ^description,
                "ingest_id" => ^ingest_id,
-               "content" => ^content,
+               "content" => %{"list" => "two"},
+               "dynamic_content" => ^content,
                "domain" => %{"id" => ^domain_id, "name" => ^domain_name}
              } = data
     end
@@ -176,7 +177,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       creation_attrs = %{
-        "content" => %{},
+        "content" => %{"foo" => %{"value" => "bar", "origin" => "user"}},
         "type" => "some_type",
         "name" => "Some name",
         "description" => to_rich_text("Some description"),
@@ -200,9 +201,12 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert %{"id" => ^id, "version" => 1} = data
 
-      creation_attrs
-      |> Map.delete("domain_id")
-      |> Enum.each(&assert Map.get(data, elem(&1, 0)) == elem(&1, 1))
+      assert data["content"] == %{"foo" => "bar"}
+      assert data["dynamic_content"] == creation_attrs["content"]
+      assert data["description"] == creation_attrs["description"]
+      assert data["in_progress"] == creation_attrs["in_progress"]
+      assert data["name"] == creation_attrs["name"]
+      assert data["type"] == creation_attrs["type"]
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
