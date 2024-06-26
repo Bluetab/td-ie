@@ -6,6 +6,7 @@ defmodule TdIeWeb.IngestVersionView do
   use TdIeWeb, :view
 
   alias TdCache.UserCache
+  alias TdDfLib.Content
   alias TdDfLib.Format
   alias TdIeWeb.IngestVersionView
   alias TdIeWeb.LinkView
@@ -93,6 +94,7 @@ defmodule TdIeWeb.IngestVersionView do
     ingest_version
     |> Map.take(view_fields ++ test_fields)
     |> Map.put("type", type)
+    |> Content.legacy_content_support("content", "dynamic_content")
   end
 
   def render("ingest_version.json", %{ingest_version: ingest_version} = assigns) do
@@ -124,6 +126,7 @@ defmodule TdIeWeb.IngestVersionView do
     |> add_template(assigns)
     |> add_embedded_resources(assigns)
     |> add_cached_content(assigns)
+    |> Content.legacy_content_support(:content)
   end
 
   def render("versions.json", %{hypermedia: hypermedia}) do
@@ -148,6 +151,7 @@ defmodule TdIeWeb.IngestVersionView do
     ])
     |> Map.put("type", type(ingest_version))
     |> Map.put("last_change_by", last_change_by)
+    |> Content.legacy_content_support("content", "dynamic_content")
   end
 
   defp type(%{ingest: %{type: type}}), do: type
