@@ -39,6 +39,8 @@ defmodule TdIe.Ingests.ElasticDocument do
         iv
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain_id)
+        |> Enum.map(fn {key, %{"value" => value}} -> {key, value} end)
+        |> Map.new()
 
       iv
       |> Map.take([
