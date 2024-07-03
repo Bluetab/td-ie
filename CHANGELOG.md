@@ -5,7 +5,6 @@
 ### Added
 
 - [TD-6499] Add Ingest Execution content data origin
--
 
 ## [6.7.0] 2024-06-13
 
