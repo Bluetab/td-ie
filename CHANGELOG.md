@@ -5,6 +5,8 @@
 ### Changed
 
 - [TD-6773] Update td-df-lib, td-cache and td-core
+- [TD-6617] Update td-df-lib and td-core
+
 
  ## [6.9.2] 2024-07-29
 
