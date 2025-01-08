@@ -11,10 +11,6 @@ defmodule TdIeWeb.Router do
     plug TdIe.Auth.Pipeline.Secure
   end
 
-  scope "/api/swagger" do
-    forward("/", PhoenixSwagger.Plug.SwaggerUI, otp_app: :td_ie, swagger_file: "swagger.json")
-  end
-
   scope "/api", TdIeWeb do
     pipe_through :api
     get("/ping", PingController, :ping)
@@ -56,27 +52,5 @@ defmodule TdIeWeb.Router do
     end
 
     get("/ingests/search/reindex_all", SearchController, :reindex_all)
-  end
-
-  def swagger_info do
-    %{
-      schemes: ["http", "https"],
-      info: %{
-        version: Application.spec(:td_ie, :vsn),
-        title: "Truedat Ingest Engine Service"
-      },
-      securityDefinitions: %{
-        bearer: %{
-          type: "apiKey",
-          name: "Authorization",
-          in: "header"
-        }
-      },
-      security: [
-        %{
-          bearer: []
-        }
-      ]
-    }
   end
 end

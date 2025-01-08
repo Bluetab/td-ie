@@ -216,29 +216,29 @@ defmodule TdIe.Ingests.IngestVersion do
     status == h || has_any_status?(status, t)
   end
 
-  def is_updatable?(%IngestVersion{current: current, status: status}) do
+  def updatable?(%IngestVersion{current: current, status: status}) do
     current && status == "draft"
   end
 
-  def is_publishable?(%IngestVersion{current: current, status: status}) do
+  def publishable?(%IngestVersion{current: current, status: status}) do
     current && status == "pending_approval"
   end
 
-  def is_rejectable?(%IngestVersion{} = ingest_version),
-    do: is_publishable?(ingest_version)
+  def rejectable?(%IngestVersion{} = ingest_version),
+    do: publishable?(ingest_version)
 
-  def is_versionable?(%IngestVersion{current: current, status: status}) do
+  def versionable?(%IngestVersion{current: current, status: status}) do
     current && status == "published"
   end
 
-  def is_deprecatable?(%IngestVersion{} = ingest_version),
-    do: is_versionable?(ingest_version)
+  def deprecatable?(%IngestVersion{} = ingest_version),
+    do: versionable?(ingest_version)
 
-  def is_undo_rejectable?(%IngestVersion{current: current, status: status}) do
+  def undo_rejectable?(%IngestVersion{current: current, status: status}) do
     current && status == "rejected"
   end
 
-  def is_deletable?(%IngestVersion{current: current, status: status}) do
+  def deletable?(%IngestVersion{current: current, status: status}) do
     valid_statuses = ["draft", "rejected"]
     current && Enum.member?(valid_statuses, status)
   end

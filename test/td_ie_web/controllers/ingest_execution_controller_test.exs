@@ -3,11 +3,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   Controller test of ingest execution entities
   """
   use TdIeWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   @create_attrs %{
     end_timestamp: ~N[2010-04-17 14:00:00.000000],
@@ -39,18 +38,18 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
 
   describe "index" do
     @tag authentication: [role: "admin"]
-    test "lists all ingest_executions", %{conn: conn, swagger_schema: schema} do
+    test "lists all ingest_executions", %{conn: conn} do
       %{id: ingest_id} = insert(:ingest)
       conn = get(conn, Routes.ingest_ingest_execution_path(conn, :index, ingest_id))
-      validate_resp_schema(conn, schema, "IngestExecutionsResponse")
+
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "create ingest_execution" do
     @tag authentication: [role: "admin"]
-    test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorker.clear()
+    test "renders ingest_execution when data is valid", %{conn: conn} do
+      IndexWorkerMock.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
 
       assert %{"data" => %{"id" => id}} =
@@ -58,13 +57,11 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                |> post(Routes.ingest_ingest_execution_path(conn, :create, ingest_id),
                  ingest_execution: @create_attrs
                )
-               |> validate_resp_schema(schema, "IngestExecutionResponse")
                |> json_response(:created)
 
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_ingest_execution_path(conn, :show, ingest_id, id))
-               |> validate_resp_schema(schema, "IngestExecutionResponse")
                |> json_response(:ok)
 
       assert data == %{
@@ -79,8 +76,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "records" => 10
              }
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -101,10 +98,9 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "create ingest_execution_by_name" do
     @tag authentication: [role: "admin"]
     test "renders ingest_execution_by_name when data is valid", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       insert(:ingest_version, name: "nombre sobrescrito")
 
       assert %{"data" => _data} =
@@ -113,11 +109,10 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                  ingest_name: "nombre sobrescrito",
                  ingest_execution: @create_attrs
                )
-               |> validate_resp_schema(schema, "IngestExecutionByNameResponse")
                |> json_response(:created)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -153,8 +148,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
 
   describe "update ingest_execution" do
     @tag authentication: [role: "admin"]
-    test "renders ingest_execution when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorker.clear()
+    test "renders ingest_execution when data is valid", %{conn: conn} do
+      IndexWorkerMock.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
       %{id: id} = ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
@@ -164,7 +159,6 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                  Routes.ingest_ingest_execution_path(conn, :update, ingest_id, ingest_execution),
                  ingest_execution: @update_attrs
                )
-               |> validate_resp_schema(schema, "IngestExecutionResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^id} = data
@@ -172,7 +166,6 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_ingest_execution_path(conn, :show, ingest_id, id))
-               |> validate_resp_schema(schema, "IngestExecutionResponse")
                |> json_response(:ok)
 
       assert data == %{
@@ -187,8 +180,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
                "records" => 11
              }
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     @tag authentication: [role: "admin"]
@@ -210,7 +203,7 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
   describe "delete ingest_execution" do
     @tag authentication: [role: "admin"]
     test "deletes chosen ingest_execution", %{conn: conn} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       %{ingest_id: ingest_id} = insert(:ingest_version)
       ingest_execution = insert(:ingest_execution, ingest_id: ingest_id)
 
@@ -224,8 +217,8 @@ defmodule TdIeWeb.IngestExecutionControllerTest do
         get(conn, Routes.ingest_ingest_execution_path(conn, :show, ingest_id, ingest_execution))
       end)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 end

@@ -1,10 +1,9 @@
 defmodule TdIeWeb.IngestVersionControllerTest do
   use TdIeWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -172,8 +171,8 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
   describe "create ingest" do
     @tag authentication: [role: "admin"]
-    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorker.clear()
+    test "renders ingest when data is valid", %{conn: conn} do
+      IndexWorkerMock.clear()
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
 
       creation_attrs = %{
@@ -188,7 +187,6 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert %{"data" => data} =
                conn
                |> post(Routes.ingest_version_path(conn, :create), ingest_version: creation_attrs)
-               |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:created)
 
       assert %{"ingest_id" => id} = data
@@ -196,7 +194,6 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_path(conn, :show, id))
-               |> validate_resp_schema(schema, "IngestResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^id, "version" => 1} = data
@@ -210,14 +207,13 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert data["domain"]["id"] == domain_id
       assert data["domain"]["name"] == domain_name
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     @tag authentication: [role: "admin"]
     test "renders errors when data is invalid", %{
-      conn: conn,
-      swagger_schema: schema
+      conn: conn
     } do
       %{id: domain_id} = CacheHelpers.put_domain()
 
@@ -241,7 +237,6 @@ defmodule TdIeWeb.IngestVersionControllerTest do
       assert %{"errors" => errors} =
                conn
                |> post(Routes.ingest_version_path(conn, :create), ingest_version: creation_attrs)
-               |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:unprocessable_entity)
 
       assert errors != %{}
@@ -309,7 +304,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
   describe "create new versions" do
     @tag authentication: [role: "admin"]
     test "create new version with modified template", %{conn: conn} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
 
       template_content = [
         %{
@@ -352,15 +347,15 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                )
                |> json_response(:created)
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 
   describe "update ingest_version" do
     @tag authentication: [role: "admin"]
-    test "renders ingest_version when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorker.clear()
+    test "renders ingest_version when data is valid", %{conn: conn} do
+      IndexWorkerMock.clear()
       %{user_id: user_id} = build(:claims)
       %{id: id} = insert(:ingest_version, last_change_by: user_id)
 
@@ -377,18 +372,16 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                  Routes.ingest_version_path(conn, :update, id),
                  ingest_version: update_attrs
                )
-               |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:ok)
 
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_version_path(conn, :show, id))
-               |> validate_resp_schema(schema, "IngestVersionResponse")
                |> json_response(:ok)
 
       Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 
