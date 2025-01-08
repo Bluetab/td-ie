@@ -3,7 +3,6 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   Testing of ingest filter controller
   """
   use TdIeWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 

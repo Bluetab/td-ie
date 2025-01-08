@@ -24,42 +24,42 @@ defmodule TdIe.Canada.IngestAbilities do
   end
 
   def can?(%Claims{} = claims, :update, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_updatable?(ingest_version) &&
+    IngestVersion.updatable?(ingest_version) &&
       authorized?(claims, :update_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :send_for_approval, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_updatable?(ingest_version) &&
+    IngestVersion.updatable?(ingest_version) &&
       authorized?(claims, :update_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :reject, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_rejectable?(ingest_version) &&
+    IngestVersion.rejectable?(ingest_version) &&
       authorized?(claims, :reject_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :undo_rejection, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_undo_rejectable?(ingest_version) &&
+    IngestVersion.undo_rejectable?(ingest_version) &&
       authorized?(claims, :update_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :publish, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_publishable?(ingest_version) &&
+    IngestVersion.publishable?(ingest_version) &&
       authorized?(claims, :publish_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :version, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_versionable?(ingest_version) &&
+    IngestVersion.versionable?(ingest_version) &&
       authorized?(claims, :update_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :deprecate, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_deprecatable?(ingest_version) &&
+    IngestVersion.deprecatable?(ingest_version) &&
       authorized?(claims, :deprecate_ingest, ingest_version)
   end
 
   def can?(%Claims{} = claims, :delete, %IngestVersion{} = ingest_version) do
-    IngestVersion.is_deletable?(ingest_version) &&
+    IngestVersion.deletable?(ingest_version) &&
       authorized?(claims, :delete_ingest, ingest_version)
   end
 

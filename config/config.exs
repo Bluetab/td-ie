@@ -34,12 +34,6 @@ config :logger, :console,
 
 # Configuration for Phoenix
 config :phoenix, :json_library, Jason
-config :phoenix_swagger, json_library: Jason
-
-config :td_ie, :phoenix_swagger,
-  swagger_files: %{
-    "priv/static/swagger.json" => [router: TdIeWeb.Router]
-  }
 
 config :td_ie, TdIe.Auth.Guardian,
   allowed_algos: ["HS512"],
