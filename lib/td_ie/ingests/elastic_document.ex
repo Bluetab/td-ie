@@ -54,6 +54,7 @@ defmodule TdIe.Ingests.ElasticDocument do
         :in_progress,
         :inserted_at
       ])
+      |> Map.put(:ngram_name, iv.name)
       |> Map.put(:content, content)
       |> Map.put(:description, RichText.to_plain_text(iv.description))
       |> Map.put(:domain, Map.take(domain, [:id, :name, :external_id]))
@@ -88,12 +89,15 @@ defmodule TdIe.Ingests.ElasticDocument do
   defimpl ElasticDocumentProtocol, for: IngestVersion do
     use ElasticDocument
 
+    @search_fields ~w(ngram_name*^3)
+
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("ie")}
 
       mapping_type = %{
         id: %{type: "long"},
         name: %{type: "text", fields: %{raw: %{type: "keyword", normalizer: "sortable"}}},
+        ngram_name: %{type: "search_as_you_type"},
         description: %{type: "text"},
         version: %{type: "short"},
         template: %{
@@ -129,16 +133,43 @@ defmodule TdIe.Ingests.ElasticDocument do
       settings = %{
         number_of_shards: 1,
         analysis: %{
+          analyzer: %{
+            default: %{
+              type: "custom",
+              tokenizer: "standard",
+              filter: ["lowercase", "asciifolding"]
+            }
+          },
           normalizer: %{
             sortable: %{type: "custom", char_filter: [], filter: ["lowercase", "asciifolding"]}
+          },
+          filter: %{
+            es_stem: %{
+              type: "stemmer",
+              language: "light_spanish"
+            }
           }
         }
       }
 
-      %{mappings: %{properties: mapping_type}, settings: settings}
+      %{mappings: %{properties: mapping_type}, settings: apply_lang_settings(settings)}
+    end
+
+    def query_data(_) do
+      content_schema = Templates.content_schema_for_scope("ie")
+      dynamic_fields = dynamic_search_fields(content_schema, "content")
+
+      %{
+        fields: @search_fields ++ dynamic_fields,
+        aggs: merged_aggregations(content_schema)
+      }
     end
 
     def aggregations(_) do
+      merged_aggregations("ie")
+    end
+
+    defp native_aggregations do
       %{
         "domain" => %{terms: %{field: "domain.name.raw", size: Cluster.get_size_field("domain")}},
         "domain_id" => %{terms: %{field: "domain.id", size: Cluster.get_size_field("domain_id")}},
@@ -159,7 +190,11 @@ defmodule TdIe.Ingests.ElasticDocument do
         },
         "taxonomy" => %{terms: %{field: "domain_ids", size: Cluster.get_size_field("taxonomy")}}
       }
-      |> merge_dynamic_fields("ie", "content")
+    end
+
+    defp merged_aggregations(ie_scope_or_content) do
+      native_aggregations = native_aggregations()
+      merge_dynamic_aggregations(native_aggregations, ie_scope_or_content, "content")
     end
   end
 end

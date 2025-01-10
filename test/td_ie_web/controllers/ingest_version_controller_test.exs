@@ -84,7 +84,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
-          assert query == %{bool: %{filter: %{match_all: %{}}}}
+          assert query == %{bool: %{must: %{match_all: %{}}}}
           SearchHelpers.hits_response([])
       end)
 
@@ -113,7 +113,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
-          assert query == %{bool: %{filter: %{match_all: %{}}}}
+          assert query == %{bool: %{must: %{match_all: %{}}}}
           SearchHelpers.hits_response([ingest_version])
       end)
 
@@ -256,7 +256,20 @@ defmodule TdIeWeb.IngestVersionControllerTest do
         _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
           assert opts == [params: %{"track_total_hits" => "true"}]
           assert sort == ["_score", "name.raw"]
-          assert %{bool: %{must: %{simple_query_string: %{query: "one*"}}}} = query
+
+          assert %{
+                   bool: %{
+                     must: %{
+                       multi_match: %{
+                         fields: ["ngram_name*^3", "content.string"],
+                         lenient: true,
+                         query: "one",
+                         type: "bool_prefix",
+                         fuzziness: "AUTO"
+                       }
+                     }
+                   }
+                 } = query
 
           SearchHelpers.hits_response([one])
       end)
@@ -283,7 +296,7 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
           assert query == %{
                    bool: %{
-                     filter: %{term: %{"ingest_id" => ingest_id}}
+                     must: %{term: %{"ingest_id" => ingest_id}}
                    }
                  }
 
@@ -322,6 +335,11 @@ defmodule TdIeWeb.IngestVersionControllerTest do
           scope: "ie"
         })
 
+      on_exit(fn ->
+        IndexWorkerMock.clear()
+        Templates.delete_template(template.id)
+      end)
+
       %{user_id: user_id} = build(:claims)
 
       ingest = insert(:ingest, type: template.name, last_change_by: user_id)
@@ -348,7 +366,6 @@ defmodule TdIeWeb.IngestVersionControllerTest do
                |> json_response(:created)
 
       assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
-      IndexWorkerMock.clear()
     end
   end
 

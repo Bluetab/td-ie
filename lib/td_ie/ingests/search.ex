@@ -14,9 +14,9 @@ defmodule TdIe.Ingests.Search do
   @index :ingests
 
   def get_filter_values(%Claims{} = claims, params) do
-    query = build_query(claims, params)
-    aggs = ElasticDocumentProtocol.aggregations(%IngestVersion{})
-    search = %{query: query, aggs: aggs, size: 0}
+    query_data = ElasticDocumentProtocol.query_data(%IngestVersion{})
+    query = build_query(claims, params, query_data)
+    search = %{query: query, aggs: query_data.aggs, size: 0}
     {:ok, response} = Search.get_filters(search, @index)
     response
   end
@@ -29,20 +29,21 @@ defmodule TdIe.Ingests.Search do
   def search_ingest_versions(params, claims, page \\ 0, size \\ 50)
 
   def search_ingest_versions(params, %Claims{} = claims, page, size) do
-    query = build_query(claims, params)
+    query_data = ElasticDocumentProtocol.query_data(%IngestVersion{})
+    query = build_query(claims, params, query_data)
     sort = Map.get(params, "sort", ["_score", "name.raw"])
 
     %{from: page * size, size: size, query: query, sort: sort}
     |> do_search()
   end
 
-  defp build_query(%Claims{} = claims, params) do
+  defp build_query(%Claims{} = claims, params, query_data) do
     permissions = TdIePermissions.get_default_permissions()
 
     permissions
     |> Permissions.get_search_permissions(claims)
     |> Query.build_filters()
-    |> Query.build_query(params)
+    |> Query.build_query(params, query_data)
   end
 
   defp do_search(search) do
