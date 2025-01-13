@@ -5,8 +5,6 @@ defmodule TdIeWeb.IngestVersionController do
 
   use TdHypermedia, :controller
   use TdIeWeb, :controller
-  use PhoenixSwagger
-
   import Canada, only: [can?: 2]
 
   alias TdCache.TemplateCache
@@ -18,25 +16,10 @@ defmodule TdIeWeb.IngestVersionController do
   alias TdIe.Ingests.Workflow
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
-  alias TdIeWeb.SwaggerDefinitions
 
   require Logger
 
   action_fallback(TdIeWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.ingest_version_definitions()
-  end
-
-  swagger_path :index do
-    description("Ingest Versions")
-
-    parameters do
-      search(:body, Schema.ref(:IngestVersionFilterRequest), "Search query and filter parameters")
-    end
-
-    response(200, "OK", Schema.ref(:IngestVersionsResponse))
-  end
 
   def index(conn, params) do
     claims = conn.assigns[:current_resource]
@@ -44,16 +27,6 @@ defmodule TdIeWeb.IngestVersionController do
     params
     |> Search.search_ingest_versions(claims)
     |> render_search_results(conn)
-  end
-
-  swagger_path :search do
-    description("Ingest Versions")
-
-    parameters do
-      search(:body, Schema.ref(:IngestVersionFilterRequest), "Search query and filter parameters")
-    end
-
-    response(200, "OK", Schema.ref(:IngestVersionsResponse))
   end
 
   def search(conn, params) do
@@ -90,18 +63,6 @@ defmodule TdIeWeb.IngestVersionController do
     |> put_resp_content_type("text/csv", "utf-8")
     |> put_resp_header("content-disposition", "attachment; filename=\"ingests.zip\"")
     |> send_resp(200, Download.to_csv(ingest_versions))
-  end
-
-  swagger_path :create do
-    description("Creates a Ingest version child of Data Domain")
-    produces("application/json")
-
-    parameters do
-      ingest(:body, Schema.ref(:IngestVersionCreate), "Ingest create attrs")
-    end
-
-    response(201, "Created", Schema.ref(:IngestVersionResponse))
-    response(400, "Client Error")
   end
 
   def create(conn, %{"ingest_version" => ingest_params}) do
@@ -166,43 +127,17 @@ defmodule TdIeWeb.IngestVersionController do
     end
   end
 
-  swagger_path :versions do
-    description("List Ingest Versions")
-
-    parameters do
-      ingest_version_id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestVersionsResponse))
-  end
-
   def versions(conn, %{"ingest_version_id" => ingest_version_id}) do
     claims = conn.assigns[:current_resource]
 
     ingest_version = Ingests.get_ingest_version!(ingest_version_id)
 
-    case Search.list_ingest_versions(ingest_version.ingest_id, claims) do
-      %{results: ingest_versions} ->
-        render(conn, "versions.json",
-          ingest_versions: ingest_versions,
-          hypermedia: hypermedia("ingest_version", conn, ingest_versions)
-        )
+    %{results: ingest_versions} = Search.list_ingest_versions(ingest_version.ingest_id, claims)
 
-      _ ->
-        conn |> put_status(:unprocessable_entity) |> put_view(ErrorView) |> render("422.json")
-    end
-  end
-
-  swagger_path :show do
-    description("Show Ingest Version")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestVersionResponse))
-    response(400, "Client Error")
+    render(conn, "versions.json",
+      ingest_versions: ingest_versions,
+      hypermedia: hypermedia("ingest_version", conn, ingest_versions)
+    )
   end
 
   def show(conn, %{"id" => id}) do
@@ -243,18 +178,6 @@ defmodule TdIeWeb.IngestVersionController do
     |> Map.put(:hint, :link)
   end
 
-  swagger_path :delete do
-    description("Delete a Ingest version")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(204, "No Content")
-    response(400, "Client Error")
-  end
-
   def delete(conn, %{"id" => id}) do
     claims = conn.assigns[:current_resource]
 
@@ -263,19 +186,6 @@ defmodule TdIeWeb.IngestVersionController do
          {:ok, %IngestVersion{}} <- Ingests.delete_ingest_version(ingest_version, claims) do
       send_resp(conn, :no_content, "")
     end
-  end
-
-  swagger_path :send_for_approval do
-    description("Submit a draft Ingest for approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def send_for_approval(conn, %{"ingest_version_id" => id}) do
@@ -294,20 +204,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :publish do
-    description("Publish a Ingest which is pending approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def publish(conn, %{"ingest_version_id" => id}) do
@@ -328,21 +226,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :reject do
-    description("Reject a Ingest which is pending approval")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-      reject_reason(:body, :string, "Rejection reason")
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def reject(conn, %{"ingest_version_id" => id} = params) do
@@ -364,20 +249,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :undo_rejection do
-    description("Create a draft from a rejected Ingest")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def undo_rejection(conn, %{"ingest_version_id" => id}) do
@@ -397,20 +270,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :version do
-    description("Create a new draft from a published Ingest")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def version(conn, %{"ingest_version_id" => id}) do
@@ -431,20 +292,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :deprecate do
-    description("Deprecate a published Ingest")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(403, "User is not authorized to perform this action")
-    response(422, "Ingest invalid state")
   end
 
   def deprecate(conn, %{"ingest_version_id" => id}) do
@@ -463,20 +312,8 @@ defmodule TdIeWeb.IngestVersionController do
       )
     else
       {:status, _, _} -> {:error, :unprocessable_entity}
+      error -> error
     end
-  end
-
-  swagger_path :update do
-    description("Updates Ingest Version")
-    produces("application/json")
-
-    parameters do
-      ingest_version(:body, Schema.ref(:IngestVersionUpdate), "Ingest Version update attrs")
-      id(:path, :integer, "Ingest Version ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestVersionResponse))
-    response(400, "Client Error")
   end
 
   def update(conn, %{"id" => id, "ingest_version" => ingest_version_params}) do

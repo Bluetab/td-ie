@@ -21,9 +21,7 @@ defmodule TdIe.Ingests.Links do
   def get_links(%Ingest{id: id}), do: get_links(id)
 
   def get_links(ingest_id) when is_integer(ingest_id) do
-    case LinkCache.list("ingest", ingest_id) do
-      {:ok, links} -> links
-      _ -> []
-    end
+    {:ok, links} = LinkCache.list("ingest", ingest_id)
+    links
   end
 end

@@ -13,8 +13,6 @@ defmodule TdIeWeb.Locale do
         conn
 
       locale ->
-        Gettext.put_locale(TdIeWeb.Gettext, locale)
-
         conn
         |> fetch_session
         |> put_session(:locale, locale)

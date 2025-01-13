@@ -3,11 +3,10 @@ defmodule TdIeWeb.IngestControllerTest do
   Controller test of ingest entities
   """
   use TdIeWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -46,8 +45,8 @@ defmodule TdIeWeb.IngestControllerTest do
     setup :create_template
 
     @tag authentication: [role: "admin"]
-    test "renders ingest when data is valid", %{conn: conn, swagger_schema: schema} do
-      IndexWorker.clear()
+    test "renders ingest when data is valid", %{conn: conn} do
+      IndexWorkerMock.clear()
       %{id: domain_id, name: domain_name} = CacheHelpers.put_domain()
       %{user_id: user_id} = build(:claims)
       ingest = insert(:ingest, domain_id: domain_id)
@@ -65,7 +64,6 @@ defmodule TdIeWeb.IngestControllerTest do
       assert %{"data" => data} =
                conn
                |> put(Routes.ingest_path(conn, :update, ingest), ingest: update_attrs)
-               |> validate_resp_schema(schema, "IngestResponse")
                |> json_response(:ok)
 
       assert %{"id" => ^ingest_id} = data
@@ -73,7 +71,6 @@ defmodule TdIeWeb.IngestControllerTest do
       assert %{"data" => data} =
                conn
                |> get(Routes.ingest_path(conn, :show, ingest_id))
-               |> validate_resp_schema(schema, "IngestResponse")
                |> json_response(:ok)
 
       assert data["domain"]["id"] == domain_id
@@ -86,12 +83,12 @@ defmodule TdIeWeb.IngestControllerTest do
       assert data["in_progress"] == update_attrs["in_progress"]
 
       # Enum.each(update_attrs, &assert(Map.get(data, elem(&1, 0)) == elem(&1, 1)))
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     @tag authentication: [role: "admin"]
-    test "renders errors when data is invalid", %{conn: conn, swagger_schema: schema} do
+    test "renders errors when data is invalid", %{conn: conn} do
       %{id: user_id} = CacheHelpers.put_user()
       ingest_version = insert(:ingest_version, last_change_by: user_id)
       ingest_id = ingest_version.ingest.id
@@ -106,7 +103,6 @@ defmodule TdIeWeb.IngestControllerTest do
       assert %{"errors" => errors} =
                conn
                |> put(Routes.ingest_path(conn, :update, ingest_id), ingest: update_attrs)
-               |> validate_resp_schema(schema, "IngestResponse")
                |> json_response(:unprocessable_entity)
 
       assert errors != %{}
@@ -132,11 +128,10 @@ defmodule TdIeWeb.IngestControllerTest do
       @tag status_from: status_from, status_to: status_to
       test "update ingest status change from #{status_from} to #{status_to}", %{
         conn: conn,
-        swagger_schema: schema,
         status_from: status_from,
         status_to: status_to
       } do
-        IndexWorker.clear()
+        IndexWorkerMock.clear()
         %{id: user_id} = CacheHelpers.put_user()
 
         ingest_version = insert(:ingest_version, status: status_from, last_change_by: user_id)
@@ -151,7 +146,6 @@ defmodule TdIeWeb.IngestControllerTest do
                  |> patch(Routes.ingest_ingest_path(conn, :update_status, ingest),
                    ingest: update_attrs
                  )
-                 |> validate_resp_schema(schema, "IngestResponse")
                  |> json_response(:ok)
 
         assert %{"id" => ^ingest_id} = data
@@ -159,12 +153,11 @@ defmodule TdIeWeb.IngestControllerTest do
         assert %{"data" => data} =
                  conn
                  |> get(Routes.ingest_path(conn, :show, ingest_id))
-                 |> validate_resp_schema(schema, "IngestResponse")
                  |> json_response(:ok)
 
         assert %{"status" => ^status_to} = data
-        assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-        IndexWorker.clear()
+        assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+        IndexWorkerMock.clear()
       end
     end)
   end

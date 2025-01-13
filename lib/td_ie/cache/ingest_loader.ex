@@ -102,7 +102,7 @@ defmodule TdIe.Cache.IngestLoader do
       |> Enum.map(fn {res, _} -> res end)
 
     if Enum.any?(results, &(&1 != :ok)) do
-      Logger.warn("Cache loading of ingests failed")
+      Logger.warning("Cache loading of ingests failed")
     else
       Logger.info("Cached #{length(results)} ingests")
     end

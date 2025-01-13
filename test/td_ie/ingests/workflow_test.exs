@@ -5,7 +5,7 @@ defmodule TdIe.Ingests.WorkflowTest do
   import TdIe.TestOperators
 
   alias TdCache.Redix.Stream
-  alias TdCore.Search.IndexWorker
+  alias TdCore.Search.IndexWorkerMock
   alias TdIe.Ingests
   alias TdIe.Ingests.IngestVersion
   alias TdIe.Ingests.Workflow
@@ -31,7 +31,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     setup :put_user
 
     test "with valid data creates a ingest", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       ingest_attrs = %{
@@ -65,12 +65,12 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.type == ingest_attrs.type
       assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
-      assert [{:reindex, :ingests, [_]} | _] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]} | _] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an audit event including domain_id", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       ingest_attrs = %{
@@ -96,8 +96,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event
       assert %{"ingest" => %{"domain_id" => ^domain_id}} = Jason.decode!(payload)
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with invalid data returns error changeset" do
@@ -118,7 +118,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     end
 
     test "with content", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       content_schema = [
@@ -155,12 +155,12 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert {:ok, %{ingest_version: ingest_version}} = Workflow.create_ingest(creation_attrs)
 
       assert %{content: ^content} = ingest_version
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with invalid content: required", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       content_schema = [
@@ -201,12 +201,12 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.type == ingest_attrs.type
       assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with content: default values", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       content_schema = [
@@ -247,12 +247,12 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       assert ingest_version.content["Field1"] == %{"value" => "Hello", "origin" => "default"}
       assert ingest_version.content["Field2"] == %{"value" => "World", "origin" => "default"}
-      assert [{:reindex, :ingests, [_]} | _] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]} | _] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with invalid content: invalid variable list", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       domain_id = 1
 
       content_schema = [
@@ -292,8 +292,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert ingest_version.ingest.type == ingest_attrs.type
       assert ingest_version.ingest.domain_id == ingest_attrs.domain_id
       assert ingest_version.ingest.last_change_by == ingest_attrs.last_change_by
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with no content", %{user_id: user_id} do
@@ -389,7 +389,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     setup :put_user
 
     test "with valid data updates the ingest_version", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version)
 
       ingest_attrs = %{
@@ -422,12 +422,12 @@ defmodule TdIe.Ingests.WorkflowTest do
 
       assert object.ingest.id == ingest_version.ingest.id
       assert object.ingest.last_change_by == 1000
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with valid content data updates the ingest", %{user_id: user_id} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
 
       content_schema = [
         %{"name" => "Field1", "type" => "string", "required" => true},
@@ -472,8 +472,8 @@ defmodule TdIe.Ingests.WorkflowTest do
              }
 
       assert ingest_version.content["Field2"] == %{"value" => "Second field", "origin" => "user"}
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "with invalid data returns error changeset" do
@@ -540,12 +540,12 @@ defmodule TdIe.Ingests.WorkflowTest do
     test "creates a new version and sets current to false on previous version", %{
       claims: claims
     } do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, res} = Workflow.new_ingest_version(ingest_version, claims)
       assert %{current: %{current: true}, previous: %{current: false}} = res
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "creates a new version and copies the identifier from the previous version one", %{
@@ -553,7 +553,7 @@ defmodule TdIe.Ingests.WorkflowTest do
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
     } do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       existing_identifier = "00000000-0000-0000-0000-000000000000"
       ingest = build(:ingest, %{type: template_with_identifier.name})
 
@@ -587,17 +587,17 @@ defmodule TdIe.Ingests.WorkflowTest do
                }
              } = res
 
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an event to the audit stream", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version, status: "published")
       assert {:ok, %{audit: event_id}} = Workflow.new_ingest_version(ingest_version, claims)
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 
@@ -605,7 +605,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     setup :claims
 
     test "changes the status and audit fields" do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       %{last_change_at: ts} = ingest_version = insert(:ingest_version, status: "draft")
 
       %{user_id: user_id} = claims = build(:claims, user_id: 987)
@@ -617,12 +617,12 @@ defmodule TdIe.Ingests.WorkflowTest do
                published
 
       assert DateTime.diff(last_change_at, ts, :microsecond) > 0
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an event to ingests:events", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       %{ingest_id: ingest_id, id: id} = ingest_version = insert(:ingest_version)
       assert {:ok, %{event: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
 
@@ -630,12 +630,12 @@ defmodule TdIe.Ingests.WorkflowTest do
                Stream.range(:redix, "ingests:events", event_id, event_id, transform: false)
 
       assert event_data ||| ["event", "publish", "id", "#{ingest_id}", "version_id", "#{id}"]
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version, status: "draft")
 
       assert {:ok, %{audit: event_id}} = Workflow.publish_ingest_version(ingest_version, claims)
@@ -643,8 +643,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event
       assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
-      assert [{:reindex, :ingests, [_]} | _] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]} | _] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 
@@ -652,7 +652,7 @@ defmodule TdIe.Ingests.WorkflowTest do
     setup :claims
 
     test "rejects ingest", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
@@ -660,12 +660,12 @@ defmodule TdIe.Ingests.WorkflowTest do
                Workflow.reject_ingest_version(ingest_version, reason, claims)
 
       assert %{status: "rejected", reject_reason: ^reason} = ingest_version
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an event to the audit stream", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       reason = "Because I want to"
       ingest_version = insert(:ingest_version, status: "pending_approval")
 
@@ -673,8 +673,8 @@ defmodule TdIe.Ingests.WorkflowTest do
                Workflow.reject_ingest_version(ingest_version, reason, claims)
 
       assert {:ok, [%{id: ^event_id}]} = Stream.read(:redix, @stream, transform: true)
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 
@@ -682,19 +682,19 @@ defmodule TdIe.Ingests.WorkflowTest do
     setup :claims
 
     test "updates the ingest", %{claims: %{user_id: user_id} = claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version)
 
       assert {:ok, %{updated: ingest_version}} =
                Workflow.submit_ingest_version(ingest_version, claims)
 
       assert %{status: "pending_approval", last_change_by: ^user_id} = ingest_version
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
 
     test "publishes an event including domain_ids to the audit stream", %{claims: claims} do
-      IndexWorker.clear()
+      IndexWorkerMock.clear()
       ingest_version = insert(:ingest_version, status: "draft")
 
       assert {:ok, %{audit: event_id}} = Workflow.submit_ingest_version(ingest_version, claims)
@@ -702,8 +702,8 @@ defmodule TdIe.Ingests.WorkflowTest do
       assert {:ok, [%{id: ^event_id} = event]} = Stream.read(:redix, @stream, transform: true)
       assert %{payload: payload} = event
       assert %{"domain_ids" => _domain_ids} = Jason.decode!(payload)
-      assert [{:reindex, :ingests, [_]}] = IndexWorker.calls()
-      IndexWorker.clear()
+      assert [{:reindex, :ingests, [_]}] = IndexWorkerMock.calls()
+      IndexWorkerMock.clear()
     end
   end
 

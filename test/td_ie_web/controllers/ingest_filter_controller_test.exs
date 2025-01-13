@@ -3,7 +3,6 @@ defmodule TdIeWeb.IngestFilterControllerTest do
   Testing of ingest filter controller
   """
   use TdIeWeb.ConnCase
-  use PhoenixSwagger.SchemaTest, "priv/static/swagger.json"
 
   import Mox
 
@@ -15,7 +14,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
       ElasticsearchMock
       |> expect(:request, fn
         _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
-          assert query == %{bool: %{filter: %{match_all: %{}}}}
+          assert query == %{bool: %{must: %{match_all: %{}}}}
           SearchHelpers.aggs_response()
       end)
 
@@ -34,7 +33,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
         _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
           assert query == %{
                    bool: %{
-                     filter: %{
+                     must: %{
                        bool: %{
                          filter: [
                            %{term: %{"status" => "published"}},
@@ -61,7 +60,7 @@ defmodule TdIeWeb.IngestFilterControllerTest do
       ElasticsearchMock
       |> expect(:request, fn
         _, :post, "/ingests/_search", %{aggs: _, query: query, size: 0}, [_] ->
-          assert query == %{bool: %{filter: %{match_none: %{}}}}
+          assert query == %{bool: %{must: %{match_none: %{}}}}
           SearchHelpers.aggs_response()
       end)
 

@@ -4,7 +4,6 @@ defmodule TdIeWeb.IngestController do
   """
   use TdHypermedia, :controller
   use TdIeWeb, :controller
-  use PhoenixSwagger
 
   import Canada, only: [can?: 2]
 
@@ -14,27 +13,10 @@ defmodule TdIeWeb.IngestController do
   alias TdIe.Ingests.Workflow
   alias TdIeWeb.ErrorView
   alias TdIeWeb.IngestSupport
-  alias TdIeWeb.SwaggerDefinitions
 
   require Logger
 
   action_fallback(TdIeWeb.FallbackController)
-
-  def swagger_definitions do
-    SwaggerDefinitions.ingest_definitions()
-  end
-
-  swagger_path :index_children_ingest do
-    description("List ingests children of Domain")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "Domain ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestsResponse))
-    response(400, "Client Error")
-  end
 
   def index_children_ingest(conn, %{"domain_id" => id}) do
     ingest_versions = Ingests.get_domain_children_versions!(id)
@@ -63,18 +45,6 @@ defmodule TdIeWeb.IngestController do
     render(conn, "search.json", ingests: ingest_versions)
   end
 
-  swagger_path :show do
-    description("Show ingests")
-    produces("application/json")
-
-    parameters do
-      id(:path, :integer, "ingest ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(400, "Client Error")
-  end
-
   def show(conn, %{"id" => id}) do
     ingest =
       id
@@ -87,19 +57,6 @@ defmodule TdIeWeb.IngestController do
       ingest: ingest,
       hypermedia: hypermedia("ingest", conn, ingest)
     )
-  end
-
-  swagger_path :update do
-    description("Updates ingests")
-    produces("application/json")
-
-    parameters do
-      ingest(:body, Schema.ref(:IngestUpdate), "ingest update attrs")
-      id(:path, :integer, "ingest ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(400, "Client Error")
   end
 
   def update(conn, %{"id" => id, "ingest" => ingest_params}) do
@@ -134,24 +91,6 @@ defmodule TdIeWeb.IngestController do
       error ->
         IngestSupport.handle_ingest_errors(conn, error)
     end
-  end
-
-  swagger_path :update_status do
-    description("Updates Ingest status")
-    produces("application/json")
-
-    parameters do
-      ingest(
-        :body,
-        Schema.ref(:IngestUpdateStatus),
-        "ingest status update attrs"
-      )
-
-      ingest_id(:path, :integer, "ingest ID", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(400, "Client Error")
   end
 
   def update_status(conn, %{
@@ -240,18 +179,6 @@ defmodule TdIeWeb.IngestController do
       |> put_status(:created)
       |> render("show.json", ingest: new_version)
     end
-  end
-
-  swagger_path :index_status do
-    description("List ingest with certain status")
-    produces("application/json")
-
-    parameters do
-      status(:path, :string, "ingest Status", required: true)
-    end
-
-    response(200, "OK", Schema.ref(:IngestResponse))
-    response(400, "Client Error")
   end
 
   def index_status(conn, status) do

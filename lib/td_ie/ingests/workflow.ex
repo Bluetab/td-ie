@@ -236,15 +236,9 @@ defmodule TdIe.Ingests.Workflow do
   defp do_validate_description(attrs) do
     import Ecto.Changeset, only: [put_change: 3]
 
-    if !attrs.description == %{} do
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, true))
-      |> Map.put(:in_progress, true)
-    else
-      attrs
-      |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
-      |> Map.put(:in_progress, false)
-    end
+    attrs
+    |> Map.put(:changeset, put_change(attrs.changeset, :in_progress, false))
+    |> Map.put(:in_progress, false)
   end
 
   defp validate_ingest_content(attrs) do

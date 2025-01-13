@@ -25,8 +25,7 @@ defmodule TdIe.Ingests.RichText do
     plain_text = to_plain_text(doc)
 
     case String.last(plain_text) do
-      " " -> String.slice(plain_text, 0..-2)
-      # "\n" -> String.slice(plain_text, 0..-2)
+      " " -> String.slice(plain_text, 0..-2//1)
       _ -> plain_text
     end
   end
