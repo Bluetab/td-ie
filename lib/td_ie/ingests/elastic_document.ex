@@ -90,6 +90,7 @@ defmodule TdIe.Ingests.ElasticDocument do
     use ElasticDocument
 
     @search_fields ~w(ngram_name*^3)
+    @simple_search_fields ~w(name*)
 
     def mappings(_) do
       content_mappings = %{properties: get_dynamic_mappings("ie")}
@@ -161,6 +162,7 @@ defmodule TdIe.Ingests.ElasticDocument do
 
       %{
         fields: @search_fields ++ dynamic_fields,
+        simple_search_fields: @simple_search_fields,
         aggs: merged_aggregations(content_schema)
       }
     end
