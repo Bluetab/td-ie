@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7155] Introduce simple query string query for ingests
+
 ## [7.0.0] 2025-01-13
 
 ### Changed
