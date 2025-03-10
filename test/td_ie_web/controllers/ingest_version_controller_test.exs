@@ -281,6 +281,37 @@ defmodule TdIeWeb.IngestVersionControllerTest do
 
       assert [%{"id" => ^id}] = data
     end
+
+    @tag authentication: [role: "admin"]
+    test "find ingest by name searching by wildcard", %{conn: conn} do
+      %{id: domain_id} = CacheHelpers.put_domain()
+
+      %{id: id} =
+        one = insert(:ingest_version, name: "one", status: "draft", domain_id: domain_id)
+
+      expect(ElasticsearchMock, :request, fn
+        _, :post, "/ingests/_search", %{from: 0, size: 50, sort: sort, query: query}, opts ->
+          assert opts == [params: %{"track_total_hits" => "true"}]
+          assert sort == ["_score", "name.raw"]
+
+          assert %{
+                   bool: %{
+                     must: %{
+                       simple_query_string: %{fields: ["name*"], query: "\"one\""}
+                     }
+                   }
+                 } = query
+
+          SearchHelpers.hits_response([one])
+      end)
+
+      assert %{"data" => data} =
+               conn
+               |> get(Routes.ingest_version_path(conn, :index), %{query: "\"one\""})
+               |> json_response(:ok)
+
+      assert [%{"id" => ^id}] = data
+    end
   end
 
   describe "versions" do
