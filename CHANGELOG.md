@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.4.0] 2025-04-09
+
+### Changed
+
+- License and libraries
+
 ## [7.2.0] 2025-03-10
 
 ### Added
