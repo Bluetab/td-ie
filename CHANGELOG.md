@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.5.0] 2025-04-30
+
+### Fixed
+
+- [TD-7226] Enhance SSL configuration handling in production
+
 ## [7.4.0] 2025-04-09
 
 ### Changed
@@ -27,7 +33,6 @@
   - `search_as_you_type` type in concept name.
   - Defines scope for native and dynamic fields search.
   - Use query data in `ElasticDocumentProtocol` to build queries.
-
 
 ## [6.16.0] 2024-12-16
 
