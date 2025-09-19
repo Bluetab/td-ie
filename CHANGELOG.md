@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7417] Forcemerge options for elastic index hot swap
+  
 ## [7.5.0] 2025-04-30
 
 ### Fixed
