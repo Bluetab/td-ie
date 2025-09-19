@@ -8,6 +8,12 @@
   
 ## [7.5.0] 2025-04-30
 
+### Added
+
+- [TD-7417] Forcemerge options for elastic index hot swap
+  
+## [7.5.0] 2025-04-30
+
 ### Fixed
 
 - [TD-7226] Enhance SSL configuration handling in production
