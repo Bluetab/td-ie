@@ -1,19 +1,17 @@
 # Changelog
 
- ## [7.11.0] 2025-10-13
+ ## [7.12.0] 2025-10-29
 
 ### Added
 
 - [TD-7340] Support for `dynamic_table` template fields
-
-# Changelog
 
 ## [7.11.0] 2025-10-13
 
 ### Added
 
 - [TD-7417] Forcemerge options for elastic index hot swap
-
+  
 ### Changed
 
 - [TD-7401] Update `td-core` version
