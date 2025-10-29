@@ -17,6 +17,7 @@ defmodule TdIe.Ingests.ElasticDocument do
     alias TdCache.TaxonomyCache
     alias TdCache.TemplateCache
     alias TdCache.UserCache
+    alias TdDfLib.Content
     alias TdDfLib.Format
     alias TdDfLib.RichText
 
@@ -39,8 +40,7 @@ defmodule TdIe.Ingests.ElasticDocument do
         iv
         |> Map.get(:content)
         |> Format.search_values(template, domain_id: domain_id)
-        |> Enum.map(fn {key, %{"value" => value}} -> {key, value} end)
-        |> Map.new()
+        |> Content.to_legacy()
 
       iv
       |> Map.take([

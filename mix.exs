@@ -6,7 +6,7 @@ defmodule TdIe.Mixfile do
       app: :td_ie,
       version:
         case System.get_env("APP_VERSION") do
-          nil -> "7.11.0-local"
+          nil -> "7.12.0-local"
           v -> v
         end,
       elixir: "~> 1.18",
@@ -60,7 +60,7 @@ defmodule TdIe.Mixfile do
       {:quantum, "~> 3.5.3"},
       {:csv, "~> 3.2.1"},
       {:td_hypermedia, git: "https://github.com/Bluetab/td-hypermedia.git", tag: "7.4.0"},
-      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.11.1"},
+      {:td_core, git: "https://github.com/Bluetab/td-core.git", tag: "7.12.0"},
       {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
       {:ex_machina, "~> 2.8", only: :test},
