@@ -1,6 +1,12 @@
 # Changelog
 
- ## [7.12.0] 2025-10-29
+## [7.13.0] 2025-11-18
+
+### Added
+
+- [TD-7627] Update and refactor test
+
+## [7.12.0] 2025-10-29
 
 ### Added
 
@@ -11,7 +17,7 @@
 ### Added
 
 - [TD-7417] Forcemerge options for elastic index hot swap
-  
+
 ### Changed
 
 - [TD-7401] Update `td-core` version
